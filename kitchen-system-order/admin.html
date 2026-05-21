@@ -909,20 +909,23 @@ async function rejectAll(reqId) {
 }
 
 async function acceptRequest(reqId) {
-    if(!confirm(`Accept this request? It will be locked and moved to Accepted section.`)) return;
+    if(!confirm(`Accept this request? All pending items will be AUTO-APPROVED with their original quantities. Manually rejected items will stay rejected.`)) return;
     const req = allRequests.find(r => r.id === reqId);
     if(req) {
         req.items.forEach(item => {
+            // Only change PENDING items - leave APPROVED and REJECTED as they are
             if(item.status !== "approved" && item.status !== "rejected") {
-                item.status = "rejected";
-                item.rejectionReason = "Auto-rejected - request accepted";
-                item.rejectedBy = currentAdmin;
-                item.rejectedAt = new Date().toLocaleString();
-                item.approvedQty = 0;
+                // AUTO-APPROVE pending items with original quantity
+                item.status = "approved";
+                item.approvedQty = item.originalQty;  // Full original quantity
+                item.approvedBy = currentAdmin;
+                item.approvedAt = new Date().toLocaleString();
+                // No rejection reason
             }
             item.completedVia = "accept";
         });
         await updateRequest(reqId, req.items);
+        showToast(`✅ Request completed: ${req.items.filter(i => i.status === "approved").length} approved, ${req.items.filter(i => i.status === "rejected").length} rejected`);
     }
 }
 
