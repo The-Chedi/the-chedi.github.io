@@ -461,7 +461,7 @@ hr {
             <span class="badge">Load Kitchen JSON</span>
             <span class="badge">Add Items from Menu</span>
         </h1>
-        <div style="margin-top: 8px; font-size: 0.7rem;">Load menu from kitchen-system-order/items/*.json | Click item to add to order</div>
+        <div style="margin-top: 8px; font-size: 0.7rem;">Load menu from /items/*.json | Click item to add to order</div>
     </div>
 
     <div class="container">
@@ -493,11 +493,11 @@ hr {
                         <button class="btn btn-restore" onclick="restoreSingleToPending()">🔄 Restore to Pending</button>
                     </div>
                     
-                    <!-- MENU SELECTOR - READ FROM JSON FILES -->
+                    <!-- MENU SELECTOR - READ FROM /items/*.json -->
                     <div class="menu-selector">
                         <div class="menu-title">
                             📦 ADD ITEM FROM KITCHEN MENU (JSON Files)
-                            <span style="font-size: 0.7rem;">kitchen-system-order/items/</span>
+                            <span style="font-size: 0.7rem;">/items/</span>
                         </div>
                         <div class="kitchen-menu-buttons" id="kitchenMenuButtons"></div>
                         <div id="selectedKitchenName" style="margin-bottom: 10px; font-size: 0.75rem; color: #00d4ff;"></div>
@@ -603,6 +603,7 @@ document.getElementById("devPasswordInput")?.addEventListener("keypress", functi
 });
 
 // ==================== KITCHEN JSON FILES MAPPING ====================
+// Simplified path: just /items/filename.json
 const KITCHEN_JSON_FILES = {
     "Hot Kitchen": "hot-kitchen.json",
     "Cold Kitchen": "cold-kitchen.json",
@@ -613,7 +614,8 @@ const KITCHEN_JSON_FILES = {
     "Staff Kitchen": "staff-kitchen.json"
 };
 
-const JSON_BASE_PATH = "kitchen-system-order/items/";
+// Base path is simply /items/
+const JSON_BASE_PATH = "/items/";
 
 let currentMenuItems = [];
 let currentSelectedKitchen = "Hot Kitchen";
@@ -754,13 +756,14 @@ async function loadKitchenMenuJSON(kitchen) {
         return;
     }
     
+    // Simple path: /items/filename.json
     const jsonPath = `${JSON_BASE_PATH}${fileName}`;
     document.getElementById("selectedKitchenName").innerHTML = `📁 Loading: ${jsonPath}`;
     
     try {
         const response = await fetch(jsonPath);
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status} - File not found. Make sure ${jsonPath} exists.`);
+            throw new Error(`HTTP ${response.status} - File not found. Make sure ${jsonPath} exists in your server's /items/ folder.`);
         }
         const data = await response.json();
         
@@ -774,11 +777,11 @@ async function loadKitchenMenuJSON(kitchen) {
         }
         
         renderMenuItemsList();
-        document.getElementById("selectedKitchenName").innerHTML = `✅ Loaded ${currentMenuItems.length} items from ${fileName}`;
+        document.getElementById("selectedKitchenName").innerHTML = `✅ Loaded ${currentMenuItems.length} items from ${jsonPath}`;
         showToast(`✅ Loaded ${currentMenuItems.length} items from ${kitchen}`);
     } catch(e) {
         console.error(e);
-        document.getElementById("selectedKitchenName").innerHTML = `❌ Error loading ${fileName}: ${e.message}`;
+        document.getElementById("selectedKitchenName").innerHTML = `❌ Error loading ${jsonPath}: ${e.message}`;
         showToast(`Failed to load ${fileName}: ${e.message}`, true);
         currentMenuItems = [];
         renderMenuItemsList();
