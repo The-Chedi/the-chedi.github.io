@@ -6,7 +6,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-<title>Developer Console - Order Editor + JSON Generator</title>
+<title>Developer Console - Order Editor + Kitchen Menu Loader</title>
 <style>
 * {
     margin: 0;
@@ -254,8 +254,8 @@ textarea {
 .status-rejected { background: #dc2626; color: white; }
 .status-accepted { background: #8b5cf6; color: white; }
 
-/* Add Item to Order Section */
-.add-item-section {
+/* Menu Items Selector */
+.menu-selector {
     background: #0a0e27;
     border-radius: 16px;
     padding: 16px;
@@ -263,10 +263,86 @@ textarea {
     border: 1px solid #2a3a5a;
 }
 
-.add-item-title {
+.menu-title {
     color: #00d4ff;
     margin-bottom: 15px;
     font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.kitchen-menu-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+}
+
+.kitchen-menu-btn {
+    background: #1e293b;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 30px;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 0.7rem;
+    transition: all 0.2s;
+}
+
+.kitchen-menu-btn.active {
+    background: #00d4ff;
+    color: #0a0e27;
+}
+
+.kitchen-menu-btn:hover { background: #334155; }
+
+.menu-items-list {
+    max-height: 250px;
+    overflow-y: auto;
+    margin-top: 10px;
+}
+
+.menu-item-card {
+    background: #111827;
+    padding: 10px 14px;
+    margin-bottom: 6px;
+    border-radius: 10px;
+    border-left: 3px solid #f59e0b;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.menu-item-card:hover {
+    background: #1f2937;
+    transform: translateX(4px);
+}
+
+.menu-item-code { color: #f59e0b; font-weight: bold; font-family: monospace; }
+.menu-item-name { flex: 2; font-size: 0.8rem; }
+.menu-item-unit { color: #9ca3af; font-size: 0.7rem; }
+.menu-item-price { color: #10b981; font-weight: bold; }
+
+.add-qty-control {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.qty-input-small {
+    width: 70px;
+    background: #1a1a2e;
+    border: 1px solid #2a3a5a;
+    padding: 4px 8px;
+    border-radius: 8px;
+    color: white;
+    text-align: center;
 }
 
 .toast {
@@ -382,10 +458,10 @@ hr {
         <h1>
             🛠️ DEVELOPER CONSOLE
             <span class="badge">Edit Orders</span>
-            <span class="badge">JSON Generator</span>
-            <span class="badge">Add Items to Orders</span>
+            <span class="badge">Load Kitchen JSON</span>
+            <span class="badge">Add Items from Menu</span>
         </h1>
-        <div style="margin-top: 8px; font-size: 0.7rem;">Edit Firestore Orders | Restore to Pending | Add New Items to Any Order | Generate Kitchen Menu JSON</div>
+        <div style="margin-top: 8px; font-size: 0.7rem;">Load menu from kitchen-system-order/items/*.json | Click item to add to order</div>
     </div>
 
     <div class="container">
@@ -410,49 +486,25 @@ hr {
                     <input type="text" id="orderDocId" class="form-input" placeholder="Enter Firestore Document ID...">
                 </div>
                 <div id="orderViewer" style="display:none;">
-                    <textarea id="orderJsonEditor" rows="12" placeholder="Document JSON will appear here..."></textarea>
+                    <textarea id="orderJsonEditor" rows="10" placeholder="Document JSON will appear here..."></textarea>
                     <div style="display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap;">
                         <button class="btn btn-success" onclick="saveOrderDocument()">💾 SAVE to Firestore</button>
                         <button class="btn btn-danger" onclick="deleteOrderDocument()">🗑️ DELETE Document</button>
                         <button class="btn btn-restore" onclick="restoreSingleToPending()">🔄 Restore to Pending</button>
                     </div>
                     
-                    <!-- ADD NEW ITEM TO ORDER SECTION -->
-                    <div class="add-item-section">
-                        <div class="add-item-title">➕ ADD NEW ITEM TO THIS ORDER</div>
-                        <div class="row">
-                            <div class="field">
-                                <label>CODE</label>
-                                <input type="text" id="newItemCode" placeholder="e.g., 169999">
-                            </div>
-                            <div class="field">
-                                <label>NAME</label>
-                                <input type="text" id="newItemName" placeholder="Item name">
-                            </div>
-                            <div class="field">
-                                <label>NAME (AR)</label>
-                                <input type="text" id="newItemNameAr" placeholder="Arabic name">
-                            </div>
+                    <!-- MENU SELECTOR - READ FROM JSON FILES -->
+                    <div class="menu-selector">
+                        <div class="menu-title">
+                            📦 ADD ITEM FROM KITCHEN MENU (JSON Files)
+                            <span style="font-size: 0.7rem;">kitchen-system-order/items/</span>
                         </div>
-                        <div class="row">
-                            <div class="field">
-                                <label>UNIT</label>
-                                <input type="text" id="newItemUnit" placeholder="e.g., kg, pcs">
-                            </div>
-                            <div class="field">
-                                <label>PRICE</label>
-                                <input type="number" id="newItemPrice" value="0" step="0.01">
-                            </div>
-                            <div class="field">
-                                <label>REQUESTED QTY</label>
-                                <input type="number" id="newItemQty" value="1" step="0.5">
-                            </div>
+                        <div class="kitchen-menu-buttons" id="kitchenMenuButtons"></div>
+                        <div id="selectedKitchenName" style="margin-bottom: 10px; font-size: 0.75rem; color: #00d4ff;"></div>
+                        <div id="menuItemsList" class="menu-items-list">
+                            <div style="padding: 20px; text-align: center; color: #9ca3af;">Select a kitchen above to load menu items</div>
                         </div>
-                        <div style="display: flex; gap: 10px; margin-top: 10px;">
-                            <button class="btn btn-add-item" onclick="addNewItemToOrder()">➕ Add Item to Order</button>
-                            <button class="btn btn-secondary" onclick="clearNewItemForm()">Clear Form</button>
-                        </div>
-                        <div class="note" style="margin-top: 10px;">💡 After restoring an order to PENDING, you can add new items above. Click SAVE after adding.</div>
+                        <div class="note" style="margin-top: 10px;">💡 Click on any item to add it to the order with quantity 1. Then click SAVE.</div>
                     </div>
                 </div>
                 <div id="ordersList" class="doc-list"></div>
@@ -550,6 +602,22 @@ document.getElementById("devPasswordInput")?.addEventListener("keypress", functi
     if (e.key === "Enter") checkDevLogin();
 });
 
+// ==================== KITCHEN JSON FILES MAPPING ====================
+const KITCHEN_JSON_FILES = {
+    "Hot Kitchen": "hot-kitchen.json",
+    "Cold Kitchen": "cold-kitchen.json",
+    "Pastry / Bakery": "pastry.json",
+    "Butchery": "butchery.json",
+    "Beach House": "beach-house.json",
+    "Nihon Kitchen": "nihon-kitchen.json",
+    "Staff Kitchen": "staff-kitchen.json"
+};
+
+const JSON_BASE_PATH = "kitchen-system-order/items/";
+
+let currentMenuItems = [];
+let currentSelectedKitchen = "Hot Kitchen";
+
 // ==================== FIRESTORE ORDERS ====================
 let currentOrderDocId = null;
 let currentOrderData = null;
@@ -614,6 +682,13 @@ async function fetchOrderDocument() {
         document.getElementById("orderJsonEditor").value = JSON.stringify(currentOrderData, null, 2);
         document.getElementById("orderViewer").style.display = "block";
         showToast(`✅ Loaded: ${docId}`);
+        // Load default kitchen menu based on order section
+        if (currentOrderData.section && KITCHEN_JSON_FILES[currentOrderData.section]) {
+            currentSelectedKitchen = currentOrderData.section;
+            await loadKitchenMenuJSON(currentSelectedKitchen);
+        } else {
+            await loadKitchenMenuJSON("Hot Kitchen");
+        }
     } catch(e) { showToast("Error: " + e.message, true); }
 }
 
@@ -655,47 +730,115 @@ async function deleteOrderById(docId) {
     }
 }
 
-// ============ ADD NEW ITEM TO ORDER ============
-function clearNewItemForm() {
-    document.getElementById("newItemCode").value = "";
-    document.getElementById("newItemName").value = "";
-    document.getElementById("newItemNameAr").value = "";
-    document.getElementById("newItemUnit").value = "";
-    document.getElementById("newItemPrice").value = "0";
-    document.getElementById("newItemQty").value = "1";
+// ============ LOAD KITCHEN MENU FROM JSON FILE ============
+function renderKitchenMenuButtons() {
+    const container = document.getElementById("kitchenMenuButtons");
+    container.innerHTML = "";
+    Object.keys(KITCHEN_JSON_FILES).forEach(kitchen => {
+        const btn = document.createElement("button");
+        btn.className = `kitchen-menu-btn ${currentSelectedKitchen === kitchen ? 'active' : ''}`;
+        btn.innerText = kitchen;
+        btn.onclick = () => {
+            currentSelectedKitchen = kitchen;
+            renderKitchenMenuButtons();
+            loadKitchenMenuJSON(kitchen);
+        };
+        container.appendChild(btn);
+    });
 }
 
-function addNewItemToOrder() {
+async function loadKitchenMenuJSON(kitchen) {
+    const fileName = KITCHEN_JSON_FILES[kitchen];
+    if (!fileName) {
+        showToast(`No JSON file mapping for ${kitchen}`, true);
+        return;
+    }
+    
+    const jsonPath = `${JSON_BASE_PATH}${fileName}`;
+    document.getElementById("selectedKitchenName").innerHTML = `📁 Loading: ${jsonPath}`;
+    
+    try {
+        const response = await fetch(jsonPath);
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status} - File not found. Make sure ${jsonPath} exists.`);
+        }
+        const data = await response.json();
+        
+        // Handle both array format and {items: []} format
+        if (Array.isArray(data)) {
+            currentMenuItems = data;
+        } else if (data.items && Array.isArray(data.items)) {
+            currentMenuItems = data.items;
+        } else {
+            currentMenuItems = [];
+        }
+        
+        renderMenuItemsList();
+        document.getElementById("selectedKitchenName").innerHTML = `✅ Loaded ${currentMenuItems.length} items from ${fileName}`;
+        showToast(`✅ Loaded ${currentMenuItems.length} items from ${kitchen}`);
+    } catch(e) {
+        console.error(e);
+        document.getElementById("selectedKitchenName").innerHTML = `❌ Error loading ${fileName}: ${e.message}`;
+        showToast(`Failed to load ${fileName}: ${e.message}`, true);
+        currentMenuItems = [];
+        renderMenuItemsList();
+    }
+}
+
+function renderMenuItemsList() {
+    const container = document.getElementById("menuItemsList");
+    if (!currentMenuItems || currentMenuItems.length === 0) {
+        container.innerHTML = '<div style="padding: 20px; text-align: center; color: #9ca3af;">No items found in this JSON file</div>';
+        return;
+    }
+    
+    container.innerHTML = "";
+    currentMenuItems.forEach((item, index) => {
+        const div = document.createElement("div");
+        div.className = "menu-item-card";
+        div.innerHTML = `
+            <span class="menu-item-code">📌 ${escapeHtml(item.code || 'N/A')}</span>
+            <span class="menu-item-name"><strong>${escapeHtml(item.name || 'No name')}</strong><br><span style="font-size:0.65rem;">${escapeHtml(item.name_ar || '')}</span></span>
+            <span class="menu-item-unit">📦 ${escapeHtml(item.unit || '-')}</span>
+            <span class="menu-item-price">💰 ${item.AVE || item.price || 0}</span>
+            <div class="add-qty-control">
+                <input type="number" id="qty_${index}" class="qty-input-small" value="1" min="0.5" step="0.5" style="width:60px;">
+                <button class="btn btn-add-item" style="padding: 4px 12px;" onclick="addMenuItemToOrder(${index})">➕ Add</button>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function addMenuItemToOrder(index) {
     if (!currentOrderDocId || !currentOrderData) {
         showToast("No order loaded. Please fetch an order first.", true);
         return;
     }
     
-    const code = document.getElementById("newItemCode").value.trim();
-    const name = document.getElementById("newItemName").value.trim();
-    const nameAr = document.getElementById("newItemNameAr").value.trim();
-    const unit = document.getElementById("newItemUnit").value.trim();
-    const price = parseFloat(document.getElementById("newItemPrice").value);
-    const qty = parseFloat(document.getElementById("newItemQty").value);
+    const menuItem = currentMenuItems[index];
+    if (!menuItem) return;
     
-    if (!code) { showToast("Item Code is required", true); return; }
-    if (!name) { showToast("Item Name is required", true); return; }
-    if (!unit) { showToast("Unit is required", true); return; }
-    if (isNaN(price) || price < 0) { showToast("Valid price is required", true); return; }
-    if (isNaN(qty) || qty <= 0) { showToast("Valid quantity is required", true); return; }
+    const qtyInput = document.getElementById(`qty_${index}`);
+    const quantity = parseFloat(qtyInput?.value || 1);
+    if (isNaN(quantity) || quantity <= 0) {
+        showToast("Invalid quantity", true);
+        return;
+    }
     
-    // Create new item object
+    // Get price from either AVE or price field
+    const price = menuItem.AVE || menuItem.price || 0;
+    
     const newItem = {
-        code: code,
-        name: name,
-        name_ar: nameAr,
-        unit: unit,
-        originalQty: qty,
+        code: menuItem.code || "",
+        name: menuItem.name || "",
+        name_ar: menuItem.name_ar || "",
+        unit: menuItem.unit || "",
+        originalQty: quantity,
         price: price,
         status: "pending"
     };
     
-    // Add to current order items
     if (!currentOrderData.items) {
         currentOrderData.items = [];
     }
@@ -704,15 +847,12 @@ function addNewItemToOrder() {
     // Update the JSON editor
     document.getElementById("orderJsonEditor").value = JSON.stringify(currentOrderData, null, 2);
     
-    // Clear form
-    clearNewItemForm();
-    
-    showToast(`✅ Added "${name}" to order. Click SAVE to persist.`);
+    showToast(`✅ Added "${menuItem.name}" (x${quantity}) to order. Click SAVE to persist.`);
 }
 
 // ============ RESTORE TO PENDING FUNCTIONS ============
 async function restoreOrderToPending(docId) {
-    if (!confirm(`Restore order to PENDING status?\n\nThis will reset all approved/rejected items back to pending. You can then add new items.`)) return;
+    if (!confirm(`Restore order to PENDING status?\n\nThis will reset all approved/rejected items back to pending. You can then add new items from the menu.\n\nContinue?`)) return;
     
     try {
         const doc = await db.collection("kitchen_requests").doc(docId).get();
@@ -738,7 +878,7 @@ async function restoreOrderToPending(docId) {
             
             if (changed) {
                 await db.collection("kitchen_requests").doc(docId).update({ items: data.items });
-                showToast(`✅ Restored ${docId} to PENDING status. You can now add new items.`);
+                showToast(`✅ Restored ${docId} to PENDING status. You can now add new items from the menu.`);
                 listAllOrders();
                 if (currentOrderDocId === docId) {
                     await fetchOrderDocument();
@@ -989,6 +1129,7 @@ function switchTab(tab) {
         document.querySelectorAll('.tab-btn')[0].classList.add('active');
         document.getElementById('ordersPanel').classList.add('active-panel');
         listAllOrders();
+        renderKitchenMenuButtons();
     } else {
         document.querySelectorAll('.tab-btn')[1].classList.add('active');
         document.getElementById('generatorPanel').classList.add('active-panel');
@@ -1027,6 +1168,9 @@ function handleEnter(e) {
 codeInput?.addEventListener('keypress', handleEnter);
 nameInput?.addEventListener('keypress', handleEnter);
 unitInput?.addEventListener('keypress', handleEnter);
+
+// Initialize
+renderKitchenMenuButtons();
 </script>
 </body>
 </html>
