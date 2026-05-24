@@ -14,5 +14,10 @@ if (!firebase.apps.length) {
 }
 
 const db = firebase.firestore();
+const auth = firebase.auth();
+
+// Enable persistence (keeps user logged in)
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
 console.log("✅ Firebase initialized successfully");
+console.log("✅ Firestore and Auth services ready");
