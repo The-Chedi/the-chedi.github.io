@@ -221,16 +221,43 @@ textarea {
 .btn-secondary { background: #334155; color: white; }
 .btn-restore { background: #8b5cf6; color: white; }
 .btn-add-item { background: #00d4ff; color: #0a0e27; }
+.btn-refresh { background: #00d4ff; color: #0a0e27; }
 .btn-disabled { background: #4a5568; color: #a0aec0; cursor: not-allowed; opacity: 0.6; }
 
 .btn:hover { transform: scale(1.02); opacity: 0.9; }
 .btn-disabled:hover { transform: none; opacity: 0.6; }
 
-/* Document List - Uniform spacing */
+/* Document List - Clean Table Style */
 .doc-list {
+    margin-top: 20px;
+}
+
+.doc-list-header {
+    background: #1a1a2e;
+    padding: 12px 16px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.doc-list-title {
+    font-weight: bold;
+    color: #00d4ff;
+    font-size: 0.9rem;
+}
+
+.doc-list-header-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.doc-items-container {
     max-height: 400px;
     overflow-y: auto;
-    margin-top: 20px;
 }
 
 .doc-item {
@@ -238,30 +265,70 @@ textarea {
     padding: 14px 18px;
     margin-bottom: 8px;
     border-radius: 12px;
-    border-left: 3px solid #00d4ff;
+    border-left: 4px solid #00d4ff;
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
     gap: 12px;
     cursor: pointer;
-    font-size: 0.8rem;
+    transition: all 0.2s;
 }
 
-.doc-item:hover { background: #1f2937; }
+.doc-item:hover {
+    background: #1f2937;
+    transform: translateX(2px);
+}
 
-.doc-id { font-family: monospace; font-size: 11px; color: #00d4ff; background: #0a0e27; padding: 4px 8px; border-radius: 8px; }
-.doc-id-full { font-family: monospace; font-size: 10px; color: #00d4ff; word-break: break-all; }
-.doc-info { display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
-.doc-name { color: #e0e0e0; font-weight: 500; }
-.doc-kitchen { background: #1e293b; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; }
+.doc-item-info {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 15px;
+    flex: 2;
+}
 
-.status-badge { 
-    padding: 4px 12px; 
-    border-radius: 20px; 
-    font-size: 0.7rem; 
+.doc-id-badge {
+    background: #0a0e27;
+    padding: 5px 10px;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 0.7rem;
+    color: #00d4ff;
     font-weight: bold;
-    min-width: 80px;
+}
+
+.doc-request-id {
+    background: #1e293b;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: #f59e0b;
+}
+
+.doc-chef {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.8rem;
+    color: #e0e0e0;
+}
+
+.doc-kitchen {
+    background: #1e293b;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    color: #94a3b8;
+}
+
+.status-badge {
+    padding: 5px 14px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    min-width: 85px;
     text-align: center;
 }
 .status-pending { background: #f59e0b; color: #1a1a2e; }
@@ -269,13 +336,12 @@ textarea {
 .status-rejected { background: #dc2626; color: white; }
 .status-accepted { background: #8b5cf6; color: white; }
 
-/* Action buttons group */
 .doc-actions {
     display: flex;
     gap: 8px;
 }
 
-.btn-small {
+.btn-icon {
     padding: 5px 12px;
     font-size: 0.7rem;
 }
@@ -518,7 +584,6 @@ hr {
                 <h2>📄 Edit Firestore Documents (kitchen_requests)</h2>
                 <div>
                     <button class="btn btn-primary" onclick="fetchOrderDocument()">🔍 Fetch by ID</button>
-                    <button class="btn btn-secondary" onclick="listAllOrders()">📋 List Orders</button>
                 </div>
             </div>
             <div class="form-group">
@@ -550,7 +615,17 @@ hr {
                         <div class="note" style="margin-top: 10px;">💡 Only the order's kitchen is enabled. Click the enabled kitchen button to load items, then click on any item to add it to the order.</div>
                     </div>
                 </div>
-                <div id="ordersList" class="doc-list"></div>
+                
+                <!-- Orders List with Header and Refresh Button -->
+                <div class="doc-list">
+                    <div class="doc-list-header">
+                        <span class="doc-list-title">📋 RECENT ORDERS (click to edit)</span>
+                        <div class="doc-list-header-actions">
+                            <button class="btn btn-refresh btn-icon" onclick="refreshOrdersList()">⟳ Refresh</button>
+                        </div>
+                    </div>
+                    <div id="ordersList" class="doc-items-container"></div>
+                </div>
             </div>
         </div>
 
@@ -689,21 +764,18 @@ function updateEditButtonsBasedOnStatus() {
     const saveBtn = document.getElementById("saveOrderBtn");
     const deleteBtn = document.getElementById("deleteOrderBtn");
     const restoreBtn = document.getElementById("restoreOrderBtn");
-    const menuButtons = document.querySelectorAll(".kitchen-menu-btn");
-    const addItemButtons = document.querySelectorAll(".btn-add-item");
     
     if (!isPending) {
         if (saveBtn) saveBtn.classList.add("btn-disabled");
         if (deleteBtn) deleteBtn.classList.add("btn-disabled");
         if (restoreBtn) restoreBtn.style.display = "inline-block";
-        // Disable menu buttons
-        menuButtons.forEach(btn => {
+        // Disable kitchen menu buttons visually
+        document.querySelectorAll(".kitchen-menu-btn").forEach(btn => {
             if (!btn.classList.contains("disabled")) {
                 btn.style.pointerEvents = "none";
                 btn.style.opacity = "0.5";
             }
         });
-        // Show warning
         const warningBox = document.getElementById("orderStatusWarning");
         if (warningBox) {
             warningBox.style.display = "block";
@@ -713,7 +785,6 @@ function updateEditButtonsBasedOnStatus() {
         if (saveBtn) saveBtn.classList.remove("btn-disabled");
         if (deleteBtn) deleteBtn.classList.remove("btn-disabled");
         if (restoreBtn) restoreBtn.style.display = "none";
-        // Enable menu buttons (only the enabled one)
         document.querySelectorAll(".kitchen-menu-btn").forEach(btn => {
             if (!btn.classList.contains("disabled")) {
                 btn.style.pointerEvents = "auto";
@@ -725,12 +796,22 @@ function updateEditButtonsBasedOnStatus() {
     }
 }
 
+async function refreshOrdersList() {
+    showToast("⟳ Refreshing orders list...");
+    await listAllOrders();
+}
+
 async function listAllOrders() {
     try {
         const snapshot = await db.collection("kitchen_requests").orderBy("timestamp", "desc").limit(50).get();
         const container = document.getElementById("ordersList");
-        container.innerHTML = "<strong>📋 Recent Orders (click to edit):</strong><br><br>";
-        if (snapshot.empty) { container.innerHTML += "<div>No orders found</div>"; return; }
+        container.innerHTML = "";
+        
+        if (snapshot.empty) { 
+            container.innerHTML = '<div style="padding: 30px; text-align: center; color: #9ca3af;">📭 No orders found</div>'; 
+            return; 
+        }
+        
         snapshot.forEach(doc => {
             const data = doc.data();
             const status = getRequestStatus(data.items);
@@ -740,24 +821,29 @@ async function listAllOrders() {
             else if (status === "rejected") { statusClass = "status-rejected"; statusText = "Rejected"; }
             else if (status === "accepted") { statusClass = "status-accepted"; statusText = "Accepted"; }
             
-            // Uniform spacing for all orders
-            container.innerHTML += `<div class="doc-item" onclick="loadOrderById('${doc.id}')">
-                <div class="doc-info">
-                    <span class="doc-id">🆔 ${doc.id.substring(0, 20)}...</span>
-                    <span class="doc-name">📌 ${data.requestId || 'N/A'}</span>
-                    <span class="doc-name">👨‍🍳 ${data.chefName || '?'}</span>
-                    <span class="doc-kitchen">${data.section || '?'}</span>
-                </div>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <span class="status-badge ${statusClass}">${statusText}</span>
-                    <div class="doc-actions">
-                        <button class="btn btn-secondary btn-small" onclick="event.stopPropagation();deleteOrderById('${doc.id}')">🗑️</button>
-                        <button class="btn btn-restore btn-small" onclick="event.stopPropagation();restoreOrderToPending('${doc.id}')">🔄 Restore</button>
+            // Clean and clear order display
+            container.innerHTML += `
+                <div class="doc-item" onclick="loadOrderById('${doc.id}')">
+                    <div class="doc-item-info">
+                        <span class="doc-id-badge">🆔 ${doc.id.substring(0, 12)}...</span>
+                        <span class="doc-request-id">📌 ${data.requestId || 'N/A'}</span>
+                        <span class="doc-chef">👨‍🍳 ${data.chefName || '?'}</span>
+                        <span class="doc-kitchen">🍽️ ${data.section || '?'}</span>
+                    </div>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <span class="status-badge ${statusClass}">${statusText}</span>
+                        <div class="doc-actions">
+                            <button class="btn btn-secondary btn-icon" onclick="event.stopPropagation();deleteOrderById('${doc.id}')" title="Delete Order">🗑️</button>
+                            <button class="btn btn-restore btn-icon" onclick="event.stopPropagation();restoreOrderToPending('${doc.id}')" title="Restore to Pending">🔄</button>
+                        </div>
                     </div>
                 </div>
-            </div>`;
+            `;
         });
-    } catch(e) { showToast("Error: " + e.message, true); }
+    } catch(e) { 
+        showToast("Error loading orders: " + e.message, true); 
+        document.getElementById("ordersList").innerHTML = '<div style="padding: 30px; text-align: center; color: #dc2626;">❌ Error loading orders</div>';
+    }
 }
 
 async function loadOrderById(docId) {
@@ -781,13 +867,9 @@ async function fetchOrderDocument() {
         orderKitchen = currentOrderData.section || "Hot Kitchen";
         showToast(`✅ Loaded: ${docId} | Status: ${currentOrderStatus.toUpperCase()} | Kitchen: ${orderKitchen}`);
         
-        // Update UI based on order status
         updateEditButtonsBasedOnStatus();
-        
-        // Render kitchen buttons with only the order's kitchen enabled
         renderKitchenMenuButtons();
         
-        // Clear items list until user clicks the enabled button
         document.getElementById("menuItemsList").innerHTML = '<div style="padding: 20px; text-align: center; color: #9ca3af;">Click the enabled kitchen button above to load menu items</div>';
         
     } catch(e) { showToast("Error: " + e.message, true); }
@@ -805,7 +887,7 @@ async function saveOrderDocument() {
         await db.collection("kitchen_requests").doc(currentOrderDocId).update(updateData);
         currentOrderData = updateData;
         showToast(`✅ Saved ${currentOrderDocId}`);
-        listAllOrders();
+        refreshOrdersList();
     } catch(e) { showToast("Save failed: " + e.message, true); }
 }
 
@@ -823,16 +905,16 @@ async function deleteOrderDocument() {
         orderKitchen = "";
         document.getElementById("orderViewer").style.display = "none";
         document.getElementById("orderDocId").value = "";
-        listAllOrders();
+        refreshOrdersList();
         renderKitchenMenuButtons();
     }
 }
 
 async function deleteOrderById(docId) {
-    if (confirm(`Delete ${docId}?`)) {
+    if (confirm(`Delete order ${docId}?`)) {
         await db.collection("kitchen_requests").doc(docId).delete();
         showToast(`Deleted ${docId}`);
-        listAllOrders();
+        refreshOrdersList();
         if (currentOrderDocId === docId) {
             currentOrderDocId = null;
             currentOrderData = null;
@@ -1024,7 +1106,7 @@ async function restoreOrderToPending(docId) {
                 if (currentOrderDocId === docId) {
                     await fetchOrderDocument();
                 }
-                listAllOrders();
+                refreshOrdersList();
             } else {
                 showToast(`Order is already in PENDING status`);
                 if (currentOrderDocId === docId) {
@@ -1222,7 +1304,7 @@ function switchTab(tab) {
     if (tab === 'orders') {
         document.querySelectorAll('.tab-btn')[0].classList.add('active');
         document.getElementById('ordersPanel').classList.add('active-panel');
-        listAllOrders();
+        refreshOrdersList();
     } else {
         document.querySelectorAll('.tab-btn')[1].classList.add('active');
         document.getElementById('generatorPanel').classList.add('active-panel');
@@ -1261,6 +1343,9 @@ function handleEnter(e) {
 codeInput?.addEventListener('keypress', handleEnter);
 nameInput?.addEventListener('keypress', handleEnter);
 unitInput?.addEventListener('keypress', handleEnter);
+
+// Initial load
+refreshOrdersList();
 </script>
 </body>
 </html>
