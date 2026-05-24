@@ -126,19 +126,6 @@
     .back-link:hover {
         color: #00d4ff;
     }
-    
-    .demo-credentials {
-        margin-top: 25px;
-        padding-top: 20px;
-        border-top: 1px solid #2a3a5a;
-        font-size: 0.7rem;
-        color: #94a3b8;
-        text-align: center;
-    }
-    
-    .demo-credentials span {
-        color: #00d4ff;
-    }
 </style>
 </head>
 <body>
@@ -161,23 +148,22 @@
         <div id="loadingMessage" class="loading-message" style="display: none;">⏳ Logging in...</div>
         
         <a href="index.html" class="back-link">← Back to Home</a>
-        
-        <div class="demo-credentials">
-            <strong>Demo Accounts:</strong><br>
-            <span>marco@system-order-kitchen.firebaseapp.com</span> / M1r50123<br>
-            <span>developer@system-order-kitchen.firebaseapp.com</span> / Dev@2025Secure!
-        </div>
     </div>
     
     <script>
         // Check if already logged in
         auth.onAuthStateChanged(async (user) => {
             if (user) {
-                // Get user role from Firestore
                 try {
+                    // Get user role from Firestore
                     const userDoc = await db.collection("users").doc(user.uid).get();
-                    const role = userDoc.exists ? userDoc.data().role : "chef";
+                    let role = userDoc.exists ? userDoc.data().role : "chef";
                     
+                    sessionStorage.setItem("userId", user.uid);
+                    sessionStorage.setItem("userEmail", user.email);
+                    sessionStorage.setItem("userRole", role);
+                    
+                    // Redirect based on role
                     if (role === "admin") {
                         window.location.href = "admin.html";
                     } else if (role === "developer") {
@@ -186,7 +172,7 @@
                         window.location.href = "chef.html";
                     }
                 } catch(e) {
-                    console.error("Error checking role:", e);
+                    console.error("Error:", e);
                     window.location.href = "chef.html";
                 }
             }
@@ -208,14 +194,14 @@
                 const userCredential = await auth.signInWithEmailAndPassword(email, password);
                 const user = userCredential.user;
                 
-                // Check user role from Firestore
-                const userDoc = await db.collection("users").doc(user.uid).get();
+                // Get or create user role
+                let userDoc = await db.collection("users").doc(user.uid).get();
                 let role = "chef";
                 
                 if (userDoc.exists) {
                     role = userDoc.data().role;
                 } else {
-                    // Create user document if doesn't exist
+                    // Create user document with default role
                     await db.collection("users").doc(user.uid).set({
                         email: user.email,
                         role: "chef",
@@ -224,7 +210,6 @@
                     });
                 }
                 
-                // Store user info in session
                 sessionStorage.setItem("userId", user.uid);
                 sessionStorage.setItem("userEmail", user.email);
                 sessionStorage.setItem("userRole", role);
@@ -242,19 +227,19 @@
                 let errorMsg = "Login failed: ";
                 switch (error.code) {
                     case 'auth/user-not-found':
-                        errorMsg += "User not found. Please contact administrator.";
+                        errorMsg += "Invalid email or password";
                         break;
                     case 'auth/wrong-password':
-                        errorMsg += "Wrong password. Please try again.";
+                        errorMsg += "Invalid email or password";
                         break;
                     case 'auth/invalid-email':
-                        errorMsg += "Invalid email format.";
+                        errorMsg += "Invalid email format";
                         break;
                     case 'auth/too-many-requests':
-                        errorMsg += "Too many failed attempts. Try again later.";
+                        errorMsg += "Too many failed attempts. Try again later";
                         break;
                     default:
-                        errorMsg += error.message;
+                        errorMsg += "Please check your credentials";
                 }
                 showError(errorMsg);
                 showLoading(false);
