@@ -87,13 +87,13 @@ body {
 }
 
 .btn-dev {
-    background: #2c3e50;
-    border: 1px solid #00d4ff;
+    background: #0052cc;
+    border: 1px solid #4d9eff;
 }
 
 .btn-dev-active {
-    background: #00d4ff;
-    color: #1e3c72;
+    background: #0066ff;
+    color: white;
 }
 
 .stats-grid {
@@ -672,95 +672,148 @@ body {
     vertical-align: middle;
 }
 
-/* Developer Console Panel Styles */
+/* ============ IMPROVED DEVELOPER CONSOLE - VISIBLE BLUE THEME ============ */
 .dev-console-panel {
-    background: #0f172a;
-    border-radius: 16px;
-    border: 1px solid #2a3a5a;
+    background: linear-gradient(135deg, #0b2b5e, #0a1a3a);
+    border-radius: 20px;
+    border: 2px solid #4d9eff;
     margin-top: 24px;
     overflow: hidden;
     display: none;
+    box-shadow: 0 8px 32px rgba(0,100,255,0.3);
 }
 
 .dev-console-header {
-    background: #1a1a2e;
-    padding: 14px 20px;
-    border-bottom: 2px solid #00d4ff;
+    background: linear-gradient(135deg, #003d99, #002266);
+    padding: 16px 24px;
+    border-bottom: 2px solid #4d9eff;
     font-weight: bold;
-    color: #00d4ff;
+    color: #ffffff;
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
+    font-size: 1rem;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.dev-console-header span {
+    background: #0066ff;
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-size: 0.85rem;
 }
 
 .dev-query-section {
     display: flex;
     gap: 12px;
-    padding: 20px;
+    padding: 24px;
     flex-wrap: wrap;
-    background: #0f0f1a;
+    background: #0a1a3a;
 }
 
 .dev-query-input {
     flex: 2;
     min-width: 200px;
-    padding: 10px 16px;
-    background: #1a1a2e;
-    border: 1px solid #2a3a5a;
-    border-radius: 12px;
-    color: #00ffcc;
+    padding: 12px 18px;
+    background: #ffffff;
+    border: 2px solid #4d9eff;
+    border-radius: 40px;
+    color: #003366;
     font-family: monospace;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.dev-query-input:focus {
+    outline: none;
+    border-color: #00ccff;
+    box-shadow: 0 0 8px #4d9eff;
 }
 
 .dev-json-editor {
-    background: #0d1117;
-    padding: 16px;
-    border-radius: 12px;
+    background: #0f2a4a;
+    padding: 20px;
+    border-radius: 16px;
     margin: 20px;
-    border: 1px solid #2a3a5a;
+    border: 1px solid #4d9eff;
 }
 
 .dev-json-editor textarea {
     width: 100%;
     background: #0a0e27;
-    border: 1px solid #2a3a5a;
+    border: 1px solid #4d9eff;
     color: #00ffcc;
     font-family: monospace;
-    font-size: 12px;
-    padding: 16px;
-    border-radius: 12px;
+    font-size: 13px;
+    padding: 18px;
+    border-radius: 14px;
     resize: vertical;
+    font-weight: 500;
 }
 
 .dev-doc-list {
-    max-height: 300px;
+    max-height: 350px;
     overflow-y: auto;
     margin: 20px;
 }
 
 .dev-doc-item {
-    background: #111827;
-    padding: 10px 12px;
-    margin-bottom: 8px;
-    border-radius: 12px;
-    border-left: 3px solid #00d4ff;
+    background: #0f2a4a;
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    border-radius: 14px;
+    border-left: 5px solid #4d9eff;
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 12px;
+    color: #e0e8ff;
+    transition: all 0.2s;
+}
+
+.dev-doc-item:hover {
+    background: #1a3a6a;
+    transform: translateX(4px);
+}
+
+.dev-doc-item span {
+    font-weight: 500;
 }
 
 .btn-dev-action {
-    background: #00d4ff;
-    color: #0a0e27;
-    padding: 6px 12px;
-    border-radius: 20px;
+    background: #0066ff;
+    color: white;
+    padding: 6px 16px;
+    border-radius: 30px;
     border: none;
     cursor: pointer;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 600;
+    transition: all 0.2s;
+}
+
+.btn-dev-action:hover {
+    background: #00ccff;
+    transform: scale(1.02);
+}
+
+.btn-dev-danger {
+    background: #dc2626;
+    color: white;
+}
+
+.btn-dev-danger:hover {
+    background: #ff4444;
+}
+
+.dev-section-title {
+    color: #4d9eff;
+    font-weight: bold;
+    margin-bottom: 12px;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
 }
 
 @media (max-width: 768px) {
@@ -790,7 +843,7 @@ body {
             <button class="user-btn" onclick="selectUser('Ahmed')">👨‍💻 Ahmed<br><span class="user-title">Administrator</span></button>
             <button class="user-btn" onclick="selectUser('Nader')">👨‍💼 Nader<br><span class="user-title">Administrator</span></button>
             <hr style="margin: 10px 0;">
-            <button class="user-btn" onclick="showDevLogin()" style="background:#2c3e50; color:white;">🛠️ Developer Mode (Advanced)</button>
+            <button class="user-btn" onclick="showDevLogin()" style="background:#0052cc; color:white;">🛠️ Developer Mode (Advanced)</button>
         </div>
         <input type="password" id="passwordInput" placeholder="Enter password" style="display:none;">
         <button id="loginBtn" style="display:none;" onclick="checkLogin()">Login</button>
@@ -836,38 +889,38 @@ body {
         <div class="tabs" id="statusTabs"></div>
         <div id="requestsContainer"></div>
         
-        <!-- Developer Console Panel (Integrated) -->
+        <!-- Developer Console Panel - IMPROVED VISIBLE BLUE THEME -->
         <div id="devConsolePanel" class="dev-console-panel">
             <div class="dev-console-header">
-                <span>🛠️ DEVELOPER CONSOLE - Direct Firebase Access</span>
-                <button class="btn-header" onclick="toggleDevConsole()" style="background:#dc2626;">✖ Close</button>
+                <span>🔧 DEVELOPER CONSOLE - Full Firebase Control</span>
+                <button class="btn-header" onclick="toggleDevConsole()" style="background:#dc2626; color:white;">✖ Close</button>
             </div>
             <div class="dev-query-section">
-                <input type="text" id="devDocIdInput" class="dev-query-input" placeholder="Enter Firestore Document ID to edit...">
-                <button class="btn-header" onclick="fetchDevDocument()" style="background:#00d4ff; color:#000;">📄 Fetch Document</button>
-                <button class="btn-header" onclick="listDevDocuments()" style="background:#334155;">📋 List Recent Documents</button>
+                <input type="text" id="devDocIdInput" class="dev-query-input" placeholder="Enter Firestore Document ID (e.g., ABC123...)">
+                <button class="btn-header" onclick="fetchDevDocument()" style="background:#0066ff; color:white; font-weight:bold;">📄 Fetch Document</button>
+                <button class="btn-header" onclick="listDevDocuments()" style="background:#0052cc; color:white;">📋 List Recent Docs</button>
             </div>
             <div id="devDocViewer" style="display:none;">
                 <div class="dev-json-editor">
-                    <textarea id="devJsonEditor" rows="10" placeholder="Document JSON will appear here... Edit directly and click Save"></textarea>
+                    <textarea id="devJsonEditor" rows="10" placeholder="Document JSON appears here... Edit directly and click SAVE"></textarea>
                     <div style="display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap;">
-                        <button class="btn-header" onclick="updateDevDocument()" style="background:#10b981;">💾 SAVE to Firestore</button>
-                        <button class="btn-header" onclick="deleteDevDocument()" style="background:#dc2626;">🗑️ DELETE Document</button>
-                        <button class="btn-header" onclick="refreshDevDocument()" style="background:#f59e0b;">⟳ Refresh</button>
+                        <button class="btn-header" onclick="updateDevDocument()" style="background:#10b981; color:white;">💾 SAVE to Firestore</button>
+                        <button class="btn-header" onclick="deleteDevDocument()" style="background:#dc2626; color:white;">🗑️ DELETE Document</button>
+                        <button class="btn-header" onclick="refreshDevDocument()" style="background:#f59e0b; color:white;">⟳ Refresh</button>
                     </div>
                 </div>
             </div>
             <div id="devDocListContainer" class="dev-doc-list"></div>
-            <div style="padding: 0 20px 20px 20px;">
-                <hr style="border-color:#2a3a5a; margin-bottom:16px;">
-                <div><strong>⚡ Quick Batch Actions:</strong></div>
-                <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px;">
-                    <button class="btn-header" onclick="batchResetPendingItems()" style="background:#f59e0b;">⟳ Reset All Pending Items</button>
-                    <button class="btn-header" onclick="batchDeleteCompleted()" style="background:#dc2626;">🗑️ Delete Completed Requests</button>
-                    <button class="btn-header" onclick="refreshStatsDev()" style="background:#00d4ff; color:#000;">📊 Refresh Stats</button>
+            <div style="padding: 0 20px 24px 20px;">
+                <hr style="border-color:#4d9eff; margin-bottom:16px;">
+                <div class="dev-section-title">⚡ QUICK BATCH ACTIONS</div>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button class="btn-dev-action" onclick="batchResetPendingItems()">⟳ Reset All Pending Items</button>
+                    <button class="btn-dev-action" onclick="batchDeleteCompleted()">🗑️ Delete Completed Requests</button>
+                    <button class="btn-dev-action" onclick="refreshStatsDev()">📊 Refresh Firestore Stats</button>
                 </div>
-                <div style="margin-top: 12px; font-size: 11px; color: #9ca3af;">
-                    ⚠️ Developer actions are irreversible. Use with caution.
+                <div style="margin-top: 16px; font-size: 12px; color: #aaccff; background:#0a1a3a; padding:10px; border-radius:12px;">
+                    ⚠️ Developer actions are irreversible. Always double-check before deleting.
                 </div>
             </div>
         </div>
@@ -928,6 +981,7 @@ function checkLogin() {
         document.getElementById("passwordModal").style.display = "none";
         document.getElementById("mainContent").style.display = "block";
         localStorage.setItem("admin", currentAdmin);
+        localStorage.removeItem("devMode");
         loadRequests();
     } else {
         document.getElementById("loginError").innerHTML = "❌ Wrong password!";
@@ -1110,10 +1164,10 @@ function showResetConfirmModal() {
         <div class="confirm-modal-content">
             <h3>⚠️ PERMANENT DELETION ⚠️</h3>
             <p>Delete <strong>${toDelete.length}</strong> completed request(s)?</p>
-            <p class="warning-text" style="color:#e74c3c; margin:15px 0;">This action cannot be undone!</p>
-            <div class="confirm-buttons" style="display:flex; gap:12px;">
+            <p style="color:#e74c3c; margin:15px 0;">This action cannot be undone!</p>
+            <div style="display:flex; gap:12px;">
                 <button class="btn-cancel-delete" style="background:#95a5a6; padding:12px; border-radius:40px; flex:1;" onclick="this.closest('.confirm-modal').remove()">Cancel</button>
-                <button class="btn-confirm-delete" id="confirmDeleteBtn" style="background:#e74c3c; padding:12px; border-radius:40px; flex:1;">Delete</button>
+                <button id="confirmDeleteBtn" style="background:#e74c3c; padding:12px; border-radius:40px; flex:1;">Delete</button>
             </div>
         </div>
     `;
@@ -1277,7 +1331,7 @@ function renderUI() {
     updateStats();
 }
 
-// ==================== DEVELOPER CONSOLE FUNCTIONS ====================
+// DEVELOPER CONSOLE FUNCTIONS
 async function fetchDevDocument() {
     const docId = document.getElementById("devDocIdInput").value.trim();
     if(!docId) { showToast("Enter a Document ID"); return; }
@@ -1289,7 +1343,7 @@ async function fetchDevDocument() {
         const data = { id: docSnap.id, ...docSnap.data() };
         document.getElementById("devJsonEditor").value = JSON.stringify(data, null, 2);
         document.getElementById("devDocViewer").style.display = "block";
-        showToast(`Loaded: ${docId}`);
+        showToast(`✅ Loaded: ${docId}`);
     } catch(e) { showToast("Error: " + e.message); }
 }
 
@@ -1309,7 +1363,7 @@ async function deleteDevDocument() {
     if(!currentDevDocId) return;
     if(confirm(`⚠️ PERMANENTLY DELETE ${currentDevDocId}? This cannot be undone.`)) {
         await db.collection("kitchen_requests").doc(currentDevDocId).delete();
-        showToast(`Deleted ${currentDevDocId}`);
+        showToast(`🗑️ Deleted ${currentDevDocId}`);
         currentDevDocId = null;
         document.getElementById("devDocViewer").style.display = "none";
         document.getElementById("devDocIdInput").value = "";
@@ -1326,16 +1380,16 @@ async function listDevDocuments() {
     try {
         const snapshot = await db.collection("kitchen_requests").orderBy("timestamp", "desc").limit(30).get();
         const container = document.getElementById("devDocListContainer");
-        container.innerHTML = "<strong>📄 Recent Documents (click to edit):</strong>";
-        if(snapshot.empty) { container.innerHTML += "<div style='padding:12px;'>No documents found</div>"; return; }
+        container.innerHTML = "<div class='dev-section-title'>📄 RECENT DOCUMENTS (click to edit)</div>";
+        if(snapshot.empty) { container.innerHTML += "<div style='padding:12px; color:#aaccff;'>No documents found</div>"; return; }
         snapshot.forEach(doc => {
             const data = doc.data();
             container.innerHTML += `<div class="dev-doc-item">
-                <span style="font-family:monospace; font-size:11px;">${doc.id.substring(0, 24)}...</span>
+                <span style="font-family:monospace; font-size:12px;">🆔 ${doc.id.substring(0, 24)}...</span>
                 <span>📌 ${data.requestId || 'N/A'} | ${data.chefName || '?'} | ${data.section || '?'}</span>
                 <div>
                     <button class="btn-dev-action" onclick="quickLoadDevDoc('${doc.id}')">✏️ Edit</button>
-                    <button class="btn-dev-action" onclick="quickDeleteDevDoc('${doc.id}')" style="background:#dc2626; color:white;">🗑️</button>
+                    <button class="btn-dev-action btn-dev-danger" onclick="quickDeleteDevDoc('${doc.id}')">🗑️</button>
                 </div>
             </div>`;
         });
@@ -1386,7 +1440,7 @@ async function batchResetPendingItems() {
             }
         }
     }
-    showToast(`Reset ${count} documents`);
+    showToast(`⟳ Reset ${count} documents`);
     await loadRequests();
 }
 
@@ -1401,14 +1455,14 @@ async function batchDeleteCompleted() {
             del++;
         }
     }
-    showToast(`Deleted ${del} completed requests`);
+    showToast(`🗑️ Deleted ${del} completed requests`);
     await loadRequests();
     listDevDocuments();
 }
 
 async function refreshStatsDev() {
     const snap = await db.collection("kitchen_requests").get();
-    showToast(`Total documents in Firestore: ${snap.size}`);
+    showToast(`📊 Total documents in Firestore: ${snap.size}`);
     await loadRequests();
 }
 
