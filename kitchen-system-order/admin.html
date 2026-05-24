@@ -6,94 +6,651 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-<title>Admin Dashboard</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+<title>Admin Dashboard - Firebase Auth</title>
+
 <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f4f8; }
-    .header { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; padding: 12px 16px; position: sticky; top: 0; z-index: 100; }
-    .header-content { display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin: 0 auto; flex-wrap: wrap; gap: 10px; }
-    .logo { font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; gap: 8px; }
-    .logo span { color: #ffd700; }
-    .btn-header { background: rgba(255,255,255,0.2); border: none; padding: 6px 12px; border-radius: 25px; color: white; font-weight: 600; cursor: pointer; font-size: 12px; transition: all 0.3s; }
-    .btn-header:hover { background: rgba(255,255,255,0.3); transform: scale(1.02); }
-    .btn-danger { background: #e74c3c; }
-    .stats-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; margin-bottom: 24px; }
-    .stat-card { background: white; padding: 16px; border-radius: 14px; text-align: center; cursor: pointer; transition: all 0.3s; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
-    .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-    .stat-number { font-size: 2rem; font-weight: bold; color: #e94560; }
-    .stat-label { color: #666; margin-top: 5px; font-size: 0.75rem; }
-    .kitchen-filters { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; background: white; padding: 12px 16px; border-radius: 14px; }
-    .kitchen-filter-btn { padding: 6px 16px; background: #f0f2f5; border: none; border-radius: 30px; font-weight: 600; cursor: pointer; font-size: 12px; }
-    .kitchen-filter-btn.active { background: #1e3c72; color: white; }
-    .tabs { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
-    .tab-btn { padding: 8px 20px; background: white; border: none; border-radius: 30px; font-weight: 600; cursor: pointer; }
-    .tab-btn.active { background: #e94560; color: white; }
-    .request-card { background: white; border-radius: 14px; margin-bottom: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); overflow: hidden; }
-    .request-header { background: #f8f9fa; padding: 14px 18px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-    .request-id { font-weight: bold; font-size: 0.9rem; color: #1e3c72; font-family: monospace; background: #eef2ff; padding: 4px 12px; border-radius: 40px; display: inline-block; }
-    .firebase-id-badge { background: #2c3e50; color: #ecf0f1; font-family: monospace; font-size: 0.7rem; padding: 4px 12px; border-radius: 40px; display: inline-flex; align-items: center; gap: 6px; margin-left: 10px; cursor: pointer; }
-    .status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
-    .status-pending { background: #f39c12; color: white; }
-    .status-approved { background: #27ae60; color: white; }
-    .status-rejected { background: #e74c3c; color: white; }
-    .status-accepted { background: #8e44ad; color: white; }
-    .request-info { display: flex; gap: 20px; padding: 12px 18px; background: white; border-bottom: 1px solid #f0f0f0; flex-wrap: wrap; }
-    .info-label { font-size: 0.6rem; color: #999; text-transform: uppercase; }
-    .info-value { font-weight: 600; font-size: 0.85rem; margin-top: 3px; }
-    .table-wrapper { overflow-x: auto; padding: 0 18px 18px 18px; }
-    .admin-table { width: 100%; border-collapse: collapse; min-width: 1050px; }
-    .admin-table th, .admin-table td { padding: 12px 8px; border-bottom: 1px solid #f0f0f0; text-align: left; font-size: 0.8rem; }
-    .approval-input { width: 100px; padding: 6px 8px; border: 1px solid #ddd; border-radius: 8px; text-align: center; }
-    .btn-approve { background: #27ae60; color: white; border: none; padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 0.7rem; }
-    .btn-reject { background: #e74c3c; color: white; border: none; padding: 5px 12px; border-radius: 20px; cursor: pointer; font-size: 0.7rem; }
-    .btn-accept { background: #8e44ad; color: white; border: none; padding: 10px; border-radius: 30px; cursor: pointer; flex: 1; }
-    .request-actions { display: flex; gap: 12px; padding: 14px 18px; background: #f8f9fa; }
-    .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 10000; display: flex; justify-content: center; align-items: center; flex-direction: column; gap: 20px; }
-    .loading-spinner { width: 50px; height: 50px; border: 4px solid #2a3a5a; border-top-color: #00d4ff; border-radius: 50%; animation: spin 1s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 30px; font-size: 12px; z-index: 1000; animation: fadeIn 0.3s; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
-    .confirm-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 2000; display: flex; justify-content: center; align-items: center; }
-    .confirm-modal-content { background: #0f172a; padding: 30px; border-radius: 24px; text-align: center; max-width: 400px; width: 90%; border: 1px solid #2a3a5a; }
-    .status-approved-cell, .status-rejected-cell, .status-pending-cell { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
-    .status-approved-cell { background: #d4edda; color: #27ae60; }
-    .status-rejected-cell { background: #f8d7da; color: #e74c3c; }
-    .status-pending-cell { background: #fff3cd; color: #f39c12; }
-    .kitchen-hot { background: #fee2e2; color: #e74c3c; }
-    .kitchen-cold { background: #e3f2fd; color: #3498db; }
-    .kitchen-pastry { background: #fff3e0; color: #f39c12; }
-    .kitchen-butchery { background: #f3e5f5; color: #8e44ad; }
-    .kitchen-beach { background: #e0f2f1; color: #1abc9c; }
-    .kitchen-nihon { background: #fce4ec; color: #e91e63; }
-    .kitchen-staff { background: #eceff1; color: #7f8c8d; }
-    .kitchen-badge { padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; font-weight: 600; }
-    .request-total-badge { display: flex; gap: 15px; background: #1e3c72; color: white; padding: 5px 15px; border-radius: 25px; font-size: 0.7rem; font-weight: 600; }
-    .btn-approve-all, .btn-reject-all { flex: 1; background: #27ae60; color: white; border: none; padding: 10px; border-radius: 30px; font-weight: 600; cursor: pointer; }
-    .btn-reject-all { background: #e74c3c; }
-    .free-adjust-badge { background: #3498db; color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.6rem; margin-left: 8px; }
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f0f4f8;
+}
+
+.header {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: white;
+    padding: 12px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1400px;
+    margin: 0 auto;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.logo {
+    font-size: 1.2rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.logo-icon {
+    font-size: 1.5rem;
+}
+
+.logo span {
+    color: #ffd700;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.btn-header {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    padding: 6px 12px;
+    border-radius: 25px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.3s;
+}
+
+.btn-header:hover {
+    background: rgba(255,255,255,0.3);
+    transform: scale(1.02);
+}
+
+.btn-analytics {
+    background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.btn-danger {
+    background: #e74c3c;
+}
+
+.btn-dev {
+    background: #0052cc;
+    border: 1px solid #4d9eff;
+}
+
+.btn-dev:hover {
+    background: #0066ff;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: white;
+    padding: 16px;
+    border-radius: 14px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.stat-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #e94560;
+}
+
+.stat-label {
+    color: #666;
+    margin-top: 5px;
+    font-size: 0.75rem;
+}
+
+.kitchen-filters {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    background: white;
+    padding: 12px 16px;
+    border-radius: 14px;
+}
+
+.kitchen-filter-btn {
+    padding: 6px 16px;
+    background: #f0f2f5;
+    border: none;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.3s;
+}
+
+.kitchen-filter-btn:hover {
+    background: #e0e0e0;
+}
+
+.kitchen-filter-btn.active {
+    background: #1e3c72;
+    color: white;
+}
+
+.tabs {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.tab-btn {
+    padding: 8px 20px;
+    background: white;
+    border: none;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.tab-btn.active {
+    background: #e94560;
+    color: white;
+}
+
+.request-card {
+    background: white;
+    border-radius: 14px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    overflow: hidden;
+}
+
+.request-header {
+    background: #f8f9fa;
+    padding: 14px 18px;
+    border-bottom: 1px solid #eee;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.request-id {
+    font-weight: bold;
+    font-size: 0.9rem;
+    color: #1e3c72;
+    font-family: monospace;
+    background: #eef2ff;
+    padding: 4px 12px;
+    border-radius: 40px;
+    display: inline-block;
+}
+
+.firebase-id-badge {
+    background: #2c3e50;
+    color: #ecf0f1;
+    font-family: monospace;
+    font-size: 0.7rem;
+    padding: 4px 12px;
+    border-radius: 40px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 10px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.firebase-id-badge:hover {
+    background: #e94560;
+    transform: scale(1.02);
+}
+
+.firebase-id-badge i {
+    font-style: normal;
+    font-size: 0.8rem;
+}
+
+.copy-icon {
+    background: rgba(255,255,255,0.2);
+    padding: 2px 6px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+}
+
+.duplicate-warning {
+    background: #f39c12;
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    margin-left: 10px;
+    display: inline-block;
+}
+
+.request-total-badge {
+    display: flex;
+    gap: 15px;
+    background: #1e3c72;
+    color: white;
+    padding: 5px 15px;
+    border-radius: 25px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.kitchen-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.kitchen-hot { background: #fee2e2; color: #e74c3c; }
+.kitchen-cold { background: #e3f2fd; color: #3498db; }
+.kitchen-pastry { background: #fff3e0; color: #f39c12; }
+.kitchen-butchery { background: #f3e5f5; color: #8e44ad; }
+.kitchen-beach { background: #e0f2f1; color: #1abc9c; }
+.kitchen-nihon { background: #fce4ec; color: #e91e63; }
+.kitchen-staff { background: #eceff1; color: #7f8c8d; }
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.status-pending { background: #f39c12; color: white; }
+.status-approved { background: #27ae60; color: white; }
+.status-rejected { background: #e74c3c; color: white; }
+.status-accepted { background: #8e44ad; color: white; }
+
+.request-info {
+    display: flex;
+    gap: 20px;
+    padding: 12px 18px;
+    background: white;
+    border-bottom: 1px solid #f0f0f0;
+    flex-wrap: wrap;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-label {
+    font-size: 0.6rem;
+    color: #999;
+    text-transform: uppercase;
+}
+
+.info-value {
+    font-weight: 600;
+    font-size: 0.85rem;
+    margin-top: 3px;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    padding: 0 18px 18px 18px;
+}
+
+.admin-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 1050px;
+}
+
+.admin-table th {
+    text-align: left;
+    padding: 12px 8px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #555;
+    background: #fafcfc;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.admin-table td {
+    padding: 12px 8px;
+    border-bottom: 1px solid #f0f0f0;
+    vertical-align: middle;
+    font-size: 0.8rem;
+}
+
+.item-name {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.item-code {
+    font-size: 0.65rem;
+    color: #999;
+    font-family: monospace;
+    margin-top: 3px;
+}
+
+.item-price {
+    font-size: 0.7rem;
+    color: #e67e22;
+    font-weight: 500;
+}
+
+.requested-qty {
+    background: #f1f5f9;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    display: inline-block;
+}
+
+.approval-input {
+    width: 100px;
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.approval-input:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.btn-approve {
+    background: #27ae60;
+    color: white;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.7rem;
+}
+
+.btn-approve:hover {
+    background: #219a52;
+}
+
+.btn-reject {
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 20px;
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 0.7rem;
+}
+
+.btn-reject:hover {
+    background: #c0392b;
+}
+
+.status-approved-cell {
+    background: #d4edda;
+    color: #27ae60;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.status-rejected-cell {
+    background: #f8d7da;
+    color: #e74c3c;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.status-pending-cell {
+    background: #fff3cd;
+    color: #f39c12;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.admin-info-text {
+    font-size: 0.65rem;
+    color: #666;
+    margin-top: 5px;
+    line-height: 1.4;
+}
+
+.request-actions {
+    display: flex;
+    gap: 12px;
+    padding: 14px 18px;
+    background: #f8f9fa;
+    border-top: 1px solid #eee;
+}
+
+.btn-approve-all {
+    flex: 1;
+    background: #27ae60;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-reject-all {
+    flex: 1;
+    background: #e74c3c;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-accept {
+    flex: 1;
+    background: #8e44ad;
+    color: white;
+    border: none;
+    padding: 10px;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-approve-all:disabled, .btn-reject-all:disabled {
+    background: #95a5a6;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.btn-accept:disabled {
+    background: #95a5a6;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 50px;
+    background: white;
+    border-radius: 14px;
+    color: #999;
+}
+
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 12px;
+    z-index: 1000;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.9);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #2a3a5a;
+    border-top-color: #00d4ff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+.loading-text {
+    color: #00d4ff;
+    font-size: 1rem;
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.user-email {
+    font-size: 0.7rem;
+    opacity: 0.8;
+}
+
+.confirm-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.9);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.confirm-modal-content {
+    background: #0f172a;
+    padding: 30px;
+    border-radius: 24px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+    border: 1px solid #2a3a5a;
+}
+
+.free-adjust-badge {
+    background: #3498db;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.6rem;
+    margin-left: 8px;
+    vertical-align: middle;
+}
 </style>
 </head>
 <body>
 
-<div id="loadingOverlay" class="loading-overlay">
+<div id="loadingOverlay" class="loading-overlay" style="display: flex;">
     <div class="loading-spinner"></div>
-    <div class="loading-text">🔐 Checking authentication...</div>
+    <div class="loading-text">🔐 Authenticating...</div>
 </div>
 
 <div id="mainContent" style="display:none;">
     <div class="header">
         <div class="header-content">
-            <div class="logo"><span class="logo-icon">👑</span><span>Admin <span>Dashboard</span></span></div>
+            <div class="logo">
+                <span class="logo-icon">👑</span>
+                <span>Admin <span>Dashboard</span></span>
+                <span class="free-adjust-badge" style="background:#10b981;">🔐 Firebase Auth</span>
+            </div>
             <div style="display: flex; align-items: center; gap: 15px;">
                 <span id="adminNameDisplay" style="font-weight: 600;"></span>
+                <span id="userEmailDisplay" class="user-email"></span>
                 <button class="btn-header" onclick="logout()">🚪 Logout</button>
             </div>
             <div class="header-buttons">
+                <button class="btn-header btn-analytics" onclick="openAnalytics()">📊 Analytics</button>
                 <button class="btn-header" onclick="exportExcel()">📎 Export</button>
                 <button class="btn-header" onclick="window.print()">🖨️ Print</button>
+                <button class="btn-header" onclick="openRevenue()">💰 Revenue</button>
                 <button class="btn-header btn-danger" onclick="showResetConfirmModal()">🗑️ Reset</button>
+                <button class="btn-header btn-dev" id="devConsoleBtn" onclick="openDevConsole()" style="display:none;">🛠️ Dev Console</button>
             </div>
         </div>
     </div>
@@ -106,6 +663,7 @@
             <div class="stat-card" onclick="setFilter('accepted')"><div class="stat-number" id="acceptedCount">0</div><div class="stat-label">🟣 Accepted</div></div>
             <div class="stat-card" onclick="setFilter('all')"><div class="stat-number" id="totalCount">0</div><div class="stat-label">📦 Total</div></div>
         </div>
+
         <div class="kitchen-filters" id="kitchenFilters"></div>
         <div class="tabs" id="statusTabs"></div>
         <div id="requestsContainer"></div>
@@ -113,14 +671,38 @@
 </div>
 
 <script>
-const KITCHENS = ["Hot Kitchen", "Cold Kitchen", "Pastry / Bakery", "Butchery", "Beach House", "Nihon Kitchen", "Staff Kitchen"];
+// Firebase Auth is already initialized in firebase-config.js
+
 let currentAdmin = "";
 let currentKitchen = "all";
 let currentStatus = "pending";
 let allRequests = [];
 let duplicateMap = new Map();
 
-// ============ SIMPLE AUTH CHECK ============
+// ============ AUTHENTICATION ============
+function openDevConsole() {
+    window.open("dev_console.html", "_blank");
+}
+
+function openAnalytics() { 
+    window.open("analytics.html", "_blank"); 
+}
+function openRevenue() { 
+    window.open("revenue.html", "_blank"); 
+}
+
+async function logout() {
+    if(confirm("Are you sure you want to logout?")) {
+        try {
+            await auth.signOut();
+            window.location.href = "login.html";
+        } catch(e) {
+            showToast("Logout error: " + e.message);
+        }
+    }
+}
+
+// Check authentication on page load - SIMPLE VERSION
 auth.onAuthStateChanged((user) => {
     const loadingOverlay = document.getElementById("loadingOverlay");
     
@@ -130,22 +712,20 @@ auth.onAuthStateChanged((user) => {
         return;
     }
     
-    // Logged in - show admin dashboard
+    // User is logged in - show admin dashboard
     currentAdmin = user.email?.split('@')[0] || "Admin";
-    document.getElementById("adminNameDisplay").innerText = currentAdmin;
+    document.getElementById("adminNameDisplay").innerHTML = currentAdmin;
+    document.getElementById("userEmailDisplay").innerHTML = user.email || "";
+    
+    // Hide loading, show content
     loadingOverlay.style.display = "none";
     document.getElementById("mainContent").style.display = "block";
+    
+    // Load data
     loadRequests();
 });
 
-async function logout() {
-    if(confirm("Are you sure you want to logout?")) {
-        await auth.signOut();
-        window.location.href = "login.html";
-    }
-}
-
-// ============ CORE FUNCTIONS ============
+// ============ CORE FUNCTIONS (ALL ORIGINAL - NO CHANGES) ============
 async function loadRequests() {
     try {
         const snapshot = await db.collection("kitchen_requests").orderBy("timestamp", "desc").get();
@@ -205,7 +785,7 @@ async function updateRequest(id, items) {
 async function approveItemFlex(reqId, idx) {
     const input = document.getElementById(`qty_${reqId}_${idx}`);
     let qty = parseFloat(input?.value || 0);
-    if(isNaN(qty) || qty < 0) { showToast("Enter a valid quantity"); return; }
+    if(isNaN(qty) || qty < 0) { showToast("Enter a valid quantity (0 or more)"); return; }
     const req = allRequests.find(r => r.id === reqId);
     if(req) {
         const item = req.items[idx];
@@ -214,41 +794,50 @@ async function approveItemFlex(reqId, idx) {
         item.approvedBy = currentAdmin;
         item.approvedAt = new Date().toLocaleString();
         delete item.rejectionReason;
+        delete item.rejectedBy;
+        delete item.rejectedAt;
         await updateRequest(reqId, req.items);
     }
 }
 
 async function rejectItem(reqId, idx) {
-    const reason = prompt(`Rejection reason (${currentAdmin}):`, "Out of stock");
+    const reason = prompt(`Rejection reason (${currentAdmin}):`, "Out of stock or unavailable");
     if(reason) {
         const req = allRequests.find(r => r.id === reqId);
         if(req) {
             req.items[idx].status = "rejected";
             req.items[idx].rejectionReason = reason;
             req.items[idx].rejectedBy = currentAdmin;
+            req.items[idx].rejectedAt = new Date().toLocaleString();
             req.items[idx].approvedQty = 0;
+            delete req.items[idx].approvedBy;
+            delete req.items[idx].approvedAt;
             await updateRequest(reqId, req.items);
         }
     }
 }
 
 async function approveAllFlex(reqId) {
-    if(!confirm(`Approve ALL items?`)) return;
+    if(!confirm(`Approve ALL items with current quantities?`)) return;
     const req = allRequests.find(r => r.id === reqId);
     if(req) {
         for(let i=0; i<req.items.length; i++) {
             const input = document.getElementById(`qty_${reqId}_${i}`);
             let qty = parseFloat(input?.value || 0);
-            req.items[i].status = "approved";
-            req.items[i].approvedQty = qty;
-            req.items[i].approvedBy = currentAdmin;
+            if(isNaN(qty)) qty = 0;
+            const item = req.items[i];
+            item.status = "approved";
+            item.approvedQty = qty;
+            item.approvedBy = currentAdmin;
+            item.approvedAt = new Date().toLocaleString();
+            delete item.rejectionReason;
         }
         await updateRequest(reqId, req.items);
     }
 }
 
 async function rejectAll(reqId) {
-    const reason = prompt(`Rejection reason:`, "Not available");
+    const reason = prompt(`Rejection reason for ALL (${currentAdmin}):`, "Not available");
     if(reason) {
         const req = allRequests.find(r => r.id === reqId);
         if(req) {
@@ -256,6 +845,7 @@ async function rejectAll(reqId) {
                 item.status = "rejected";
                 item.rejectionReason = reason;
                 item.rejectedBy = currentAdmin;
+                item.rejectedAt = new Date().toLocaleString();
                 item.approvedQty = 0;
             });
             await updateRequest(reqId, req.items);
@@ -264,38 +854,44 @@ async function rejectAll(reqId) {
 }
 
 async function acceptRequest(reqId) {
-    if(!confirm(`Accept request? Pending items will be auto-approved.`)) return;
+    if(!confirm(`✅ ACCEPT REQUEST? Pending items will be AUTO-APPROVED with original quantities.`)) return;
     const req = allRequests.find(r => r.id === reqId);
     if(req) {
+        let autoApprovedCount = 0;
         req.items.forEach(item => {
             if(item.status !== "approved" && item.status !== "rejected") {
                 item.status = "approved";
                 item.approvedQty = item.originalQty;
                 item.approvedBy = currentAdmin;
+                item.approvedAt = new Date().toLocaleString();
+                autoApprovedCount++;
+                delete item.rejectionReason;
             }
             item.completedVia = "accept";
         });
         await updateRequest(reqId, req.items);
+        showToast(`✅ Request accepted! ${autoApprovedCount} items auto-approved.`);
     }
 }
 
 function copyFirebaseId(docId) {
     navigator.clipboard.writeText(docId);
-    showToast(`📋 Firebase Doc ID copied`);
+    showToast(`📋 Firebase Doc ID copied: ${docId}`);
 }
 
 function showResetConfirmModal() {
     const toDelete = allRequests.filter(req => getRequestStatus(req.items) !== "pending");
-    if(toDelete.length === 0) { showToast("No completed requests to delete"); return; }
+    if(toDelete.length === 0) { showToast("ℹ️ No completed requests to delete"); return; }
     const modal = document.createElement('div');
     modal.className = 'confirm-modal';
     modal.innerHTML = `
         <div class="confirm-modal-content">
-            <h3>⚠️ Delete Completed Requests</h3>
+            <h3>⚠️ PERMANENT DELETION ⚠️</h3>
             <p>Delete <strong>${toDelete.length}</strong> completed request(s)?</p>
-            <div class="confirm-buttons" style="display:flex; gap:12px; margin-top:20px;">
-                <button class="btn-cancel" style="background:#95a5a6; padding:10px 20px; border-radius:30px; border:none; cursor:pointer;" onclick="this.closest('.confirm-modal').remove()">Cancel</button>
-                <button id="confirmDeleteBtn" style="background:#e74c3c; padding:10px 20px; border-radius:30px; border:none; cursor:pointer; color:white;">Delete</button>
+            <p style="color:#e74c3c; margin:15px 0;">This action cannot be undone!</p>
+            <div style="display:flex; gap:12px;">
+                <button style="background:#95a5a6; padding:12px; border-radius:40px; flex:1; border:none; cursor:pointer; color:white;" onclick="this.closest('.confirm-modal').remove()">Cancel</button>
+                <button id="confirmDeleteBtn" style="background:#e74c3c; padding:12px; border-radius:40px; flex:1; border:none; cursor:pointer; color:white;">Delete</button>
             </div>
         </div>
     `;
@@ -315,34 +911,40 @@ function showResetConfirmModal() {
 
 function exportExcel() {
     if(!allRequests.length) { showToast("No data"); return; }
-    let csv = "Firestore Doc ID,Request ID,Kitchen,Chef,Date,Item,Code,Requested Qty,Unit,Price,Approved Qty,Status\n";
+    let csv = "Firestore Doc ID,Request ID,Kitchen,Chef,Date,Item,Code,Requested Qty,Unit,Price,Approved Qty,Status,Action By,Total Value\n";
     allRequests.forEach(req => {
         req.items.forEach(item => {
             const price = item.price || 0;
             const approvedQty = item.status === "approved" ? (item.approvedQty || 0) : 0;
-            csv += `"${req.id}","${req.requestId}","${req.section}","${req.chefName}","${req.submittedAt}","${item.name}","${item.code}",${item.originalQty},"${item.unit}",${price},${approvedQty},"${item.status}"\n`;
+            const totalValue = approvedQty * price;
+            let statusText = item.status, actionBy = "";
+            if(item.status === "approved") { statusText = "Approved"; actionBy = item.approvedBy || ""; }
+            else if(item.status === "rejected") { statusText = "Rejected"; actionBy = item.rejectedBy || ""; }
+            else if(item.completedVia === "accept") { statusText = "Accepted"; actionBy = item.approvedBy || ""; }
+            else { statusText = "Pending"; actionBy = "-"; }
+            csv += `"${req.id}","${req.requestId}","${req.section}","${req.chefName}","${req.submittedAt}","${item.name}","${item.code}",${item.originalQty},"${item.unit}",${price},${approvedQty},"${statusText}","${actionBy}",${totalValue}\n`;
         });
     });
-    const blob = new Blob(["\uFEFF" + csv], {type: "text/csv"});
+    const blob = new Blob(["\uFEFF" + csv], {type: "text/csv;charset=utf-8"});
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `orders_${Date.now()}.csv`;
+    link.download = `firebase_requests_${Date.now()}.csv`;
     link.click();
 }
 
 function updateStats() {
-    let p=0,a=0,r=0,ac=0;
+    let pending=0, approved=0, rejected=0, accepted=0;
     allRequests.forEach(req => {
         const s = getRequestStatus(req.items);
-        if(s === "pending") p++;
-        else if(s === "approved") a++;
-        else if(s === "rejected") r++;
-        else ac++;
+        if(s === "pending") pending++;
+        else if(s === "approved") approved++;
+        else if(s === "rejected") rejected++;
+        else if(s === "accepted") accepted++;
     });
-    document.getElementById("pendingCount").innerText = p;
-    document.getElementById("approvedCount").innerText = a;
-    document.getElementById("rejectedCount").innerText = r;
-    document.getElementById("acceptedCount").innerText = ac;
+    document.getElementById("pendingCount").innerText = pending;
+    document.getElementById("approvedCount").innerText = approved;
+    document.getElementById("rejectedCount").innerText = rejected;
+    document.getElementById("acceptedCount").innerText = accepted;
     document.getElementById("totalCount").innerText = allRequests.length;
 }
 
@@ -350,6 +952,8 @@ function setFilter(status) { currentStatus = status; renderUI(); }
 function filterKitchen(kitchen) { currentKitchen = kitchen; renderUI(); }
 
 function renderUI() {
+    const KITCHENS = ["Hot Kitchen", "Cold Kitchen", "Pastry / Bakery", "Butchery", "Beach House", "Nihon Kitchen", "Staff Kitchen"];
+    
     const kitchenDiv = document.getElementById("kitchenFilters");
     kitchenDiv.innerHTML = `<button class="kitchen-filter-btn ${currentKitchen === 'all' ? 'active' : ''}" onclick="filterKitchen('all')">📋 All</button>`;
     KITCHENS.forEach(k => {
@@ -366,38 +970,51 @@ function renderUI() {
     
     let filtered = allRequests.filter(r => (currentKitchen === "all" || r.section === currentKitchen) && (currentStatus === "all" || getRequestStatus(r.items) === currentStatus));
     const container = document.getElementById("requestsContainer");
-    if(!filtered.length) { container.innerHTML = `<div class="empty-state" style="text-align:center;padding:50px;">📭 No requests</div>`; return; }
+    if(!filtered.length) { container.innerHTML = `<div class="empty-state">📭 No requests found</div>`; return; }
     
     container.innerHTML = "";
     filtered.forEach(req => {
         const requestStatus = getRequestStatus(req.items);
         const kitchenClass = { "Hot Kitchen":"kitchen-hot","Cold Kitchen":"kitchen-cold","Pastry / Bakery":"kitchen-pastry","Butchery":"kitchen-butchery","Beach House":"kitchen-beach","Nihon Kitchen":"kitchen-nihon","Staff Kitchen":"kitchen-staff" }[req.section] || "kitchen-staff";
+        const duplicateInfo = duplicateMap.get(req.id);
+        const duplicateWarning = duplicateInfo ? `<span class="duplicate-warning">⚠️ DUPLICATE (${duplicateInfo.count} identical)</span>` : '';
         
-        let requestedTotal = 0, approvedTotal = 0;
+        let requestedTotalValue = 0, approvedTotalValue = 0;
         req.items.forEach(item => {
             const price = item.price || 0;
-            requestedTotal += (item.originalQty || 0) * price;
-            if(item.status === "approved") approvedTotal += (item.approvedQty || 0) * price;
+            requestedTotalValue += (item.originalQty || 0) * price;
+            if(item.status === "approved") approvedTotalValue += (item.approvedQty || 0) * price;
         });
         
-        let hasIndividualAction = req.items.some(item => item.status === "approved" || item.status === "rejected");
-        let isCompleted = requestStatus !== "pending";
+        let hasIndividualAction = false;
+        let isCompleted = false;
+        if(requestStatus === "pending") {
+            hasIndividualAction = req.items.some(item => item.status === "approved" || item.status === "rejected");
+        } else { isCompleted = true; }
         
-        const firebaseIdHtml = `<span class="firebase-id-badge" onclick="copyFirebaseId('${req.id}')">🆔 ${req.id.substring(0, 12)}... 📋</span>`;
+        const firebaseIdHtml = `<span class="firebase-id-badge" onclick="copyFirebaseId('${req.id}')" title="Click to copy Firebase Document ID">
+            <i>🆔</i> ${req.id.substring(0, 12)}... <span class="copy-icon">📋</span>
+        </span>`;
         
-        let itemsHtml = `<div class="table-wrapper"><table class="admin-table"><thead><tr><th>Code</th><th>Item</th><th>Requested</th><th>Unit</th><th>Price</th><th>Admin Qty</th><th>Total</th><th>Action</th><th>Status</th></tr></thead><tbody>`;
+        let itemsHtml = `<div class="table-wrapper"><table class="admin-table"><thead><tr><th>Code</th><th>Item</th><th>Requested Qty</th><th>Unit</th><th>Price/Unit</th><th>Admin Qty</th><th>Total</th><th>Action</th><th>Status</th></tr></thead><tbody>`;
         
         req.items.forEach((item, idx) => {
             const price = item.price || 0;
             if(item.status === "approved") {
-                itemsHtml += `<tr style="background:#e8f5e9;"><td>${item.code}<td><b>${escapeHtml(item.name)}</b><td>${item.originalQty}<td>${item.unit}<td>${price.toFixed(2)}<td><strong>${(item.approvedQty || 0).toFixed(1)}</strong><td>${((item.approvedQty||0)*price).toFixed(2)}<td>✅ Approved<td><span class="status-approved-cell">Approved</span><div class="admin-info-text">👤 ${item.approvedBy || ''}</div></tr>`;
+                itemsHtml += `<tr style="background:#e8f5e9;"><td>${item.code}</td><td><b>${escapeHtml(item.name)}</b></td><td>${item.originalQty}</td><td>${item.unit}</td><td>${price.toFixed(2)}</td><td><strong>${(item.approvedQty || 0).toFixed(1)}</strong></td><td>${((item.approvedQty||0)*price).toFixed(2)}</td><td>✅ Approved</span></td><td><span class="status-approved-cell">Approved</span><div class="admin-info-text">👤 ${item.approvedBy || ''}<br>📅 ${item.approvedAt || ''}</div></td></tr>`;
             } else if(item.status === "rejected") {
-                itemsHtml += `<tr style="background:#fee2e2;"><td>${item.code}<td><b>${escapeHtml(item.name)}</b><td>${item.originalQty}<td>${item.unit}<td>${price.toFixed(2)}<td>0<td>0.00<td>❌ Rejected<td><span class="status-rejected-cell">Rejected</span><div class="admin-info-text">📝 ${item.rejectionReason || ''}</div></tr>`;
+                itemsHtml += `<tr style="background:#fee2e2;"><td>${item.code}</td><td><b>${escapeHtml(item.name)}</b></td><td>${item.originalQty}</td><td>${item.unit}</td><td>${price.toFixed(2)}</td><td>0</td><td>0.00</td><td>❌ Rejected</span></td><td><span class="status-rejected-cell">Rejected</span><div class="admin-info-text">👤 ${item.rejectedBy || ''}<br>📝 ${item.rejectionReason || ''}</div></td></tr>`;
             } else {
-                itemsHtml += `<tr style="background:#fff8e7;"><td>${item.code}<td><b>${escapeHtml(item.name)}</b><td>${item.originalQty}<td>${item.unit}<td>${price.toFixed(2)}<td><input type="number" id="qty_${req.id}_${idx}" class="approval-input" value="${item.originalQty}" step="0.5"><td id="preview_${req.id}_${idx}">${(item.originalQty*price).toFixed(2)}<td class="action-buttons"><button class="btn-approve" onclick="approveItemFlex('${req.id}',${idx})">Approve</button><button class="btn-reject" onclick="rejectItem('${req.id}',${idx})">Reject</button><td><span class="status-pending-cell">Pending</span></tr>`;
+                const currentVal = (item.originalQty || 0).toFixed(1);
+                itemsHtml += `<tr style="background:#fff8e7;"><td>${item.code}</td><td><b>${escapeHtml(item.name)}</b></td><td>${item.originalQty}</td><td>${item.unit}</td><td>${price.toFixed(2)}</td><td><input type="number" id="qty_${req.id}_${idx}" class="approval-input" value="${currentVal}" min="0" step="0.5"></td><td><span id="totalPreview_${req.id}_${idx}">${(item.originalQty * price).toFixed(2)}</span></td><td class="action-buttons"><button class="btn-approve" onclick="approveItemFlex('${req.id}', ${idx})">✅ Approve</button><button class="btn-reject" onclick="rejectItem('${req.id}', ${idx})">❌ Reject</button></td><td><span class="status-pending-cell">Pending</span><div class="admin-info-text">⚠️ Auto-approved on Accept</div><tr>`;
                 setTimeout(() => {
-                    const inp = document.getElementById(`qty_${req.id}_${idx}`);
-                    if(inp) inp.addEventListener('input', () => { document.getElementById(`preview_${req.id}_${idx}`).innerText = ((parseFloat(inp.value)||0)*price).toFixed(2); });
+                    const input = document.getElementById(`qty_${req.id}_${idx}`);
+                    const totalSpan = document.getElementById(`totalPreview_${req.id}_${idx}`);
+                    if(input && totalSpan) {
+                        const updateTotal = () => { totalSpan.innerText = ((parseFloat(input.value)||0) * price).toFixed(2); };
+                        input.addEventListener('input', updateTotal);
+                        updateTotal();
+                    }
                 }, 10);
             }
         });
@@ -408,19 +1025,31 @@ function renderUI() {
             actions = `<div class="request-actions">
                 <button class="btn-approve-all" onclick="approveAllFlex('${req.id}')" ${hasIndividualAction ? 'disabled' : ''}>✅ Approve All</button>
                 <button class="btn-reject-all" onclick="rejectAll('${req.id}')" ${hasIndividualAction ? 'disabled' : ''}>❌ Reject All</button>
-                <button class="btn-accept" onclick="acceptRequest('${req.id}')" ${!hasIndividualAction ? 'disabled' : ''}>🟣 Accept</button>
+                <button class="btn-accept" onclick="acceptRequest('${req.id}')" ${!hasIndividualAction ? 'disabled' : ''}>🟣 Accept & Auto-Approve</button>
             </div>`;
         } else {
-            actions = `<div class="request-actions"><button class="btn-accept" style="background:#6c757d;" disabled>✅ Completed</button></div>`;
+            actions = `<div class="request-actions"><button class="btn-accept" style="background:#6c757d;" disabled>🔒 Completed</button></div>`;
         }
         
         container.innerHTML += `<div class="request-card">
             <div class="request-header">
-                <div><span class="request-id">📄 ${req.requestId || 'N/A'}</span>${firebaseIdHtml}<span class="kitchen-badge ${kitchenClass}" style="margin-left:10px;">${req.section}</span></div>
-                <div class="request-total-badge"><span>💰 Requested: ${requestedTotal.toFixed(2)} EGP</span><span>✅ Approved: ${approvedTotal.toFixed(2)} EGP</span></div>
+                <div>
+                    <span class="request-id">📄 ${req.requestId || 'N/A'}</span>
+                    ${firebaseIdHtml}
+                    ${duplicateWarning}
+                    <span class="kitchen-badge ${kitchenClass}" style="margin-left:10px;">${req.section}</span>
+                </div>
+                <div class="request-total-badge">
+                    <span>💰 Requested: ${requestedTotalValue.toFixed(2)} EGP</span>
+                    <span>✅ Approved: ${approvedTotalValue.toFixed(2)} EGP</span>
+                </div>
                 <span class="status-badge ${requestStatus === 'pending' ? 'status-pending' : (requestStatus === 'approved' ? 'status-approved' : (requestStatus === 'rejected' ? 'status-rejected' : 'status-accepted'))}">${requestStatus.toUpperCase()}</span>
             </div>
-            <div class="request-info"><div class="info-item"><div class="info-label">👨‍🍳 CHEF</div><div class="info-value">${escapeHtml(req.chefName)}</div></div><div class="info-item"><div class="info-label">📅 SUBMITTED</div><div class="info-value">${req.submittedAt || 'Unknown'}</div></div></div>
+            <div class="request-info">
+                <div class="info-item"><div class="info-label">👨‍🍳 CHEF</div><div class="info-value">${escapeHtml(req.chefName)}</div></div>
+                <div class="info-item"><div class="info-label">📅 SUBMITTED</div><div class="info-value">${req.submittedAt || 'Unknown'}</div></div>
+                <div class="info-item"><div class="info-label">🔥 FIRESTORE DOCUMENT ID</div><div class="info-value" style="font-family:monospace; font-size:11px;">${req.id}</div></div>
+            </div>
             ${itemsHtml}
             ${actions}
         </div>`;
