@@ -1,16 +1,18 @@
-// firebase-config.js
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
 const firebaseConfig = {
-    apiKey: "AIzaSyB7xF2kP5jgH6xyGg7-S-T_QgMoBDIoBBc",
-    authDomain: "kitchenordersystem-66eb2.firebaseapp.com",
-    projectId: "kitchenordersystem-66eb2",
-    storageBucket: "kitchenordersystem-66eb2.firebasestorage.app",
-    messagingSenderId: "786074432195",
-    appId: "1:786074432195:web:8381f2cba8f43002232876"
+  apiKey: "AIzaSyD57ErKNYwqGbLcriDYYvPUtVIw8jRncXQ",
+  authDomain: "system-order-kitchen.firebaseapp.com",
+  databaseURL: "https://system-order-kitchen-default-rtdb.firebaseio.com",
+  projectId: "system-order-kitchen",
+  storageBucket: "system-order-kitchen.firebasestorage.app",
+  messagingSenderId: "429224554052",
+  appId: "1:429224554052:web:7536c4cdea334679fcd611"
 };
 
 // Initialize Firebase
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-const db = firebase.firestore();
-console.log("✅ Firebase initialized successfully");
+const app = initializeApp(firebaseConfig);
