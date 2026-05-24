@@ -3,10 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-<title>Admin Dashboard - Firebase Doc ID Manager</title>
+<title>Admin Dashboard - Firebase Auth</title>
 
 <style>
 * {
@@ -545,138 +546,37 @@ body {
     to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
-.modal {
-    display: flex;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.85);
-    z-index: 1000;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-}
-
-.modal-content {
-    background: white;
-    padding: 30px;
-    border-radius: 24px;
-    text-align: center;
-    max-width: 360px;
-    width: 90%;
-}
-
-.modal-content h2 {
-    margin-bottom: 15px;
-    color: #1e3c72;
-}
-
-.user-selector {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 20px;
-}
-
-.user-btn {
-    background: #f0f2f5;
-    border: none;
-    padding: 12px;
-    border-radius: 40px;
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.3s;
-}
-
-.user-btn:hover {
-    background: #e0e0e0;
-}
-
-.user-title {
-    font-size: 11px;
-    color: #666;
-    margin-top: 3px;
-}
-
-.modal-content input {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 15px;
-    border: 1px solid #ddd;
-    border-radius: 40px;
-    font-size: 14px;
-    text-align: center;
-}
-
-.modal-content button {
-    background: #3498db;
-    color: white;
-    border: none;
-    padding: 12px;
-    border-radius: 40px;
-    font-weight: 600;
-    cursor: pointer;
-    width: 100%;
-    font-size: 1rem;
-}
-
-.error-msg {
-    color: #e74c3c;
-    margin-top: 10px;
-    font-size: 0.8rem;
-}
-
-.close-modal {
-    background: #95a5a6 !important;
-    margin-top: 10px;
-}
-
-.close-modal:hover {
-    background: #7f8c8d;
-}
-
-.confirm-modal {
-    display: flex;
+.loading-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
     background: rgba(0,0,0,0.9);
-    z-index: 2000;
+    z-index: 10000;
+    display: flex;
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    flex-direction: column;
+    gap: 20px;
 }
 
-.confirm-modal-content {
-    background: white;
-    padding: 30px;
-    border-radius: 24px;
-    text-align: center;
-    max-width: 400px;
-    width: 90%;
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #2a3a5a;
+    border-top-color: #00d4ff;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
 }
 
-.free-adjust-badge {
-    background: #3498db;
-    color: white;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.6rem;
-    margin-left: 8px;
-    vertical-align: middle;
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
-@media (max-width: 768px) {
-    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-    .stat-card { padding: 12px; }
-    .stat-number { font-size: 1.5rem; }
-    .firebase-id-badge { font-size: 0.6rem; padding: 2px 8px; }
-    .request-header { flex-direction: column; align-items: flex-start; }
+.loading-text {
+    color: #00d4ff;
+    font-size: 1rem;
 }
 
 .container {
@@ -684,41 +584,32 @@ body {
     margin: 0 auto;
     padding: 20px;
 }
+
+.user-email {
+    font-size: 0.7rem;
+    opacity: 0.8;
+}
 </style>
 </head>
 <body>
 
-<div id="passwordModal" class="modal">
-    <div class="modal-content">
-        <h2>🔐 Admin Login</h2>
-        <div class="user-selector">
-            <button class="user-btn" onclick="selectUser('Marco')">👨‍💼 Marco<br><span class="user-title">Administrator</span></button>
-            <button class="user-btn" onclick="selectUser('Nady')">👨‍💼 Nady<br><span class="user-title">Administrator</span></button>
-            <button class="user-btn" onclick="selectUser('Ahmed')">👨‍💻 Ahmed<br><span class="user-title">Administrator</span></button>
-            <button class="user-btn" onclick="selectUser('Nader')">👨‍💼 Nader<br><span class="user-title">Administrator</span></button>
-            <hr style="margin: 10px 0;">
-            <button class="user-btn" onclick="openDevConsole()" style="background:#0052cc; color:white;">🛠️ Developer Console (Edit Kitchen JSON)</button>
-        </div>
-        <input type="password" id="passwordInput" placeholder="Enter password" style="display:none;">
-        <button id="loginBtn" style="display:none;" onclick="checkLogin()">Login</button>
-        <div id="loginError" class="error-msg"></div>
-        <button class="close-modal" onclick="goBackToIndex()">← Back to Home</button>
-    </div>
+<div id="loadingOverlay" class="loading-overlay" style="display: flex;">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">🔐 Authenticating...</div>
 </div>
 
 <div id="mainContent" style="display:none;">
     <div class="header">
         <div class="header-content">
             <div class="logo">
-                <span class="logo-icon">🔥</span>
+                <span class="logo-icon">👑</span>
                 <span>Admin <span>Dashboard</span></span>
-                <span class="free-adjust-badge">🆔 FIREBASE DOC ID VISIBLE</span>
+                <span class="free-adjust-badge" style="background:#10b981;">🔐 Firebase Auth</span>
             </div>
             <div style="display: flex; align-items: center; gap: 15px;">
                 <span id="adminNameDisplay" style="font-weight: 600;"></span>
-                <span style="font-size: 10px; opacity: 0.8;">Administrator</span>
+                <span id="userEmailDisplay" class="user-email"></span>
                 <button class="btn-header" onclick="logout()">🚪 Logout</button>
-                <button class="btn-header btn-dev" onclick="openDevConsole()">🛠️ Dev Console</button>
             </div>
             <div class="header-buttons">
                 <button class="btn-header btn-analytics" onclick="openAnalytics()">📊 Analytics</button>
@@ -726,6 +617,7 @@ body {
                 <button class="btn-header" onclick="window.print()">🖨️ Print</button>
                 <button class="btn-header" onclick="openRevenue()">💰 Revenue</button>
                 <button class="btn-header btn-danger" onclick="showResetConfirmModal()">🗑️ Reset</button>
+                <button class="btn-header btn-dev" id="devConsoleBtn" onclick="openDevConsole()" style="display:none;">🛠️ Dev Console</button>
             </div>
         </div>
     </div>
@@ -746,49 +638,85 @@ body {
 </div>
 
 <script>
-const ADMIN_PASSWORDS = { "Marco": "M1r50123", "Nady": "Nn639123", "Ahmed": "j1cadm1n", "Nader": "nader123" };
-const KITCHENS = ["Hot Kitchen", "Cold Kitchen", "Pastry / Bakery", "Butchery", "Beach House", "Nihon Kitchen", "Staff Kitchen"];
+// Firebase Auth is already initialized in firebase-config.js
+// No passwords stored here!
 
 let currentAdmin = "";
+let currentUserRole = "";
 let currentKitchen = "all";
 let currentStatus = "pending";
 let allRequests = [];
-let selectedUser = "";
 let duplicateMap = new Map();
 
-// ============ NAVIGATION FUNCTIONS ============
-function goBackToIndex() { window.location.href = "index.html"; }
-function openAnalytics() { window.open("analytics.html", "_blank"); }
-function openRevenue() { window.open("revenue.html", "_blank"); }
-
-// ============ OPEN DEVELOPER CONSOLE ============
+// ============ AUTHENTICATION ============
 function openDevConsole() {
-    // Open the developer console in a new tab
     window.open("dev_console.html", "_blank");
 }
 
-function selectUser(user) {
-    selectedUser = user;
-    document.getElementById("passwordInput").style.display = "block";
-    document.getElementById("loginBtn").style.display = "block";
-    document.getElementById("passwordInput").placeholder = `Password for ${user}`;
-    document.getElementById("loginError").innerHTML = "";
-}
+function openAnalytics() { window.open("analytics.html", "_blank"); }
+function openRevenue() { window.open("revenue.html", "_blank"); }
 
-function checkLogin() {
-    const pass = document.getElementById("passwordInput").value;
-    if(selectedUser && ADMIN_PASSWORDS[selectedUser] === pass) {
-        currentAdmin = selectedUser;
-        document.getElementById("adminNameDisplay").innerText = currentAdmin;
-        document.getElementById("passwordModal").style.display = "none";
-        document.getElementById("mainContent").style.display = "block";
-        localStorage.setItem("admin", currentAdmin);
-        loadRequests();
-    } else {
-        document.getElementById("loginError").innerHTML = "❌ Wrong password!";
+async function logout() {
+    if(confirm("Are you sure you want to logout?")) {
+        try {
+            await auth.signOut();
+            sessionStorage.clear();
+            window.location.href = "login.html";
+        } catch(e) {
+            showToast("Logout error: " + e.message);
+        }
     }
 }
 
+// Check authentication on page load
+auth.onAuthStateChanged(async (user) => {
+    const loadingOverlay = document.getElementById("loadingOverlay");
+    
+    if (!user) {
+        // Redirect to login page
+        window.location.href = "login.html";
+        return;
+    }
+    
+    try {
+        // Get user role from custom claims
+        const idTokenResult = await user.getIdTokenResult();
+        const isAdmin = idTokenResult.claims.admin || false;
+        const isDeveloper = idTokenResult.claims.developer || false;
+        
+        if (!isAdmin && !isDeveloper) {
+            alert("Access Denied. Admin privileges required.");
+            await auth.signOut();
+            window.location.href = "login.html";
+            return;
+        }
+        
+        // Set current admin info
+        currentAdmin = user.email?.split('@')[0] || "Admin";
+        currentUserRole = isDeveloper ? "Developer" : "Admin";
+        
+        document.getElementById("adminNameDisplay").innerHTML = `${currentAdmin} <span style="font-size:10px;">(${currentUserRole})</span>`;
+        document.getElementById("userEmailDisplay").innerHTML = user.email || "";
+        
+        // Show Dev Console button only for developers
+        if (isDeveloper) {
+            document.getElementById("devConsoleBtn").style.display = "inline-block";
+        }
+        
+        // Hide loading, show content
+        loadingOverlay.style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+        
+        // Load data
+        await loadRequests();
+        
+    } catch (error) {
+        console.error("Auth error:", error);
+        loadingOverlay.innerHTML = '<div class="loading-text" style="color:#dc2626;">❌ Authentication Error</div><button onclick="location.href=\'login.html\'" style="margin-top:20px;padding:10px 20px;background:#00d4ff;border:none;border-radius:30px;cursor:pointer;">Go to Login</button>';
+    }
+});
+
+// ============ CORE FUNCTIONS ============
 async function loadRequests() {
     try {
         const snapshot = await db.collection("kitchen_requests").orderBy("timestamp", "desc").get();
@@ -1015,6 +943,8 @@ function setFilter(status) { currentStatus = status; renderUI(); }
 function filterKitchen(kitchen) { currentKitchen = kitchen; renderUI(); }
 
 function renderUI() {
+    const KITCHENS = ["Hot Kitchen", "Cold Kitchen", "Pastry / Bakery", "Butchery", "Beach House", "Nihon Kitchen", "Staff Kitchen"];
+    
     const kitchenDiv = document.getElementById("kitchenFilters");
     kitchenDiv.innerHTML = `<button class="kitchen-filter-btn ${currentKitchen === 'all' ? 'active' : ''}" onclick="filterKitchen('all')">📋 All</button>`;
     KITCHENS.forEach(k => {
@@ -1064,7 +994,7 @@ function renderUI() {
             if(item.status === "approved") {
                 itemsHtml += `<tr style="background:#e8f5e9;"><td>${item.code}</td><td><b>${escapeHtml(item.name)}</b></td><td>${item.originalQty}</td><td>${item.unit}</td><td>${price.toFixed(2)}</td><td><strong>${(item.approvedQty || 0).toFixed(1)}</strong></td><td>${((item.approvedQty||0)*price).toFixed(2)}</td><td>✅ Approved</span></td><td><span class="status-approved-cell">Approved</span><div class="admin-info-text">👤 ${item.approvedBy || ''}<br>📅 ${item.approvedAt || ''}</div></td></tr>`;
             } else if(item.status === "rejected") {
-                itemsHtml += `<tr style="background:#fee2e2;"><td>${item.code}</td><td><b>${escapeHtml(item.name)}</b></td><td>${item.originalQty}</td><td>${item.unit}</td><td>${price.toFixed(2)}</td><td>0</td><td>0.00</td><td>❌ Rejected</td><td><span class="status-rejected-cell">Rejected</span><div class="admin-info-text">👤 ${item.rejectedBy || ''}<br>📝 ${item.rejectionReason || ''}</div></td></tr>`;
+                itemsHtml += `<tr style="background:#fee2e2;"><td>${item.code}</td><td><b>${escapeHtml(item.name)}</b></td><td>${item.originalQty}</td><td>${item.unit}</td><td>${price.toFixed(2)}</td><td>0</td><td>0.00</td><td>❌ Rejected</span></td><td><span class="status-rejected-cell">Rejected</span><div class="admin-info-text">👤 ${item.rejectedBy || ''}<br>📝 ${item.rejectionReason || ''}</div></td></tr>`;
             } else {
                 const currentVal = (item.originalQty || 0).toFixed(1);
                 itemsHtml += `<tr style="background:#fff8e7;"><td>${item.code}</td><td><b>${escapeHtml(item.name)}</b></td><td>${item.originalQty}</td><td>${item.unit}</td><td>${price.toFixed(2)}</td><td><input type="number" id="qty_${req.id}_${idx}" class="approval-input" value="${currentVal}" min="0" step="0.5"></td><td><span id="totalPreview_${req.id}_${idx}">${(item.originalQty * price).toFixed(2)}</span></td><td class="action-buttons"><button class="btn-approve" onclick="approveItemFlex('${req.id}', ${idx})">✅ Approve</button><button class="btn-reject" onclick="rejectItem('${req.id}', ${idx})">❌ Reject</button></td><td><span class="status-pending-cell">Pending</span><div class="admin-info-text">⚠️ Auto-approved on Accept</div></td></tr>`;
@@ -1118,20 +1048,44 @@ function renderUI() {
     updateStats();
 }
 
-function logout() {
-    if(confirm("Logout?")) { localStorage.removeItem("admin"); window.location.href = "index.html"; }
-}
 function escapeHtml(str) { return str?.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])) || ''; }
 function showToast(msg) { const t = document.createElement("div"); t.className = "toast"; t.innerText = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2500); }
 
-const saved = localStorage.getItem("admin");
-if(saved && ADMIN_PASSWORDS[saved]) {
-    currentAdmin = saved;
-    document.getElementById("adminNameDisplay").innerText = currentAdmin;
-    document.getElementById("passwordModal").style.display = "none";
-    document.getElementById("mainContent").style.display = "block";
-    loadRequests();
-}
+// Add missing style for confirm-modal
+const style = document.createElement('style');
+style.textContent = `
+    .confirm-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.9);
+        z-index: 2000;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .confirm-modal-content {
+        background: #0f172a;
+        padding: 30px;
+        border-radius: 24px;
+        text-align: center;
+        max-width: 400px;
+        width: 90%;
+        border: 1px solid #2a3a5a;
+    }
+    .free-adjust-badge {
+        background: #3498db;
+        color: white;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 0.6rem;
+        margin-left: 8px;
+        vertical-align: middle;
+    }
+`;
+document.head.appendChild(style);
 </script>
 </body>
 </html>
