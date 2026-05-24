@@ -1,777 +1,699 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>Developer Console - Kitchen JSON Editor</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Segoe UI', 'SF Mono', Monaco, 'Courier New', monospace;
-            background: #0a0e27;
-            color: #e0e0e0;
-        }
-
-        /* Header */
-        .dev-header {
-            background: linear-gradient(135deg, #0f0c29, #1a1a4e, #24243e);
-            padding: 20px 24px;
-            border-bottom: 3px solid #00d4ff;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .dev-header h1 {
-            font-size: 1.6rem;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            flex-wrap: wrap;
-        }
-
-        .badge {
-            background: #00d4ff;
-            color: #0a0e27;
-            padding: 5px 14px;
-            border-radius: 40px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            font-family: monospace;
-        }
-
-        .badge-danger {
-            background: #dc2626;
-            color: white;
-        }
-
-        /* Layout */
-        .container {
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 24px;
-        }
-
-        /* Kitchen Tabs */
-        .kitchen-tabs {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 28px;
-            background: #0f172a;
-            padding: 16px 20px;
-            border-radius: 20px;
-            border: 1px solid #2a3a5a;
-        }
-
-        .kitchen-tab {
-            background: #1e293b;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 40px;
-            color: #94a3b8;
-            font-weight: 600;
-            cursor: pointer;
-            font-size: 0.85rem;
-            transition: all 0.2s;
-            font-family: monospace;
-        }
-
-        .kitchen-tab:hover {
-            background: #334155;
-            color: white;
-        }
-
-        .kitchen-tab.active {
-            background: #00d4ff;
-            color: #0a0e27;
-            box-shadow: 0 0 12px rgba(0,212,255,0.5);
-        }
-
-        /* Editor Panel */
-        .editor-panel {
-            background: #0f172a;
-            border-radius: 24px;
-            border: 1px solid #2a3a5a;
-            overflow: hidden;
-            margin-bottom: 24px;
-        }
-
-        .panel-header {
-            background: #1a1a2e;
-            padding: 16px 24px;
-            border-bottom: 1px solid #2a3a5a;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .panel-header h2 {
-            font-size: 1.2rem;
-            color: #00d4ff;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .btn {
-            padding: 8px 18px;
-            border-radius: 30px;
-            border: none;
-            font-weight: 600;
-            cursor: pointer;
-            font-family: monospace;
-            font-size: 0.8rem;
-            transition: all 0.2s;
-        }
-
-        .btn-primary {
-            background: #0066ff;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #00d4ff;
-            transform: scale(1.02);
-        }
-
-        .btn-success {
-            background: #10b981;
-            color: white;
-        }
-
-        .btn-danger {
-            background: #dc2626;
-            color: white;
-        }
-
-        .btn-warning {
-            background: #f59e0b;
-            color: #1a1a2e;
-        }
-
-        .btn-secondary {
-            background: #334155;
-            color: white;
-        }
-
-        .json-editor-area {
-            padding: 24px;
-        }
-
-        .json-textarea {
-            width: 100%;
-            background: #0a0e27;
-            border: 2px solid #2a3a5a;
-            color: #00ffcc;
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            padding: 20px;
-            border-radius: 16px;
-            resize: vertical;
-            line-height: 1.5;
-        }
-
-        .json-textarea:focus {
-            outline: none;
-            border-color: #00d4ff;
-            box-shadow: 0 0 10px rgba(0,212,255,0.3);
-        }
-
-        .action-bar {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-top: 20px;
-            justify-content: flex-end;
-        }
-
-        /* Items List Preview */
-        .items-preview {
-            background: #0a0e27;
-            border-radius: 16px;
-            margin-top: 20px;
-            padding: 16px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-
-        .item-card {
-            background: #111827;
-            padding: 12px 16px;
-            margin-bottom: 8px;
-            border-radius: 12px;
-            border-left: 4px solid #00d4ff;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 10px;
-            font-size: 0.8rem;
-        }
-
-        .item-code {
-            font-family: monospace;
-            color: #00d4ff;
-            font-weight: bold;
-        }
-
-        .item-name {
-            flex: 2;
-            color: white;
-        }
-
-        .item-meta {
-            color: #94a3b8;
-            font-size: 0.7rem;
-        }
-
-        .delete-item-btn {
-            background: #dc2626;
-            border: none;
-            padding: 4px 12px;
-            border-radius: 20px;
-            color: white;
-            cursor: pointer;
-            font-size: 0.7rem;
-        }
-
-        .add-item-section {
-            margin-top: 20px;
-            background: #0f172a;
-            border-radius: 16px;
-            padding: 16px;
-            border: 1px dashed #2a3a5a;
-        }
-
-        .form-row {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            margin-bottom: 12px;
-        }
-
-        .form-input {
-            flex: 1;
-            min-width: 140px;
-            background: #1a1a2e;
-            border: 1px solid #2a3a5a;
-            padding: 10px 14px;
-            border-radius: 12px;
-            color: white;
-            font-family: monospace;
-        }
-
-        .toast {
-            position: fixed;
-            bottom: 25px;
-            right: 25px;
-            background: #1f2937;
-            border-left: 4px solid #00d4ff;
-            padding: 12px 24px;
-            border-radius: 14px;
-            font-size: 13px;
-            z-index: 2000;
-            animation: slideIn 0.3s;
-            font-family: monospace;
-        }
-
-        @keyframes slideIn {
-            from { opacity: 0; transform: translateX(100px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-
-        .info-text {
-            background: #0a0e27;
-            padding: 12px;
-            border-radius: 12px;
-            font-size: 11px;
-            color: #9ca3af;
-            margin-top: 12px;
-            font-family: monospace;
-        }
-
-        .status-badge {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 0.7rem;
-            background: #0066ff;
-        }
-
-        hr {
-            border-color: #2a3a5a;
-            margin: 20px 0;
-        }
-    </style>
-</head>
-<body>
-
-<div class="dev-header">
-    <h1>
-        🛠️ DEVELOPER CONSOLE · KITCHEN JSON EDITOR
-        <span class="badge">FULL CRUD</span>
-        <span class="badge badge-danger">DIRECT FIRESTORE</span>
-    </h1>
-    <div style="margin-top: 12px; font-size: 0.8rem; opacity: 0.8;">
-        🔥 Edit any kitchen's menu items | Modify JSON structure | Add/Delete items | Live preview
-    </div>
-</div>
-
-<div class="container">
-    <!-- Kitchen Selection Tabs -->
-    <div class="kitchen-tabs" id="kitchenTabs"></div>
-
-    <!-- Main Editor Panel -->
-    <div class="editor-panel">
-        <div class="panel-header">
-            <h2>
-                <span>📝</span> 
-                <span id="currentKitchenName">Select a kitchen</span>
-                <span class="status-badge" id="docStatusBadge">Firestore Sync</span>
-            </h2>
-            <div style="display: flex; gap: 8px;">
-                <button class="btn btn-primary" onclick="fetchKitchenData()">📥 Load from Firestore</button>
-                <button class="btn btn-success" onclick="saveToFirestore()">💾 SAVE to Firestore</button>
-                <button class="btn btn-warning" onclick="formatJSON()">✨ Format JSON</button>
-            </div>
-        </div>
-
-        <div class="json-editor-area">
-            <label style="display: block; margin-bottom: 12px; font-weight: bold; color: #00d4ff;">📄 Complete JSON Array (editable):</label>
-            <textarea id="jsonEditor" class="json-textarea" rows="18" placeholder='[
-  {
-    "code": "162018",
-    "name": "Demi Glace Sauce Knorr",
-    "name_ar": "صوص ديمي جلاس كنور",
-    "unit": "750g pkt",
-    "maxLimit": 2,
-    "step": 1,
-    "AVE": 301.33649
-  }
-]'></textarea>
-            
-            <div class="action-bar">
-                <button class="btn btn-secondary" onclick="validateJSON()">🔍 Validate JSON</button>
-                <button class="btn btn-danger" onclick="confirmResetToDefault()">⚠️ Reset to Default Template</button>
-                <button class="btn btn-primary" onclick="exportJSONFile()">📎 Export JSON File</button>
-            </div>
-
-            <!-- Live Preview & Item Management -->
-            <div class="add-item-section">
-                <div style="font-weight: bold; margin-bottom: 12px;">➕ Add New Item (Quick Form)</div>
-                <div class="form-row">
-                    <input type="text" id="newCode" class="form-input" placeholder="Code (e.g., 162018)">
-                    <input type="text" id="newName" class="form-input" placeholder="Name (English)">
-                    <input type="text" id="newNameAr" class="form-input" placeholder="Name (Arabic)">
-                    <input type="text" id="newUnit" class="form-input" placeholder="Unit (e.g., 750g pkt)">
-                </div>
-                <div class="form-row">
-                    <input type="number" id="newMaxLimit" class="form-input" placeholder="Max Limit" value="2">
-                    <input type="number" id="newStep" class="form-input" placeholder="Step" value="1">
-                    <input type="number" id="newAVE" class="form-input" placeholder="AVE / Price" step="0.01" value="0">
-                    <button class="btn btn-success" onclick="addNewItem()" style="padding: 8px 20px;">➕ Add Item</button>
-                </div>
-            </div>
-
-            <!-- Preview List of Items -->
-            <div style="margin-top: 20px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
-                    <strong>📋 Current Items Preview (Click delete to remove)</strong>
-                    <button class="btn btn-secondary" onclick="refreshPreviewList()" style="padding: 4px 12px;">⟳ Refresh</button>
-                </div>
-                <div id="itemsPreviewList" class="items-preview">
-                    <div style="color: #9ca3af; text-align: center;">Load kitchen data to see items</div>
-                </div>
-            </div>
-
-            <div class="info-text">
-                ⚡ TIPS: <br>
-                • Each item must have: code, name, name_ar, unit, maxLimit, step, AVE <br>
-                • "AVE" is the price per unit (EGP)<br>
-                • Changes are saved directly to Firestore collection: <strong>kitchen_menu_{kitchenName}</strong><br>
-                • After saving, refresh main dashboard to see updated limits.
-            </div>
-        </div>
-    </div>
-</div>
-
+<meta charset="UTF-8">
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+<title>Developer Console - Order Editor + JSON Generator</title>
+<style>
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Courier New', 'Segoe UI', monospace;
+    background: #0a0e27;
+    color: #e0e0e0;
+}
+
+.header {
+    background: linear-gradient(135deg, #0f0c29, #1a1a4e, #24243e);
+    padding: 20px 24px;
+    border-bottom: 3px solid #00d4ff;
+}
+
+.header h1 {
+    font-size: 1.4rem;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.badge {
+    background: #00d4ff;
+    color: #0a0e27;
+    padding: 4px 12px;
+    border-radius: 40px;
+    font-size: 0.7rem;
+    font-weight: bold;
+}
+
+.container {
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 24px;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+    background: #0f172a;
+    padding: 12px 20px;
+    border-radius: 20px;
+}
+
+.tab-btn {
+    background: #1e293b;
+    border: none;
+    padding: 10px 24px;
+    border-radius: 40px;
+    color: #94a3b8;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+}
+
+.tab-btn.active {
+    background: #00d4ff;
+    color: #0a0e27;
+}
+
+/* Panels */
+.panel {
+    background: #0f172a;
+    border-radius: 24px;
+    border: 1px solid #2a3a5a;
+    overflow: hidden;
+    display: none;
+}
+
+.panel.active-panel {
+    display: block;
+}
+
+.panel-header {
+    background: #1a1a2e;
+    padding: 16px 24px;
+    border-bottom: 1px solid #2a3a5a;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.panel-header h2 {
+    font-size: 1rem;
+    color: #00d4ff;
+}
+
+/* Forms */
+.form-group {
+    padding: 20px 24px;
+}
+
+.form-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.form-input {
+    flex: 1;
+    min-width: 180px;
+    background: #1a1a2e;
+    border: 1px solid #2a3a5a;
+    padding: 12px 16px;
+    border-radius: 12px;
+    color: white;
+    font-family: monospace;
+}
+
+.form-input:focus {
+    outline: none;
+    border-color: #00d4ff;
+}
+
+textarea {
+    width: 100%;
+    background: #0a0e27;
+    border: 2px solid #2a3a5a;
+    color: #00ffcc;
+    font-family: 'Courier New', monospace;
+    font-size: 12px;
+    padding: 16px;
+    border-radius: 16px;
+    resize: vertical;
+    line-height: 1.5;
+}
+
+.btn {
+    padding: 10px 20px;
+    border-radius: 30px;
+    border: none;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 0.75rem;
+    transition: all 0.2s;
+}
+
+.btn-primary { background: #0066ff; color: white; }
+.btn-success { background: #10b981; color: white; }
+.btn-danger { background: #dc2626; color: white; }
+.btn-warning { background: #f59e0b; color: #1a1a2e; }
+.btn-secondary { background: #334155; color: white; }
+
+.btn:hover { transform: scale(1.02); opacity: 0.9; }
+
+/* Document List */
+.doc-list {
+    max-height: 350px;
+    overflow-y: auto;
+    margin-top: 20px;
+}
+
+.doc-item {
+    background: #111827;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    border-radius: 12px;
+    border-left: 3px solid #00d4ff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    cursor: pointer;
+}
+
+.doc-item:hover { background: #1f2937; }
+
+.doc-id { font-family: monospace; font-size: 11px; color: #00d4ff; }
+
+/* JSON Generator Items List */
+.items-list {
+    background: #0a0e27;
+    border-radius: 12px;
+    max-height: 250px;
+    overflow-y: auto;
+    margin-top: 15px;
+}
+
+.item-row {
+    background: #111827;
+    padding: 8px 12px;
+    margin: 5px;
+    border-radius: 8px;
+    border-left: 3px solid #00d4ff;
+    font-size: 0.7rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.item-code { color: #00d4ff; font-weight: bold; }
+.delete-item { background: #dc2626; border: none; padding: 3px 10px; border-radius: 20px; color: white; cursor: pointer; font-size: 0.65rem; }
+
+.counter {
+    background: #00d4ff20;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    color: #00d4ff;
+}
+
+.row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 15px;
+}
+
+.field {
+    flex: 1;
+    min-width: 140px;
+}
+
+.field label {
+    display: block;
+    font-size: 0.7rem;
+    color: #9ca3af;
+    margin-bottom: 5px;
+    text-transform: uppercase;
+}
+
+.field input {
+    width: 100%;
+    background: #1a1a2e;
+    border: 1px solid #2a3a5a;
+    padding: 10px 12px;
+    border-radius: 8px;
+    color: #00ffcc;
+    font-family: monospace;
+    font-size: 0.85rem;
+}
+
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1f2937;
+    border-left: 4px solid #10b981;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 13px;
+    z-index: 2000;
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+hr {
+    border-color: #2a3a5a;
+    margin: 15px 0;
+}
+
+.note {
+    font-size: 0.65rem;
+    color: #9ca3af;
+    text-align: center;
+    margin-top: 15px;
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+    <h1>
+        🛠️ DEVELOPER CONSOLE
+        <span class="badge">Edit Orders</span>
+        <span class="badge">JSON Generator</span>
+    </h1>
+    <div style="margin-top: 8px; font-size: 0.7rem;">Edit Firestore Orders | Generate Kitchen Menu JSON (one line with trailing commas)</div>
+</div>
+
+<div class="container">
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" onclick="switchTab('orders')">📋 Edit Firestore Orders</button>
+        <button class="tab-btn" onclick="switchTab('generator')">📦 JSON Generator (Menu Items)</button>
+    </div>
+
+    <!-- PANEL 1: FIRESTORE ORDERS EDITOR -->
+    <div id="ordersPanel" class="panel active-panel">
+        <div class="panel-header">
+            <h2>📄 Edit Firestore Documents (kitchen_requests)</h2>
+            <div>
+                <button class="btn btn-primary" onclick="fetchOrderDocument()">🔍 Fetch by ID</button>
+                <button class="btn btn-secondary" onclick="listAllOrders()">📋 List Orders</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="form-row">
+                <input type="text" id="orderDocId" class="form-input" placeholder="Enter Firestore Document ID...">
+            </div>
+            <div id="orderViewer" style="display:none;">
+                <textarea id="orderJsonEditor" rows="14" placeholder="Document JSON will appear here..."></textarea>
+                <div style="display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap;">
+                    <button class="btn btn-success" onclick="saveOrderDocument()">💾 SAVE to Firestore</button>
+                    <button class="btn btn-danger" onclick="deleteOrderDocument()">🗑️ DELETE Document</button>
+                </div>
+            </div>
+            <div id="ordersList" class="doc-list"></div>
+        </div>
+    </div>
+
+    <!-- PANEL 2: JSON GENERATOR (Menu Items) -->
+    <div id="generatorPanel" class="panel">
+        <div class="panel-header">
+            <h2>📦 Generate Menu JSON (One Line + Trailing Commas)</h2>
+            <div>
+                <button class="btn btn-primary" onclick="copyJSON()">📋 Copy JSON</button>
+                <button class="btn btn-secondary" onclick="downloadJSON()">💾 Download</button>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="row">
+                <div class="field">
+                    <label>📌 CODE *</label>
+                    <input type="text" id="code" placeholder="e.g., 161005">
+                </div>
+                <div class="field">
+                    <label>🏷️ NAME (EN) *</label>
+                    <input type="text" id="name" placeholder="e.g., Black Pepper Corn">
+                </div>
+                <div class="field">
+                    <label>🌙 NAME (AR)</label>
+                    <input type="text" id="nameAr" placeholder="e.g., حب الفلفل الأسود">
+                </div>
+            </div>
+            <div class="row">
+                <div class="field">
+                    <label>📦 UNIT *</label>
+                    <input type="text" id="unit" placeholder="e.g., kg, pcs, 750g pkt">
+                </div>
+                <div class="field">
+                    <label>🔢 MAX LIMIT *</label>
+                    <input type="number" id="maxLimit" value="2" step="0.5">
+                </div>
+                <div class="field">
+                    <label>⚡ STEP *</label>
+                    <input type="number" id="step" value="1" step="0.5">
+                </div>
+                <div class="field">
+                    <label>💰 PRICE (AVE) *</label>
+                    <input type="number" id="price" value="45.50" step="0.01">
+                </div>
+            </div>
+            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                <button class="btn btn-success" onclick="addItem()">➕ ADD ITEM</button>
+                <button class="btn btn-secondary" onclick="clearForm()">🗑️ Clear Form</button>
+                <button class="btn btn-warning" onclick="addSample()">📋 Add Sample</button>
+                <button class="btn btn-danger" onclick="clearAllItems()">Clear All Items</button>
+            </div>
+
+            <hr>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                <strong>📋 ITEMS LIST</strong>
+                <span class="counter" id="itemCount">0 items</span>
+            </div>
+            <div id="itemsList" class="items-list">
+                <div style="padding: 20px; text-align: center; color: #9ca3af;">No items added yet</div>
+            </div>
+
+            <hr>
+
+            <div style="margin-top: 15px;">
+                <strong>📄 JSON OUTPUT</strong>
+                <textarea id="jsonOutput" rows="10" readonly placeholder="JSON will appear here..." style="margin-top: 10px;"></textarea>
+            </div>
+            <div class="note">
+                ⚡ Format: Each item on one line with trailing comma (except last). Ready to copy-paste.
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
-    // KITCHEN LIST (same as main dashboard)
-    const KITCHENS = ["Hot Kitchen", "Cold Kitchen", "Pastry / Bakery", "Butchery", "Beach House", "Nihon Kitchen", "Staff Kitchen"];
-    
-    let currentKitchen = null;
-    let currentMenuData = []; // parsed array
-    
-    // Helper: get Firestore collection name for kitchen menu
-    function getMenuCollectionName(kitchenName) {
-        // Convert to safe collection name: remove spaces, special chars
-        let safe = kitchenName.replace(/[ /]/g, '_').toLowerCase();
-        return `kitchen_menu_${safe}`;
-    }
-    
-    // Render kitchen tabs
-    function renderKitchenTabs() {
-        const container = document.getElementById("kitchenTabs");
-        container.innerHTML = '';
-        KITCHENS.forEach(kitchen => {
-            const btn = document.createElement('button');
-            btn.className = 'kitchen-tab';
-            btn.innerText = kitchen;
-            btn.onclick = () => selectKitchen(kitchen);
-            if (currentKitchen === kitchen) btn.classList.add('active');
-            container.appendChild(btn);
+// ==================== FIRESTORE ORDERS ====================
+let currentOrderDocId = null;
+
+async function listAllOrders() {
+    try {
+        const snapshot = await db.collection("kitchen_requests").orderBy("timestamp", "desc").limit(30).get();
+        const container = document.getElementById("ordersList");
+        container.innerHTML = "<strong>📋 Recent Orders (click to edit):</strong><br><br>";
+        if (snapshot.empty) { container.innerHTML += "<div>No orders found</div>"; return; }
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            container.innerHTML += `<div class="doc-item" onclick="loadOrderById('${doc.id}')">
+                <span class="doc-id">🆔 ${doc.id.substring(0, 20)}...</span>
+                <span>📌 ${data.requestId || 'N/A'} | ${data.chefName || '?'} | ${data.section || '?'}</span>
+                <button class="btn btn-secondary" style="padding:4px 12px;" onclick="event.stopPropagation();deleteOrderById('${doc.id}')">🗑️</button>
+            </div>`;
         });
+    } catch(e) { showToast("Error: " + e.message, true); }
+}
+
+async function loadOrderById(docId) {
+    document.getElementById("orderDocId").value = docId;
+    await fetchOrderDocument();
+}
+
+async function fetchOrderDocument() {
+    const docId = document.getElementById("orderDocId").value.trim();
+    if (!docId) { showToast("Enter Document ID", true); return; }
+    try {
+        const doc = await db.collection("kitchen_requests").doc(docId).get();
+        if (!doc.exists) { showToast("Document not found", true); return; }
+        currentOrderDocId = docId;
+        const data = { id: doc.id, ...doc.data() };
+        document.getElementById("orderJsonEditor").value = JSON.stringify(data, null, 2);
+        document.getElementById("orderViewer").style.display = "block";
+        showToast(`✅ Loaded: ${docId}`);
+    } catch(e) { showToast("Error: " + e.message, true); }
+}
+
+async function saveOrderDocument() {
+    if (!currentOrderDocId) { showToast("No document loaded", true); return; }
+    try {
+        const newData = JSON.parse(document.getElementById("orderJsonEditor").value);
+        const { id, ...updateData } = newData;
+        await db.collection("kitchen_requests").doc(currentOrderDocId).update(updateData);
+        showToast(`✅ Saved ${currentOrderDocId}`);
+        listAllOrders();
+    } catch(e) { showToast("Save failed: " + e.message, true); }
+}
+
+async function deleteOrderDocument() {
+    if (!currentOrderDocId) return;
+    if (confirm(`Delete ${currentOrderDocId} permanently?`)) {
+        await db.collection("kitchen_requests").doc(currentOrderDocId).delete();
+        showToast(`Deleted ${currentOrderDocId}`);
+        currentOrderDocId = null;
+        document.getElementById("orderViewer").style.display = "none";
+        document.getElementById("orderDocId").value = "";
+        listAllOrders();
     }
-    
-    async function selectKitchen(kitchen) {
-        currentKitchen = kitchen;
-        document.getElementById("currentKitchenName").innerHTML = `🍽️ ${kitchen}`;
-        renderKitchenTabs();
-        // Reset editor
-        document.getElementById("jsonEditor").value = '';
-        document.getElementById("itemsPreviewList").innerHTML = '<div style="color: #9ca3af;">Loading from Firestore...</div>';
-        await fetchKitchenData();
-    }
-    
-    // Load kitchen menu from Firestore
-    async function fetchKitchenData() {
-        if (!currentKitchen) {
-            showToast("Please select a kitchen first", "warning");
-            return;
-        }
-        try {
-            const collectionName = getMenuCollectionName(currentKitchen);
-            const snapshot = await db.collection(collectionName).doc("menu_items").get();
-            if (snapshot.exists) {
-                const data = snapshot.data();
-                if (data.items && Array.isArray(data.items)) {
-                    currentMenuData = data.items;
-                } else {
-                    currentMenuData = [];
-                }
-            } else {
-                // No document exists: create default template
-                currentMenuData = getDefaultMenuForKitchen(currentKitchen);
-                showToast(`No existing data. Loaded default template for ${currentKitchen}`, "info");
-            }
-            updateEditorFromData();
-            refreshPreviewList();
-            showToast(`✅ Loaded ${currentMenuData.length} items from ${currentKitchen}`, "success");
-        } catch (err) {
-            console.error(err);
-            showToast("Error loading: " + err.message, "error");
-            currentMenuData = [];
-            updateEditorFromData();
-        }
-    }
-    
-    // Default template based on kitchen (just a sample)
-    function getDefaultMenuForKitchen(kitchen) {
-        if (kitchen === "Hot Kitchen") {
-            return [
-                { "code": "162018", "name": "Demi Glace Sauce Knorr", "name_ar": "صوص ديمي جلاس كنور", "unit": "750g pkt", "maxLimit": 2, "step": 1, "AVE": 301.34 },
-                { "code": "162019", "name": "Beef Broth", "name_ar": "مرق لحم", "unit": "1kg", "maxLimit": 5, "step": 0.5, "AVE": 45.50 }
-            ];
-        } else if (kitchen === "Pastry / Bakery") {
-            return [
-                { "code": "PAST01", "name": "French Butter", "name_ar": "زبدة فرنسية", "unit": "500g", "maxLimit": 10, "step": 1, "AVE": 28.00 }
-            ];
-        } else {
-            return [
-                { "code": "GEN001", "name": "Sample Item", "name_ar": "عنصر تجريبي", "unit": "pcs", "maxLimit": 5, "step": 1, "AVE": 10.00 }
-            ];
+}
+
+async function deleteOrderById(docId) {
+    if (confirm(`Delete ${docId}?`)) {
+        await db.collection("kitchen_requests").doc(docId).delete();
+        showToast(`Deleted ${docId}`);
+        listAllOrders();
+        if (currentOrderDocId === docId) {
+            currentOrderDocId = null;
+            document.getElementById("orderViewer").style.display = "none";
         }
     }
+}
+
+// ==================== JSON GENERATOR ====================
+let menuItems = [];
+
+const codeInput = document.getElementById('code');
+const nameInput = document.getElementById('name');
+const nameArInput = document.getElementById('nameAr');
+const unitInput = document.getElementById('unit');
+const maxLimitInput = document.getElementById('maxLimit');
+const stepInput = document.getElementById('step');
+const priceInput = document.getElementById('price');
+const itemsListDiv = document.getElementById('itemsList');
+const jsonOutput = document.getElementById('jsonOutput');
+const itemCountSpan = document.getElementById('itemCount');
+
+function updateGeneratorUI() {
+    itemCountSpan.innerText = `${menuItems.length} item${menuItems.length !== 1 ? 's' : ''}`;
     
-    function updateEditorFromData() {
-        if (currentMenuData && currentMenuData.length) {
-            document.getElementById("jsonEditor").value = JSON.stringify(currentMenuData, null, 2);
-        } else {
-            document.getElementById("jsonEditor").value = '[\n  // Add your items here\n]';
-        }
+    if (menuItems.length === 0) {
+        itemsListDiv.innerHTML = '<div style="padding: 20px; text-align: center; color: #9ca3af;">No items added yet</div>';
+        jsonOutput.value = '[]';
+        return;
     }
     
-    function refreshPreviewList() {
-        const container = document.getElementById("itemsPreviewList");
-        if (!currentMenuData || currentMenuData.length === 0) {
-            container.innerHTML = '<div style="color: #9ca3af; text-align: center;">✨ No items. Add using form or edit JSON.</div>';
-            return;
-        }
-        container.innerHTML = '';
-        currentMenuData.forEach((item, idx) => {
-            const div = document.createElement('div');
-            div.className = 'item-card';
-            div.innerHTML = `
-                <span class="item-code">${escapeHtml(item.code || '?')}</span>
-                <span class="item-name"><strong>${escapeHtml(item.name || 'No name')}</strong> <span style="font-size:0.7rem;">(${escapeHtml(item.name_ar || '')})</span></span>
-                <span class="item-meta">📦 ${item.unit || '-'} | 🔢 Max:${item.maxLimit} | ⚡ Step:${item.step} | 💰 ${item.AVE || 0} EGP</span>
-                <button class="delete-item-btn" onclick="deleteItemByIndex(${idx})">🗑️ Delete</button>
-            `;
-            container.appendChild(div);
-        });
-    }
-    
-    function deleteItemByIndex(index) {
-        if (!currentMenuData || index < 0 || index >= currentMenuData.length) return;
-        if (confirm(`Delete item "${currentMenuData[index].name}"?`)) {
-            currentMenuData.splice(index, 1);
-            updateEditorFromData();
-            refreshPreviewList();
-            showToast("Item removed. Save to persist.", "info");
-        }
-    }
-    
-    function addNewItem() {
-        const code = document.getElementById("newCode").value.trim();
-        const name = document.getElementById("newName").value.trim();
-        const name_ar = document.getElementById("newNameAr").value.trim();
-        const unit = document.getElementById("newUnit").value.trim();
-        const maxLimit = parseFloat(document.getElementById("newMaxLimit").value);
-        const step = parseFloat(document.getElementById("newStep").value);
-        const AVE = parseFloat(document.getElementById("newAVE").value);
-        
-        if (!code || !name || !unit) {
-            showToast("Code, Name (EN) and Unit are required", "error");
-            return;
-        }
-        if (isNaN(maxLimit) || isNaN(step) || isNaN(AVE)) {
-            showToast("Max Limit, Step and AVE must be numbers", "error");
-            return;
-        }
-        
-        const newItem = {
-            code: code,
-            name: name,
-            name_ar: name_ar || "",
-            unit: unit,
-            maxLimit: maxLimit,
-            step: step,
-            AVE: AVE
-        };
-        
-        if (!currentMenuData) currentMenuData = [];
-        currentMenuData.push(newItem);
-        updateEditorFromData();
-        refreshPreviewList();
-        
-        // Clear form
-        document.getElementById("newCode").value = "";
-        document.getElementById("newName").value = "";
-        document.getElementById("newNameAr").value = "";
-        document.getElementById("newUnit").value = "";
-        document.getElementById("newMaxLimit").value = "2";
-        document.getElementById("newStep").value = "1";
-        document.getElementById("newAVE").value = "0";
-        
-        showToast(`✅ Added "${name}"`, "success");
-    }
-    
-    function validateJSON() {
-        try {
-            const raw = document.getElementById("jsonEditor").value;
-            const parsed = JSON.parse(raw);
-            if (!Array.isArray(parsed)) {
-                showToast("❌ JSON must be an array of items", "error");
-                return false;
-            }
-            let hasErrors = false;
-            for (let i = 0; i < parsed.length; i++) {
-                const item = parsed[i];
-                if (!item.code || !item.name || !item.unit || item.maxLimit === undefined || item.step === undefined || item.AVE === undefined) {
-                    showToast(`❌ Item at index ${i} missing required fields (code, name, unit, maxLimit, step, AVE)`, "error");
-                    hasErrors = true;
-                }
-            }
-            if (!hasErrors) {
-                showToast(`✅ JSON is valid! ${parsed.length} items found`, "success");
-                return true;
-            }
-            return false;
-        } catch(e) {
-            showToast("❌ Invalid JSON: " + e.message, "error");
-            return false;
-        }
-    }
-    
-    function formatJSON() {
-        try {
-            const raw = document.getElementById("jsonEditor").value;
-            const parsed = JSON.parse(raw);
-            document.getElementById("jsonEditor").value = JSON.stringify(parsed, null, 2);
-            showToast("JSON formatted", "success");
-        } catch(e) {
-            showToast("Cannot format: " + e.message, "error");
-        }
-    }
-    
-    async function saveToFirestore() {
-        if (!currentKitchen) {
-            showToast("No kitchen selected", "error");
-            return;
-        }
-        
-        // Validate before save
-        try {
-            const raw = document.getElementById("jsonEditor").value;
-            const parsed = JSON.parse(raw);
-            if (!Array.isArray(parsed)) throw new Error("Data must be an array");
-            for (let i=0; i<parsed.length; i++) {
-                const it = parsed[i];
-                if (!it.code || !it.name || !it.unit || it.maxLimit === undefined || it.step === undefined || it.AVE === undefined) {
-                    throw new Error(`Item ${i} missing required fields`);
-                }
-            }
-            currentMenuData = parsed;
-        } catch(e) {
-            showToast("Fix JSON errors before saving: " + e.message, "error");
-            return;
-        }
-        
-        try {
-            const collectionName = getMenuCollectionName(currentKitchen);
-            const docRef = db.collection(collectionName).doc("menu_items");
-            await docRef.set({ items: currentMenuData, lastUpdated: new Date().toISOString(), updatedBy: "Developer Console" });
-            showToast(`💾 SAVED ${currentMenuData.length} items to ${collectionName}`, "success");
-            refreshPreviewList();
-            document.getElementById("docStatusBadge").style.background = "#10b981";
-            setTimeout(() => { document.getElementById("docStatusBadge").style.background = "#0066ff"; }, 2000);
-        } catch(err) {
-            showToast("Firestore error: " + err.message, "error");
-        }
-    }
-    
-    function confirmResetToDefault() {
-        if (!currentKitchen) return;
-        if (confirm(`⚠️ RESET ${currentKitchen} to default template? This will overwrite current JSON.`)) {
-            currentMenuData = getDefaultMenuForKitchen(currentKitchen);
-            updateEditorFromData();
-            refreshPreviewList();
-            showToast("Reset to default template. Click SAVE to persist.", "warning");
-        }
-    }
-    
-    function exportJSONFile() {
-        try {
-            const raw = document.getElementById("jsonEditor").value;
-            const parsed = JSON.parse(raw);
-            const jsonStr = JSON.stringify(parsed, null, 2);
-            const blob = new Blob([jsonStr], {type: "application/json"});
-            const a = document.createElement("a");
-            const url = URL.createObjectURL(blob);
-            a.href = url;
-            a.download = `menu_${currentKitchen?.replace(/ /g, '_')}.json`;
-            a.click();
-            URL.revokeObjectURL(url);
-            showToast("JSON file exported", "success");
-        } catch(e) {
-            showToast("Cannot export: Invalid JSON", "error");
-        }
-    }
-    
-    function escapeHtml(str) { return String(str || '').replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])); }
-    
-    function showToast(msg, type = "info") {
-        const toast = document.createElement("div");
-        toast.className = "toast";
-        toast.innerHTML = msg;
-        if (type === "error") toast.style.borderLeftColor = "#dc2626";
-        else if (type === "success") toast.style.borderLeftColor = "#10b981";
-        else toast.style.borderLeftColor = "#00d4ff";
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
-    
-    // Auto-sync from textarea to currentMenuData when focus lost? We'll do on save.
-    // But also allow manual sync: user can edit raw JSON, then click "Refresh Preview" to load from editor
-    function syncFromEditorToMemory() {
-        try {
-            const raw = document.getElementById("jsonEditor").value;
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed)) {
-                currentMenuData = parsed;
-                refreshPreviewList();
-                showToast("Preview synced from JSON editor", "info");
-                return true;
-            }
-        } catch(e) { showToast("Invalid JSON, can't sync preview", "error"); }
-        return false;
-    }
-    
-    // Override refreshPreviewList to optionally sync
-    window.refreshPreviewList = function() {
-        // Try to load from editor first if user manually edited
-        try {
-            const raw = document.getElementById("jsonEditor").value;
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed)) {
-                currentMenuData = parsed;
-            }
-        } catch(e) { /* silent */ }
-        // Now render
-        const container = document.getElementById("itemsPreviewList");
-        if (!currentMenuData || currentMenuData.length === 0) {
-            container.innerHTML = '<div style="color: #9ca3af; text-align: center;">✨ No items. Add using form or edit JSON.</div>';
-            return;
-        }
-        container.innerHTML = '';
-        currentMenuData.forEach((item, idx) => {
-            const div = document.createElement('div');
-            div.className = 'item-card';
-            div.innerHTML = `
-                <span class="item-code">${escapeHtml(item.code || '?')}</span>
-                <span class="item-name"><strong>${escapeHtml(item.name || 'No name')}</strong> <span style="font-size:0.7rem;">(${escapeHtml(item.name_ar || '')})</span></span>
-                <span class="item-meta">📦 ${item.unit || '-'} | 🔢 Max:${item.maxLimit} | ⚡ Step:${item.step} | 💰 ${item.AVE || 0} EGP</span>
-                <button class="delete-item-btn" onclick="deleteItemByIndex(${idx})">🗑️ Delete</button>
-            `;
-            container.appendChild(container);
-        });
-    };
-    
-    // attach global delete function
-    window.deleteItemByIndex = deleteItemByIndex;
-    window.addNewItem = addNewItem;
-    
-    // initial selection
-    if (KITCHENS.length) {
-        currentKitchen = KITCHENS[0];
-        renderKitchenTabs();
-        document.getElementById("currentKitchenName").innerHTML = `🍽️ ${currentKitchen}`;
-        fetchKitchenData();
-    } else {
-        document.getElementById("currentKitchenName").innerHTML = "No kitchens";
-    }
-    
-    // Monitor manual JSON changes: provide a button to sync preview
-    document.getElementById("jsonEditor").addEventListener('blur', function() {
-        try {
-            const parsed = JSON.parse(this.value);
-            if (Array.isArray(parsed)) {
-                currentMenuData = parsed;
-                refreshPreviewList();
-            }
-        } catch(e) {}
+    itemsListDiv.innerHTML = '';
+    menuItems.forEach((item, index) => {
+        const div = document.createElement('div');
+        div.className = 'item-row';
+        div.innerHTML = `
+            <span class="item-code">📌 ${escapeHtml(item.code)}</span>
+            <span><strong>${escapeHtml(item.name)}</strong> <span style="color:#9ca3af;">${escapeHtml(item.nameAr || '')}</span></span>
+            <span>📦 ${escapeHtml(item.unit)}</span>
+            <span>🔢 ${item.maxLimit}</span>
+            <span>⚡ ${item.step}</span>
+            <span>💰 ${item.price}</span>
+            <button class="delete-item" onclick="removeItem(${index})">✖</button>
+        `;
+        itemsListDiv.appendChild(div);
     });
     
-    // expose format & validate globally
-    window.validateJSON = validateJSON;
-    window.formatJSON = formatJSON;
-    window.saveToFirestore = saveToFirestore;
-    window.fetchKitchenData = fetchKitchenData;
-    window.confirmResetToDefault = confirmResetToDefault;
-    window.exportJSONFile = exportJSONFile;
-    window.selectKitchen = selectKitchen;
+    generateJSON();
+}
+
+function generateJSON() {
+    if (menuItems.length === 0) {
+        jsonOutput.value = '[]';
+        return;
+    }
+    
+    let lines = [];
+    for (let i = 0; i < menuItems.length; i++) {
+        const item = menuItems[i];
+        let line = `{"code": "${escapeJSON(item.code)}", "name": "${escapeJSON(item.name)}", "name_ar": "${escapeJSON(item.nameAr || '')}", "unit": "${escapeJSON(item.unit)}", "maxLimit": ${item.maxLimit}, "step": ${item.step}, "price": ${item.price}}`;
+        if (i < menuItems.length - 1) {
+            line += ',';
+        }
+        lines.push(line);
+    }
+    jsonOutput.value = '[\n' + lines.join('\n') + '\n]';
+}
+
+function addItem() {
+    const code = codeInput.value.trim();
+    const name = nameInput.value.trim();
+    const unit = unitInput.value.trim();
+    
+    if (!code) { showToast('❌ Code is required'); return; }
+    if (!name) { showToast('❌ Name is required'); return; }
+    if (!unit) { showToast('❌ Unit is required'); return; }
+    
+    const maxLimit = parseFloat(maxLimitInput.value);
+    const step = parseFloat(stepInput.value);
+    const price = parseFloat(priceInput.value);
+    
+    if (isNaN(maxLimit)) { showToast('❌ Max Limit must be a number'); return; }
+    if (isNaN(step)) { showToast('❌ Step must be a number'); return; }
+    if (isNaN(price)) { showToast('❌ Price must be a number'); return; }
+    
+    const newItem = {
+        code: code,
+        name: name,
+        nameAr: nameArInput.value.trim(),
+        unit: unit,
+        maxLimit: maxLimit,
+        step: step,
+        price: price
+    };
+    
+    menuItems.push(newItem);
+    updateGeneratorUI();
+    
+    codeInput.value = '';
+    nameInput.value = '';
+    nameArInput.value = '';
+    unitInput.value = '';
+    maxLimitInput.value = '2';
+    stepInput.value = '1';
+    priceInput.value = '45.50';
+    codeInput.focus();
+    
+    showToast(`✅ Added "${name}"`);
+}
+
+function removeItem(index) {
+    const removed = menuItems[index];
+    menuItems.splice(index, 1);
+    updateGeneratorUI();
+    showToast(`🗑️ Removed "${removed.name}"`);
+}
+
+function clearAllItems() {
+    if (menuItems.length === 0) return;
+    if (confirm(`Delete all ${menuItems.length} items?`)) {
+        menuItems = [];
+        updateGeneratorUI();
+        showToast('All items cleared');
+    }
+}
+
+function clearForm() {
+    codeInput.value = '';
+    nameInput.value = '';
+    nameArInput.value = '';
+    unitInput.value = '';
+    maxLimitInput.value = '2';
+    stepInput.value = '1';
+    priceInput.value = '45.50';
+    codeInput.focus();
+    showToast('Form cleared');
+}
+
+function addSample() {
+    const sample = {
+        code: "161005",
+        name: "Black Pepper Corn",
+        nameAr: "حب الفلفل الأسود",
+        unit: "kg",
+        maxLimit: 2,
+        step: 0.5,
+        price: 45.50
+    };
+    menuItems.push(sample);
+    updateGeneratorUI();
+    showToast('✅ Sample item added');
+}
+
+async function copyJSON() {
+    if (menuItems.length === 0) {
+        showToast('No items to copy');
+        return;
+    }
+    const json = jsonOutput.value;
+    await navigator.clipboard.writeText(json);
+    showToast('📋 JSON copied to clipboard');
+}
+
+function downloadJSON() {
+    if (menuItems.length === 0) {
+        showToast('No items to download');
+        return;
+    }
+    const json = jsonOutput.value;
+    const blob = new Blob([json], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `menu_items_${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('📎 JSON file downloaded');
+}
+
+// ==================== UTILITIES ====================
+function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(panel => panel.classList.remove('active-panel'));
+    if (tab === 'orders') {
+        document.querySelectorAll('.tab-btn')[0].classList.add('active');
+        document.getElementById('ordersPanel').classList.add('active-panel');
+    } else {
+        document.querySelectorAll('.tab-btn')[1].classList.add('active');
+        document.getElementById('generatorPanel').classList.add('active-panel');
+    }
+}
+
+function escapeJSON(str) {
+    if (!str) return '';
+    return str.replace(/\\/g, '\\\\')
+              .replace(/"/g, '\\"')
+              .replace(/\n/g, '\\n')
+              .replace(/\r/g, '\\r');
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
+}
+
+function showToast(msg, isError = false) {
+    const toast = document.createElement('div');
+    toast.className = 'toast';
+    toast.innerHTML = msg;
+    if (isError) toast.style.borderLeftColor = '#dc2626';
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2500);
+}
+
+function handleEnter(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        addItem();
+    }
+}
+
+codeInput.addEventListener('keypress', handleEnter);
+nameInput.addEventListener('keypress', handleEnter);
+unitInput.addEventListener('keypress', handleEnter);
+codeInput.focus();
 </script>
 </body>
 </html>
