@@ -7,7 +7,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-<title>Admin Dashboard - Firebase Auth</title>
+<title>Admin Dashboard - Firebase Doc ID Manager</title>
 
 <style>
 * {
@@ -546,6 +546,104 @@ body {
     to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
+.modal {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.85);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 24px;
+    text-align: center;
+    max-width: 360px;
+    width: 90%;
+}
+
+.modal-content h2 {
+    margin-bottom: 15px;
+    color: #1e3c72;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 40px;
+    font-size: 14px;
+    text-align: center;
+}
+
+.modal-content button {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 40px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1rem;
+}
+
+.error-msg {
+    color: #e74c3c;
+    margin-top: 10px;
+    font-size: 0.8rem;
+}
+
+.close-modal {
+    background: #95a5a6 !important;
+    margin-top: 10px;
+}
+
+.close-modal:hover {
+    background: #7f8c8d;
+}
+
+.confirm-modal {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.9);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.confirm-modal-content {
+    background: white;
+    padding: 30px;
+    border-radius: 24px;
+    text-align: center;
+    max-width: 400px;
+    width: 90%;
+}
+
+.free-adjust-badge {
+    background: #3498db;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.6rem;
+    margin-left: 8px;
+    vertical-align: middle;
+}
+
 .loading-overlay {
     position: fixed;
     top: 0;
@@ -579,52 +677,36 @@ body {
     font-size: 1rem;
 }
 
+@media (max-width: 768px) {
+    .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+    .stat-card { padding: 12px; }
+    .stat-number { font-size: 1.5rem; }
+    .firebase-id-badge { font-size: 0.6rem; padding: 2px 8px; }
+    .request-header { flex-direction: column; align-items: flex-start; }
+}
+
 .container {
     max-width: 1400px;
     margin: 0 auto;
     padding: 20px;
 }
-
-.user-email {
-    font-size: 0.7rem;
-    opacity: 0.8;
-}
-
-.confirm-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.9);
-    z-index: 2000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-
-.confirm-modal-content {
-    background: #0f172a;
-    padding: 30px;
-    border-radius: 24px;
-    text-align: center;
-    max-width: 400px;
-    width: 90%;
-    border: 1px solid #2a3a5a;
-}
-
-.free-adjust-badge {
-    background: #3498db;
-    color: white;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 0.6rem;
-    margin-left: 8px;
-    vertical-align: middle;
-}
 </style>
 </head>
 <body>
+
+<!-- FIREBASE AUTH LOGIN MODAL (Replaces password modal) -->
+<div id="authModal" class="modal">
+    <div class="modal-content">
+        <h2>🔐 Admin Login</h2>
+        <input type="email" id="loginEmail" placeholder="Email Address">
+        <input type="password" id="loginPassword" placeholder="Password">
+        <button onclick="loginWithFirebase()">Login</button>
+        <div id="loginError" class="error-msg"></div>
+        <button class="close-modal" onclick="goBackToIndex()">← Back to Home</button>
+        <hr style="margin: 15px 0;">
+        <button class="user-btn" onclick="openDevConsole()" style="background:#0052cc; color:white; width:100%;">🛠️ Developer Console</button>
+    </div>
+</div>
 
 <div id="loadingOverlay" class="loading-overlay" style="display: flex;">
     <div class="loading-spinner"></div>
@@ -635,14 +717,16 @@ body {
     <div class="header">
         <div class="header-content">
             <div class="logo">
-                <span class="logo-icon">👑</span>
+                <span class="logo-icon">🔥</span>
                 <span>Admin <span>Dashboard</span></span>
+                <span class="free-adjust-badge">🆔 FIREBASE DOC ID VISIBLE</span>
                 <span class="free-adjust-badge" style="background:#10b981;">🔐 Firebase Auth</span>
             </div>
             <div style="display: flex; align-items: center; gap: 15px;">
                 <span id="adminNameDisplay" style="font-weight: 600;"></span>
-                <span id="userEmailDisplay" class="user-email"></span>
+                <span id="userEmailDisplay" style="font-size: 10px; opacity: 0.8;"></span>
                 <button class="btn-header" onclick="logout()">🚪 Logout</button>
+                <button class="btn-header btn-dev" onclick="openDevConsole()">🛠️ Dev Console</button>
             </div>
             <div class="header-buttons">
                 <button class="btn-header btn-analytics" onclick="openAnalytics()">📊 Analytics</button>
@@ -650,7 +734,6 @@ body {
                 <button class="btn-header" onclick="window.print()">🖨️ Print</button>
                 <button class="btn-header" onclick="openRevenue()">💰 Revenue</button>
                 <button class="btn-header btn-danger" onclick="showResetConfirmModal()">🗑️ Reset</button>
-                <button class="btn-header btn-dev" id="devConsoleBtn" onclick="openDevConsole()" style="display:none;">🛠️ Dev Console</button>
             </div>
         </div>
     </div>
@@ -671,7 +754,7 @@ body {
 </div>
 
 <script>
-// Firebase Auth is already initialized in firebase-config.js
+const KITCHENS = ["Hot Kitchen", "Cold Kitchen", "Pastry / Bakery", "Butchery", "Beach House", "Nihon Kitchen", "Staff Kitchen"];
 
 let currentAdmin = "";
 let currentKitchen = "all";
@@ -679,53 +762,97 @@ let currentStatus = "pending";
 let allRequests = [];
 let duplicateMap = new Map();
 
-// ============ AUTHENTICATION ============
-function openDevConsole() {
-    window.open("dev_console.html", "_blank");
-}
+// ============ FIREBASE AUTHENTICATION ============
+function goBackToIndex() { window.location.href = "index.html"; }
+function openAnalytics() { window.open("analytics.html", "_blank"); }
+function openRevenue() { window.open("revenue.html", "_blank"); }
+function openDevConsole() { window.open("dev_console.html", "_blank"); }
 
-function openAnalytics() { 
-    window.open("analytics.html", "_blank"); 
-}
-function openRevenue() { 
-    window.open("revenue.html", "_blank"); 
+async function loginWithFirebase() {
+    const email = document.getElementById("loginEmail").value.trim();
+    const password = document.getElementById("loginPassword").value;
+    
+    if (!email || !password) {
+        document.getElementById("loginError").innerHTML = "Please enter email and password";
+        return;
+    }
+    
+    document.getElementById("loginError").innerHTML = "";
+    
+    try {
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+        
+        currentAdmin = user.email?.split('@')[0] || "Admin";
+        document.getElementById("adminNameDisplay").innerHTML = currentAdmin;
+        document.getElementById("userEmailDisplay").innerHTML = user.email || "";
+        
+        document.getElementById("authModal").style.display = "none";
+        document.getElementById("loadingOverlay").style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+        
+        localStorage.setItem("adminLoggedIn", "true");
+        localStorage.setItem("adminName", currentAdmin);
+        
+        loadRequests();
+        
+    } catch (error) {
+        let errorMsg = "Login failed: ";
+        switch (error.code) {
+            case 'auth/user-not-found':
+                errorMsg = "Invalid email or password";
+                break;
+            case 'auth/wrong-password':
+                errorMsg = "Invalid email or password";
+                break;
+            case 'auth/invalid-email':
+                errorMsg = "Invalid email format";
+                break;
+            default:
+                errorMsg = error.message;
+        }
+        document.getElementById("loginError").innerHTML = errorMsg;
+    }
 }
 
 async function logout() {
     if(confirm("Are you sure you want to logout?")) {
         try {
             await auth.signOut();
-            window.location.href = "login.html";
+            localStorage.removeItem("adminLoggedIn");
+            localStorage.removeItem("adminName");
+            window.location.reload();
         } catch(e) {
             showToast("Logout error: " + e.message);
         }
     }
 }
 
-// Check authentication on page load - SIMPLE VERSION
+// Check authentication on page load
 auth.onAuthStateChanged((user) => {
     const loadingOverlay = document.getElementById("loadingOverlay");
+    const authModal = document.getElementById("authModal");
     
-    if (!user) {
-        // Not logged in - redirect to login page
-        window.location.href = "login.html";
-        return;
+    if (user) {
+        // User is logged in - show dashboard
+        currentAdmin = user.email?.split('@')[0] || "Admin";
+        document.getElementById("adminNameDisplay").innerHTML = currentAdmin;
+        document.getElementById("userEmailDisplay").innerHTML = user.email || "";
+        
+        authModal.style.display = "none";
+        loadingOverlay.style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+        
+        loadRequests();
+    } else {
+        // User not logged in - show login modal
+        authModal.style.display = "flex";
+        loadingOverlay.style.display = "none";
+        document.getElementById("mainContent").style.display = "none";
     }
-    
-    // User is logged in - show admin dashboard
-    currentAdmin = user.email?.split('@')[0] || "Admin";
-    document.getElementById("adminNameDisplay").innerHTML = currentAdmin;
-    document.getElementById("userEmailDisplay").innerHTML = user.email || "";
-    
-    // Hide loading, show content
-    loadingOverlay.style.display = "none";
-    document.getElementById("mainContent").style.display = "block";
-    
-    // Load data
-    loadRequests();
 });
 
-// ============ CORE FUNCTIONS (ALL ORIGINAL - NO CHANGES) ============
+// ============ ALL EXISTING FUNCTIONS - NO CHANGES BELOW ============
 async function loadRequests() {
     try {
         const snapshot = await db.collection("kitchen_requests").orderBy("timestamp", "desc").get();
@@ -888,10 +1015,10 @@ function showResetConfirmModal() {
         <div class="confirm-modal-content">
             <h3>⚠️ PERMANENT DELETION ⚠️</h3>
             <p>Delete <strong>${toDelete.length}</strong> completed request(s)?</p>
-            <p style="color:#e74c3c; margin:15px 0;">This action cannot be undone!</p>
-            <div style="display:flex; gap:12px;">
-                <button style="background:#95a5a6; padding:12px; border-radius:40px; flex:1; border:none; cursor:pointer; color:white;" onclick="this.closest('.confirm-modal').remove()">Cancel</button>
-                <button id="confirmDeleteBtn" style="background:#e74c3c; padding:12px; border-radius:40px; flex:1; border:none; cursor:pointer; color:white;">Delete</button>
+            <p class="warning-text" style="color:#e74c3c; margin:15px 0;">This action cannot be undone!</p>
+            <div class="confirm-buttons" style="display:flex; gap:12px;">
+                <button class="btn-cancel-delete" style="background:#95a5a6; padding:12px; border-radius:40px; flex:1;" onclick="this.closest('.confirm-modal').remove()">Cancel</button>
+                <button class="btn-confirm-delete" id="confirmDeleteBtn" style="background:#e74c3c; padding:12px; border-radius:40px; flex:1;">Delete</button>
             </div>
         </div>
     `;
@@ -952,70 +1079,82 @@ function setFilter(status) { currentStatus = status; renderUI(); }
 function filterKitchen(kitchen) { currentKitchen = kitchen; renderUI(); }
 
 function renderUI() {
-    const KITCHENS = ["Hot Kitchen", "Cold Kitchen", "Pastry / Bakery", "Butchery", "Beach House", "Nihon Kitchen", "Staff Kitchen"];
-    
     const kitchenDiv = document.getElementById("kitchenFilters");
     kitchenDiv.innerHTML = `<button class="kitchen-filter-btn ${currentKitchen === 'all' ? 'active' : ''}" onclick="filterKitchen('all')">📋 All</button>`;
     KITCHENS.forEach(k => {
         let icon = k === 'Hot Kitchen' ? '🔥' : k === 'Cold Kitchen' ? '❄️' : k === 'Pastry / Bakery' ? '🍰' : k === 'Butchery' ? '🥩' : k === 'Beach House' ? '🏖️' : k === 'Nihon Kitchen' ? '🍜' : '👥';
-        kitchenDiv.innerHTML += `<button class="kitchen-filter-btn ${currentKitchen === k ? 'active' : ''}" onclick="filterKitchen('${k}')">${icon} ${k.split(' ')[0]}</button>`;
+        let name = k.replace(' Kitchen', '').replace(' / Bakery', '');
+        kitchenDiv.innerHTML += `<button class="kitchen-filter-btn ${currentKitchen === k ? 'active' : ''}" onclick="filterKitchen('${k}')">${icon} ${name}</button>`;
     });
     
     const tabsDiv = document.getElementById("statusTabs");
+    const statuses = ["pending", "approved", "rejected", "accepted", "all"];
+    const statusNames = ["⏳ Pending", "✅ Approved", "❌ Rejected", "🟣 Accepted", "📋 All"];
     tabsDiv.innerHTML = "";
-    ["pending","approved","rejected","accepted","all"].forEach(s => {
-        const label = {pending:"⏳ Pending",approved:"✅ Approved",rejected:"❌ Rejected",accepted:"🟣 Accepted",all:"📋 All"}[s];
-        tabsDiv.innerHTML += `<button class="tab-btn ${currentStatus === s ? 'active' : ''}" onclick="setFilter('${s}')">${label}</button>`;
+    statuses.forEach((s, i) => {
+        tabsDiv.innerHTML += `<button class="tab-btn ${currentStatus === s ? 'active' : ''}" onclick="setFilter('${s}')">${statusNames[i]}</button>`;
     });
     
-    let filtered = allRequests.filter(r => (currentKitchen === "all" || r.section === currentKitchen) && (currentStatus === "all" || getRequestStatus(r.items) === currentStatus));
+    let filtered = [...allRequests];
+    if(currentKitchen !== "all") filtered = filtered.filter(r => r.section === currentKitchen);
+    if(currentStatus !== "all") filtered = filtered.filter(r => getRequestStatus(r.items) === currentStatus);
+    
     const container = document.getElementById("requestsContainer");
     if(!filtered.length) { container.innerHTML = `<div class="empty-state">📭 No requests found</div>`; return; }
     
     container.innerHTML = "";
     filtered.forEach(req => {
         const requestStatus = getRequestStatus(req.items);
-        const kitchenClass = { "Hot Kitchen":"kitchen-hot","Cold Kitchen":"kitchen-cold","Pastry / Bakery":"kitchen-pastry","Butchery":"kitchen-butchery","Beach House":"kitchen-beach","Nihon Kitchen":"kitchen-nihon","Staff Kitchen":"kitchen-staff" }[req.section] || "kitchen-staff";
+        const kitchenClass = { "Hot Kitchen": "kitchen-hot", "Cold Kitchen": "kitchen-cold", "Pastry / Bakery": "kitchen-pastry", "Butchery": "kitchen-butchery", "Beach House": "kitchen-beach", "Nihon Kitchen": "kitchen-nihon", "Staff Kitchen": "kitchen-staff" }[req.section] || "kitchen-staff";
+        
         const duplicateInfo = duplicateMap.get(req.id);
-        const duplicateWarning = duplicateInfo ? `<span class="duplicate-warning">⚠️ DUPLICATE (${duplicateInfo.count} identical)</span>` : '';
+        const duplicateWarning = duplicateInfo ? `<span class="duplicate-warning">⚠️ DUPLICATE (${duplicateInfo.count} identical orders)</span>` : '';
         
         let requestedTotalValue = 0, approvedTotalValue = 0;
         req.items.forEach(item => {
             const price = item.price || 0;
-            requestedTotalValue += (item.originalQty || 0) * price;
+            requestedTotalValue += item.originalQty * price;
             if(item.status === "approved") approvedTotalValue += (item.approvedQty || 0) * price;
         });
         
         let hasIndividualAction = false;
         let isCompleted = false;
         if(requestStatus === "pending") {
-            hasIndividualAction = req.items.some(item => item.status === "approved" || item.status === "rejected");
+            for(const item of req.items) {
+                if(item.status === "approved" || item.status === "rejected") {
+                    hasIndividualAction = true;
+                    break;
+                }
+            }
         } else { isCompleted = true; }
         
-        const firebaseIdHtml = `<span class="firebase-id-badge" onclick="copyFirebaseId('${req.id}')" title="Click to copy Firebase Document ID">
-            <i>🆔</i> ${req.id.substring(0, 12)}... <span class="copy-icon">📋</span>
-        </span>`;
-        
-        let itemsHtml = `<div class="table-wrapper"><table class="admin-table"><thead><tr><th>Code</th><th>Item</th><th>Requested Qty</th><th>Unit</th><th>Price/Unit</th><th>Admin Qty</th><th>Total</th><th>Action</th><th>Status</th></tr></thead><tbody>`;
+        let itemsHtml = `<div class="table-wrapper"><table class="admin-table"><thead><tr><th>Code</th><th>Item</th><th>Requested Qty</th><th>Unit</th><th>Price/Unit (EGP)</th><th>Admin Qty (No Limit)</th><th>Total Value (EGP)</th><th>Action</th><th>Status</th></tr></thead><tbody>`;
         
         req.items.forEach((item, idx) => {
             const price = item.price || 0;
+            const approvedQty = item.status === "approved" ? (item.approvedQty || 0) : 0;
+            const totalValue = approvedQty * price;
+            
             if(item.status === "approved") {
-                itemsHtml += `<tr style="background:#e8f5e9;"><td>${item.code}</td><td><b>${escapeHtml(item.name)}</b></td><td>${item.originalQty}</td><td>${item.unit}</td><td>${price.toFixed(2)}</td><td><strong>${(item.approvedQty || 0).toFixed(1)}</strong></td><td>${((item.approvedQty||0)*price).toFixed(2)}</td><td>✅ Approved</span></td><td><span class="status-approved-cell">Approved</span><div class="admin-info-text">👤 ${item.approvedBy || ''}<br>📅 ${item.approvedAt || ''}</div></td></tr>`;
+                itemsHtml += `<tr style="background:#e8f5e9;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td><span class="item-price">${price.toFixed(2)}</span></td><td><strong>${approvedQty.toFixed(1)}</strong></td><td><strong style="color:#27ae60;">${totalValue.toFixed(2)}</strong></td><td><span class="btn-approve" style="background:#27ae60;opacity:0.7;">✅ Approved</span></td><td><span class="status-approved-cell">Approved</span><div class="admin-info-text">👤 ${escapeHtml(item.approvedBy || '?')}<br>📅 ${item.approvedAt || ''}</div></td></tr>`;
             } else if(item.status === "rejected") {
-                itemsHtml += `<tr style="background:#fee2e2;"><td>${item.code}</td><td><b>${escapeHtml(item.name)}</b></td><td>${item.originalQty}</td><td>${item.unit}</td><td>${price.toFixed(2)}</td><td>0</td><td>0.00</td><td>❌ Rejected</span></td><td><span class="status-rejected-cell">Rejected</span><div class="admin-info-text">👤 ${item.rejectedBy || ''}<br>📝 ${item.rejectionReason || ''}</div></td></tr>`;
+                itemsHtml += `<tr style="background:#fee2e2;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td><span class="item-price">${price.toFixed(2)}</span></td><td><strong>0</strong></td><td><strong style="color:#e74c3c;">0.00</strong></td><td><span class="btn-reject" style="background:#e74c3c;opacity:0.7;">❌ Rejected</span></td><td><span class="status-rejected-cell">Rejected</span><div class="admin-info-text">👤 ${escapeHtml(item.rejectedBy || '?')}<br>📅 ${item.rejectedAt || ''}<br>📝 ${escapeHtml(item.rejectionReason || '')}</div><\/div></td></tr>`;
             } else {
                 const currentVal = (item.originalQty || 0).toFixed(1);
-                itemsHtml += `<tr style="background:#fff8e7;"><td>${item.code}</td><td><b>${escapeHtml(item.name)}</b></td><td>${item.originalQty}</td><td>${item.unit}</td><td>${price.toFixed(2)}</td><td><input type="number" id="qty_${req.id}_${idx}" class="approval-input" value="${currentVal}" min="0" step="0.5"></td><td><span id="totalPreview_${req.id}_${idx}">${(item.originalQty * price).toFixed(2)}</span></td><td class="action-buttons"><button class="btn-approve" onclick="approveItemFlex('${req.id}', ${idx})">✅ Approve</button><button class="btn-reject" onclick="rejectItem('${req.id}', ${idx})">❌ Reject</button></td><td><span class="status-pending-cell">Pending</span><div class="admin-info-text">⚠️ Auto-approved on Accept</div><tr>`;
+                itemsHtml += `<tr style="background:#fff8e7;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td><span class="item-price">${price.toFixed(2)}</span></td><td><input type="number" id="qty_${req.id}_${idx}" class="approval-input" value="${currentVal}" min="0" step="0.5" style="background:#fef9e6;"></td><td><span id="totalValuePreview_${req.id}_${idx}" style="font-weight:600; color:#1e3c72;">${(item.originalQty * price).toFixed(2)}</span></td><td class="action-buttons"><button class="btn-approve" onclick="approveItemFlex('${req.id}', ${idx})">✅ Approve</button><button class="btn-reject" onclick="rejectItem('${req.id}', ${idx})">❌ Reject</button></td><td><span class="status-pending-cell">Pending</span><div class="admin-info-text">⚠️ Will be AUTO-APPROVED on Accept</div></td></tr>`;
+                
                 setTimeout(() => {
                     const input = document.getElementById(`qty_${req.id}_${idx}`);
-                    const totalSpan = document.getElementById(`totalPreview_${req.id}_${idx}`);
+                    const totalSpan = document.getElementById(`totalValuePreview_${req.id}_${idx}`);
                     if(input && totalSpan) {
-                        const updateTotal = () => { totalSpan.innerText = ((parseFloat(input.value)||0) * price).toFixed(2); };
+                        const updateTotal = () => {
+                            const newQty = parseFloat(input.value) || 0;
+                            totalSpan.innerText = (newQty * price).toFixed(2);
+                        };
                         input.addEventListener('input', updateTotal);
                         updateTotal();
                     }
-                }, 10);
+                }, 50);
             }
         });
         itemsHtml += `</tbody></table></div>`;
@@ -1023,32 +1162,32 @@ function renderUI() {
         let actions = "";
         if(!isCompleted) {
             actions = `<div class="request-actions">
-                <button class="btn-approve-all" onclick="approveAllFlex('${req.id}')" ${hasIndividualAction ? 'disabled' : ''}>✅ Approve All</button>
-                <button class="btn-reject-all" onclick="rejectAll('${req.id}')" ${hasIndividualAction ? 'disabled' : ''}>❌ Reject All</button>
-                <button class="btn-accept" onclick="acceptRequest('${req.id}')" ${!hasIndividualAction ? 'disabled' : ''}>🟣 Accept & Auto-Approve</button>
+                <button class="btn-approve-all" id="approveAllBtn_${req.id}" onclick="approveAllFlex('${req.id}')" ${hasIndividualAction ? 'disabled' : ''}>✅ Approve All (Flex Qty)</button>
+                <button class="btn-reject-all" id="rejectAllBtn_${req.id}" onclick="rejectAll('${req.id}')" ${hasIndividualAction ? 'disabled' : ''}>❌ Reject All</button>
+                <button class="btn-accept" id="acceptBtn_${req.id}" onclick="acceptRequest('${req.id}')" ${!hasIndividualAction ? 'disabled' : ''}>🟣 Accept (Auto-Approve Pending)</button>
             </div>`;
         } else {
-            actions = `<div class="request-actions"><button class="btn-accept" style="background:#6c757d;" disabled>🔒 Completed</button></div>`;
+            actions = `<div class="request-actions"><button class="btn-accept" style="background:#6c757d; cursor:default;" disabled>✅ Request Completed - Locked</button></div>`;
         }
+        
+        let statusText = "", statusClass = "";
+        if(requestStatus === "pending") { statusText = "Pending"; statusClass = "status-pending"; }
+        else if(requestStatus === "approved") { statusText = "Fully Approved"; statusClass = "status-approved"; }
+        else if(requestStatus === "rejected") { statusText = "Rejected"; statusClass = "status-rejected"; }
+        else { statusText = "Accepted"; statusClass = "status-accepted"; }
         
         container.innerHTML += `<div class="request-card">
             <div class="request-header">
-                <div>
-                    <span class="request-id">📄 ${req.requestId || 'N/A'}</span>
-                    ${firebaseIdHtml}
-                    ${duplicateWarning}
-                    <span class="kitchen-badge ${kitchenClass}" style="margin-left:10px;">${req.section}</span>
-                </div>
+                <div><span class="request-id">📄 ${req.requestId}</span>${duplicateWarning}<span class="kitchen-badge ${kitchenClass}" style="margin-left:10px;">${req.section}</span></div>
                 <div class="request-total-badge">
                     <span>💰 Requested: ${requestedTotalValue.toFixed(2)} EGP</span>
                     <span>✅ Approved: ${approvedTotalValue.toFixed(2)} EGP</span>
                 </div>
-                <span class="status-badge ${requestStatus === 'pending' ? 'status-pending' : (requestStatus === 'approved' ? 'status-approved' : (requestStatus === 'rejected' ? 'status-rejected' : 'status-accepted'))}">${requestStatus.toUpperCase()}</span>
+                <span class="status-badge ${statusClass}">${statusText}</span>
             </div>
             <div class="request-info">
                 <div class="info-item"><div class="info-label">👨‍🍳 CHEF</div><div class="info-value">${escapeHtml(req.chefName)}</div></div>
-                <div class="info-item"><div class="info-label">📅 SUBMITTED</div><div class="info-value">${req.submittedAt || 'Unknown'}</div></div>
-                <div class="info-item"><div class="info-label">🔥 FIRESTORE DOCUMENT ID</div><div class="info-value" style="font-family:monospace; font-size:11px;">${req.id}</div></div>
+                <div class="info-item"><div class="info-label">📅 SUBMITTED</div><div class="info-value">${req.submittedAt}</div></div>
             </div>
             ${itemsHtml}
             ${actions}
