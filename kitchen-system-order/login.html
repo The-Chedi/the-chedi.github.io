@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login - Kitchen Order System</title>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+    
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: linear-gradient(135deg, #0f0c29, #1a1a4e, #24243e);
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+    }
+    
+    .login-container {
+        background: #0f172a;
+        border-radius: 24px;
+        padding: 40px;
+        width: 400px;
+        max-width: 100%;
+        border: 1px solid #2a3a5a;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    }
+    
+    .login-container h1 {
+        color: #00d4ff;
+        text-align: center;
+        margin-bottom: 30px;
+        font-size: 1.8rem;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        color: #94a3b8;
+        margin-bottom: 8px;
+        font-size: 0.8rem;
+        font-weight: 600;
+    }
+    
+    .form-group input {
+        width: 100%;
+        padding: 12px 16px;
+        background: #1a1a2e;
+        border: 1px solid #2a3a5a;
+        border-radius: 12px;
+        color: white;
+        font-size: 1rem;
+        transition: all 0.3s;
+    }
+    
+    .form-group input:focus {
+        outline: none;
+        border-color: #00d4ff;
+        box-shadow: 0 0 5px rgba(0,212,255,0.3);
+    }
+    
+    .btn-login {
+        width: 100%;
+        padding: 12px;
+        background: #00d4ff;
+        color: #0a0e27;
+        border: none;
+        border-radius: 30px;
+        font-weight: bold;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-top: 10px;
+        transition: all 0.3s;
+    }
+    
+    .btn-login:hover {
+        opacity: 0.9;
+        transform: scale(1.02);
+    }
+    
+    .btn-login:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .error-message {
+        background: #dc262620;
+        border-left: 3px solid #dc2626;
+        padding: 10px;
+        border-radius: 8px;
+        color: #fca5a5;
+        margin-top: 15px;
+        text-align: center;
+        font-size: 0.8rem;
+    }
+    
+    .loading-message {
+        text-align: center;
+        color: #00d4ff;
+        margin-top: 15px;
+        font-size: 0.8rem;
+    }
+    
+    .back-link {
+        display: block;
+        text-align: center;
+        margin-top: 20px;
+        color: #94a3b8;
+        text-decoration: none;
+        font-size: 0.8rem;
+    }
+    
+    .back-link:hover {
+        color: #00d4ff;
+    }
+    
+    .demo-credentials {
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 1px solid #2a3a5a;
+        font-size: 0.7rem;
+        color: #94a3b8;
+        text-align: center;
+    }
+    
+    .demo-credentials span {
+        color: #00d4ff;
+    }
+</style>
+</head>
+<body>
+    <div class="login-container">
+        <h1>🔐 Kitchen Login</h1>
+        
+        <div class="form-group">
+            <label>📧 Email Address</label>
+            <input type="email" id="email" placeholder="Enter your email" autocomplete="email">
+        </div>
+        
+        <div class="form-group">
+            <label>🔑 Password</label>
+            <input type="password" id="password" placeholder="Enter your password" autocomplete="current-password">
+        </div>
+        
+        <button class="btn-login" onclick="login()">Login</button>
+        
+        <div id="errorMessage" class="error-message" style="display: none;"></div>
+        <div id="loadingMessage" class="loading-message" style="display: none;">⏳ Logging in...</div>
+        
+        <a href="index.html" class="back-link">← Back to Home</a>
+        
+        <div class="demo-credentials">
+            <strong>Demo Accounts:</strong><br>
+            <span>marco@system-order-kitchen.firebaseapp.com</span> / M1r50123<br>
+            <span>developer@system-order-kitchen.firebaseapp.com</span> / Dev@2025Secure!
+        </div>
+    </div>
+    
+    <script>
+        // Check if already logged in
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                // Get user role from Firestore
+                try {
+                    const userDoc = await db.collection("users").doc(user.uid).get();
+                    const role = userDoc.exists ? userDoc.data().role : "chef";
+                    
+                    if (role === "admin") {
+                        window.location.href = "admin.html";
+                    } else if (role === "developer") {
+                        window.location.href = "dev_console.html";
+                    } else {
+                        window.location.href = "chef.html";
+                    }
+                } catch(e) {
+                    console.error("Error checking role:", e);
+                    window.location.href = "chef.html";
+                }
+            }
+        });
+        
+        async function login() {
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+            
+            if (!email || !password) {
+                showError("Please enter email and password");
+                return;
+            }
+            
+            showLoading(true);
+            hideError();
+            
+            try {
+                const userCredential = await auth.signInWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                // Check user role from Firestore
+                const userDoc = await db.collection("users").doc(user.uid).get();
+                let role = "chef";
+                
+                if (userDoc.exists) {
+                    role = userDoc.data().role;
+                } else {
+                    // Create user document if doesn't exist
+                    await db.collection("users").doc(user.uid).set({
+                        email: user.email,
+                        role: "chef",
+                        name: user.email.split('@')[0],
+                        createdAt: new Date().toISOString()
+                    });
+                }
+                
+                // Store user info in session
+                sessionStorage.setItem("userId", user.uid);
+                sessionStorage.setItem("userEmail", user.email);
+                sessionStorage.setItem("userRole", role);
+                
+                // Redirect based on role
+                if (role === "admin") {
+                    window.location.href = "admin.html";
+                } else if (role === "developer") {
+                    window.location.href = "dev_console.html";
+                } else {
+                    window.location.href = "chef.html";
+                }
+                
+            } catch (error) {
+                let errorMsg = "Login failed: ";
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                        errorMsg += "User not found. Please contact administrator.";
+                        break;
+                    case 'auth/wrong-password':
+                        errorMsg += "Wrong password. Please try again.";
+                        break;
+                    case 'auth/invalid-email':
+                        errorMsg += "Invalid email format.";
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMsg += "Too many failed attempts. Try again later.";
+                        break;
+                    default:
+                        errorMsg += error.message;
+                }
+                showError(errorMsg);
+                showLoading(false);
+            }
+        }
+        
+        function showError(msg) {
+            const errorDiv = document.getElementById("errorMessage");
+            errorDiv.textContent = msg;
+            errorDiv.style.display = "block";
+        }
+        
+        function hideError() {
+            document.getElementById("errorMessage").style.display = "none";
+        }
+        
+        function showLoading(show) {
+            const loadingDiv = document.getElementById("loadingMessage");
+            const loginBtn = document.querySelector(".btn-login");
+            loadingDiv.style.display = show ? "block" : "none";
+            loginBtn.disabled = show;
+        }
+        
+        // Enter key submit
+        document.getElementById("password").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") login();
+        });
+        document.getElementById("email").addEventListener("keypress", function(e) {
+            if (e.key === "Enter") login();
+        });
+    </script>
+</body>
+</html>
