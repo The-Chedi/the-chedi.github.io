@@ -296,7 +296,13 @@ textarea {
     color: #0a0e27;
 }
 
-.kitchen-menu-btn:hover { background: #334155; }
+.kitchen-menu-btn.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    background: #1e293b;
+}
+
+.kitchen-menu-btn:not(.disabled):hover { background: #334155; }
 
 .menu-items-list {
     max-height: 300px;
@@ -460,7 +466,7 @@ hr {
             <span class="badge">Load Kitchen JSON</span>
             <span class="badge">Add Items from Menu</span>
         </h1>
-        <div style="margin-top: 8px; font-size: 0.7rem;">Load menu from /items/*.json | Click item to add to order</div>
+        <div style="margin-top: 8px; font-size: 0.7rem;">Only the order's kitchen is enabled | Click kitchen button to load items</div>
     </div>
 
     <div class="container">
@@ -477,7 +483,6 @@ hr {
                 <div>
                     <button class="btn btn-primary" onclick="fetchOrderDocument()">🔍 Fetch by ID</button>
                     <button class="btn btn-secondary" onclick="listAllOrders()">📋 List Orders</button>
-                    <button class="btn btn-restore" onclick="showRestoreAllModal()">🔄 Restore All to Pending</button>
                 </div>
             </div>
             <div class="form-group">
@@ -492,7 +497,7 @@ hr {
                         <button class="btn btn-restore" onclick="restoreSingleToPending()">🔄 Restore to Pending</button>
                     </div>
                     
-                    <!-- MENU SELECTOR - READ FROM items/ FOLDER -->
+                    <!-- MENU SELECTOR - Only order's kitchen is enabled -->
                     <div class="menu-selector">
                         <div class="menu-title">
                             📦 ADD ITEM FROM KITCHEN MENU (JSON Files)
@@ -501,9 +506,9 @@ hr {
                         <div class="kitchen-menu-buttons" id="kitchenMenuButtons"></div>
                         <div id="selectedKitchenName" style="margin-bottom: 10px; font-size: 0.75rem; color: #00d4ff;"></div>
                         <div id="menuItemsList" class="menu-items-list">
-                            <div style="padding: 20px; text-align: center; color: #9ca3af;">Select a kitchen above to load menu items</div>
+                            <div style="padding: 20px; text-align: center; color: #9ca3af;">Click a kitchen button above to load menu items</div>
                         </div>
-                        <div class="note" style="margin-top: 10px;">💡 Click on any item to add it to the order with quantity 1. Then click SAVE.</div>
+                        <div class="note" style="margin-top: 10px;">💡 Only the order's kitchen is enabled. Click the enabled kitchen button to load items, then click on any item to add it to the order.</div>
                     </div>
                 </div>
                 <div id="ordersList" class="doc-list"></div>
@@ -602,7 +607,6 @@ document.getElementById("devPasswordInput")?.addEventListener("keypress", functi
 });
 
 // ==================== KITCHEN JSON FILES MAPPING ====================
-// Files are in the "items" folder at the same level as HTML files
 const KITCHEN_JSON_FILES = {
     "Hot Kitchen": "hot-kitchen.json",
     "Cold Kitchen": "cold-kitchen.json",
@@ -613,11 +617,12 @@ const KITCHEN_JSON_FILES = {
     "Staff Kitchen": "staff-kitchen.json"
 };
 
-// Path is relative to the HTML file - files are in "items" folder
 const JSON_BASE_PATH = "items/";
 
 let currentMenuItems = [];
-let currentSelectedKitchen = "Hot Kitchen";
+let currentSelectedKitchen = "";
+let orderKitchen = ""; // Store the order's kitchen
+let currentMenuLoaded = false;
 
 // ==================== FIRESTORE ORDERS ====================
 let currentOrderDocId = null;
@@ -682,14 +687,18 @@ async function fetchOrderDocument() {
         currentOrderData = { id: doc.id, ...doc.data() };
         document.getElementById("orderJsonEditor").value = JSON.stringify(currentOrderData, null, 2);
         document.getElementById("orderViewer").style.display = "block";
-        showToast(`✅ Loaded: ${docId}`);
-        // Load default kitchen menu based on order section
-        if (currentOrderData.section && KITCHEN_JSON_FILES[currentOrderData.section]) {
-            currentSelectedKitchen = currentOrderData.section;
-            await loadKitchenMenuJSON(currentSelectedKitchen);
-        } else {
-            await loadKitchenMenuJSON("Hot Kitchen");
-        }
+        
+        // Get order's kitchen section
+        orderKitchen = currentOrderData.section || "Hot Kitchen";
+        showToast(`✅ Loaded: ${docId} | Kitchen: ${orderKitchen}`);
+        
+        // Render kitchen buttons with only the order's kitchen enabled
+        renderKitchenMenuButtons();
+        
+        // Clear items list until user clicks the enabled button
+        document.getElementById("menuItemsList").innerHTML = '<div style="padding: 20px; text-align: center; color: #9ca3af;">Click the enabled kitchen button above to load menu items</div>';
+        currentMenuLoaded = false;
+        
     } catch(e) { showToast("Error: " + e.message, true); }
 }
 
@@ -712,9 +721,11 @@ async function deleteOrderDocument() {
         showToast(`Deleted ${currentOrderDocId}`);
         currentOrderDocId = null;
         currentOrderData = null;
+        orderKitchen = "";
         document.getElementById("orderViewer").style.display = "none";
         document.getElementById("orderDocId").value = "";
         listAllOrders();
+        renderKitchenMenuButtons();
     }
 }
 
@@ -726,26 +737,52 @@ async function deleteOrderById(docId) {
         if (currentOrderDocId === docId) {
             currentOrderDocId = null;
             currentOrderData = null;
+            orderKitchen = "";
             document.getElementById("orderViewer").style.display = "none";
+            renderKitchenMenuButtons();
         }
     }
 }
 
-// ============ LOAD KITCHEN MENU FROM JSON FILE ============
+// ============ KITCHEN MENU BUTTONS - Only order's kitchen enabled ============
 function renderKitchenMenuButtons() {
     const container = document.getElementById("kitchenMenuButtons");
     container.innerHTML = "";
+    
     Object.keys(KITCHEN_JSON_FILES).forEach(kitchen => {
         const btn = document.createElement("button");
+        const isOrderKitchen = (kitchen === orderKitchen);
+        
         btn.className = `kitchen-menu-btn ${currentSelectedKitchen === kitchen ? 'active' : ''}`;
         btn.innerText = kitchen;
+        
+        if (!isOrderKitchen) {
+            btn.classList.add("disabled");
+            btn.title = `Only ${orderKitchen || 'the order\'s kitchen'} is enabled`;
+        }
+        
         btn.onclick = () => {
+            if (!isOrderKitchen) {
+                showToast(`Only the order's kitchen (${orderKitchen}) is enabled. Load an order with a different kitchen first.`, true);
+                return;
+            }
             currentSelectedKitchen = kitchen;
             renderKitchenMenuButtons();
             loadKitchenMenuJSON(kitchen);
         };
         container.appendChild(btn);
     });
+    
+    // Add info text if no order loaded
+    if (!orderKitchen) {
+        const infoDiv = document.createElement("div");
+        infoDiv.style.fontSize = "0.7rem";
+        infoDiv.style.color = "#9ca3af";
+        infoDiv.style.marginTop = "10px";
+        infoDiv.style.textAlign = "center";
+        infoDiv.innerText = "⚠️ Load an order first to enable its kitchen";
+        container.appendChild(infoDiv);
+    }
 }
 
 async function loadKitchenMenuJSON(kitchen) {
@@ -755,7 +792,6 @@ async function loadKitchenMenuJSON(kitchen) {
         return;
     }
     
-    // Path: items/filename.json (same folder level as HTML files)
     const jsonPath = `${JSON_BASE_PATH}${fileName}`;
     document.getElementById("selectedKitchenName").innerHTML = `📁 Loading: ${jsonPath}`;
     
@@ -766,7 +802,6 @@ async function loadKitchenMenuJSON(kitchen) {
         }
         const data = await response.json();
         
-        // Handle both array format and {items: []} format
         if (Array.isArray(data)) {
             currentMenuItems = data;
         } else if (data.items && Array.isArray(data.items)) {
@@ -778,6 +813,7 @@ async function loadKitchenMenuJSON(kitchen) {
         renderMenuItemsList();
         document.getElementById("selectedKitchenName").innerHTML = `✅ Loaded ${currentMenuItems.length} items from ${jsonPath}`;
         showToast(`✅ Loaded ${currentMenuItems.length} items from ${kitchen}`);
+        currentMenuLoaded = true;
     } catch(e) {
         console.error(e);
         document.getElementById("selectedKitchenName").innerHTML = `❌ Error: ${jsonPath} not found. Create this file in the "items" folder.`;
@@ -828,7 +864,6 @@ function addMenuItemToOrder(index) {
         return;
     }
     
-    // Get price from either AVE or price field
     const price = menuItem.AVE || menuItem.price || 0;
     
     const newItem = {
@@ -846,13 +881,12 @@ function addMenuItemToOrder(index) {
     }
     currentOrderData.items.push(newItem);
     
-    // Update the JSON editor
     document.getElementById("orderJsonEditor").value = JSON.stringify(currentOrderData, null, 2);
     
     showToast(`✅ Added "${menuItem.name}" (x${quantity}) to order. Click SAVE to persist.`);
 }
 
-// ============ RESTORE TO PENDING FUNCTIONS ============
+// ============ RESTORE TO PENDING FUNCTION ============
 async function restoreOrderToPending(docId) {
     if (!confirm(`Restore order to PENDING status?\n\nThis will reset all approved/rejected items back to pending. You can then add new items from the menu.\n\nContinue?`)) return;
     
@@ -898,58 +932,6 @@ async function restoreSingleToPending() {
     } else {
         showToast("No document loaded", true);
     }
-}
-
-async function showRestoreAllModal() {
-    const pendingRestore = [];
-    try {
-        const snapshot = await db.collection("kitchen_requests").get();
-        snapshot.forEach(doc => {
-            const status = getRequestStatus(doc.data().items);
-            if (status !== "pending") {
-                pendingRestore.push({ id: doc.id, status: status });
-            }
-        });
-        
-        if (pendingRestore.length === 0) {
-            showToast("No completed orders to restore.");
-            return;
-        }
-        
-        if (confirm(`🔄 RESTORE ALL COMPLETED ORDERS TO PENDING?\n\nYou are about to restore ${pendingRestore.length} order(s) back to PENDING status.\n\nAfter restore, you can add new items to any order.\n\nContinue?`)) {
-            let restored = 0;
-            for (const order of pendingRestore) {
-                try {
-                    const doc = await db.collection("kitchen_requests").doc(order.id).get();
-                    const data = doc.data();
-                    if (data.items) {
-                        let changed = false;
-                        data.items.forEach(item => {
-                            if (item.status === "approved" || item.status === "rejected") {
-                                item.status = "pending";
-                                delete item.approvedQty;
-                                delete item.approvedBy;
-                                delete item.approvedAt;
-                                delete item.rejectionReason;
-                                delete item.rejectedBy;
-                                delete item.rejectedAt;
-                                changed = true;
-                            }
-                            if (item.completedVia) delete item.completedVia;
-                        });
-                        if (data.completedVia) delete data.completedVia;
-                        if (changed) {
-                            await db.collection("kitchen_requests").doc(order.id).update({ items: data.items });
-                            restored++;
-                        }
-                    }
-                } catch(e) { console.error(e); }
-            }
-            showToast(`✅ Restored ${restored} orders to PENDING status`);
-            listAllOrders();
-            if (currentOrderDocId) await fetchOrderDocument();
-        }
-    } catch(e) { showToast("Error: " + e.message, true); }
 }
 
 // ==================== JSON GENERATOR ====================
@@ -1131,7 +1113,6 @@ function switchTab(tab) {
         document.querySelectorAll('.tab-btn')[0].classList.add('active');
         document.getElementById('ordersPanel').classList.add('active-panel');
         listAllOrders();
-        renderKitchenMenuButtons();
     } else {
         document.querySelectorAll('.tab-btn')[1].classList.add('active');
         document.getElementById('generatorPanel').classList.add('active-panel');
@@ -1170,9 +1151,6 @@ function handleEnter(e) {
 codeInput?.addEventListener('keypress', handleEnter);
 nameInput?.addEventListener('keypress', handleEnter);
 unitInput?.addEventListener('keypress', handleEnter);
-
-// Initialize
-renderKitchenMenuButtons();
 </script>
 </body>
 </html>
