@@ -49,6 +49,62 @@ body {
     padding: 24px;
 }
 
+/* Login Modal */
+.login-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.95);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.login-box {
+    background: #0f172a;
+    border: 2px solid #00d4ff;
+    border-radius: 24px;
+    padding: 40px;
+    width: 350px;
+    text-align: center;
+}
+
+.login-box h2 {
+    color: #00d4ff;
+    margin-bottom: 20px;
+}
+
+.login-box input {
+    width: 100%;
+    background: #1a1a2e;
+    border: 1px solid #2a3a5a;
+    padding: 14px;
+    border-radius: 12px;
+    color: white;
+    font-family: monospace;
+    font-size: 1rem;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.login-box button {
+    background: #00d4ff;
+    color: #0a0e27;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1rem;
+}
+
+.login-box button:hover { opacity: 0.9; transform: scale(1.02); }
+.error-msg { color: #dc2626; margin-top: 10px; font-size: 0.8rem; }
+
 /* Tabs */
 .tabs {
     display: flex;
@@ -163,6 +219,7 @@ textarea {
 .btn-danger { background: #dc2626; color: white; }
 .btn-warning { background: #f59e0b; color: #1a1a2e; }
 .btn-secondary { background: #334155; color: white; }
+.btn-restore { background: #8b5cf6; color: white; }
 
 .btn:hover { transform: scale(1.02); opacity: 0.9; }
 
@@ -190,6 +247,11 @@ textarea {
 .doc-item:hover { background: #1f2937; }
 
 .doc-id { font-family: monospace; font-size: 11px; color: #00d4ff; }
+.status-badge { padding: 2px 8px; border-radius: 20px; font-size: 0.65rem; font-weight: bold; }
+.status-pending { background: #f59e0b; color: #1a1a2e; }
+.status-approved { background: #10b981; color: white; }
+.status-rejected { background: #dc2626; color: white; }
+.status-accepted { background: #8b5cf6; color: white; }
 
 /* JSON Generator Items List */
 .items-list {
@@ -290,134 +352,193 @@ hr {
 </head>
 <body>
 
-<div class="header">
-    <h1>
-        🛠️ DEVELOPER CONSOLE
-        <span class="badge">Edit Orders</span>
-        <span class="badge">JSON Generator</span>
-    </h1>
-    <div style="margin-top: 8px; font-size: 0.7rem;">Edit Firestore Orders | Generate Kitchen Menu JSON (one line with trailing commas)</div>
+<div id="loginOverlay" class="login-overlay">
+    <div class="login-box">
+        <h2>🔐 Developer Access</h2>
+        <input type="password" id="devPasswordInput" placeholder="Enter Developer Password" autofocus>
+        <button onclick="checkDevLogin()">Unlock Console</button>
+        <div id="loginErrorMsg" class="error-msg"></div>
+    </div>
 </div>
 
-<div class="container">
-    <!-- Tabs -->
-    <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('orders')">📋 Edit Firestore Orders</button>
-        <button class="tab-btn" onclick="switchTab('generator')">📦 JSON Generator (Menu Items)</button>
+<div id="mainContent" style="display:none;">
+    <div class="header">
+        <h1>
+            🛠️ DEVELOPER CONSOLE
+            <span class="badge">Edit Orders</span>
+            <span class="badge">JSON Generator</span>
+            <span class="badge">Restore to Pending</span>
+        </h1>
+        <div style="margin-top: 8px; font-size: 0.7rem;">Edit Firestore Orders | Generate Kitchen Menu JSON | Restore approved/rejected orders back to pending</div>
     </div>
 
-    <!-- PANEL 1: FIRESTORE ORDERS EDITOR -->
-    <div id="ordersPanel" class="panel active-panel">
-        <div class="panel-header">
-            <h2>📄 Edit Firestore Documents (kitchen_requests)</h2>
-            <div>
-                <button class="btn btn-primary" onclick="fetchOrderDocument()">🔍 Fetch by ID</button>
-                <button class="btn btn-secondary" onclick="listAllOrders()">📋 List Orders</button>
+    <div class="container">
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('orders')">📋 Edit Firestore Orders</button>
+            <button class="tab-btn" onclick="switchTab('generator')">📦 JSON Generator (Menu Items)</button>
+        </div>
+
+        <!-- PANEL 1: FIRESTORE ORDERS EDITOR -->
+        <div id="ordersPanel" class="panel active-panel">
+            <div class="panel-header">
+                <h2>📄 Edit Firestore Documents (kitchen_requests)</h2>
+                <div>
+                    <button class="btn btn-primary" onclick="fetchOrderDocument()">🔍 Fetch by ID</button>
+                    <button class="btn btn-secondary" onclick="listAllOrders()">📋 List Orders</button>
+                    <button class="btn btn-restore" onclick="showRestoreAllModal()">🔄 Restore Selected to Pending</button>
+                </div>
+            </div>
+            <div class="form-group">
+                <div class="form-row">
+                    <input type="text" id="orderDocId" class="form-input" placeholder="Enter Firestore Document ID...">
+                </div>
+                <div id="orderViewer" style="display:none;">
+                    <textarea id="orderJsonEditor" rows="14" placeholder="Document JSON will appear here..."></textarea>
+                    <div style="display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap;">
+                        <button class="btn btn-success" onclick="saveOrderDocument()">💾 SAVE to Firestore</button>
+                        <button class="btn btn-danger" onclick="deleteOrderDocument()">🗑️ DELETE Document</button>
+                        <button class="btn btn-restore" onclick="restoreSingleToPending()">🔄 Restore to Pending</button>
+                    </div>
+                </div>
+                <div id="ordersList" class="doc-list"></div>
             </div>
         </div>
-        <div class="form-group">
-            <div class="form-row">
-                <input type="text" id="orderDocId" class="form-input" placeholder="Enter Firestore Document ID...">
-            </div>
-            <div id="orderViewer" style="display:none;">
-                <textarea id="orderJsonEditor" rows="14" placeholder="Document JSON will appear here..."></textarea>
-                <div style="display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap;">
-                    <button class="btn btn-success" onclick="saveOrderDocument()">💾 SAVE to Firestore</button>
-                    <button class="btn btn-danger" onclick="deleteOrderDocument()">🗑️ DELETE Document</button>
-                </div>
-            </div>
-            <div id="ordersList" class="doc-list"></div>
-        </div>
-    </div>
 
-    <!-- PANEL 2: JSON GENERATOR (Menu Items) -->
-    <div id="generatorPanel" class="panel">
-        <div class="panel-header">
-            <h2>📦 Generate Menu JSON (One Line + Trailing Commas)</h2>
-            <div>
-                <button class="btn btn-primary" onclick="copyJSON()">📋 Copy JSON</button>
-                <button class="btn btn-secondary" onclick="downloadJSON()">💾 Download</button>
-            </div>
-        </div>
-        <div class="form-group">
-            <div class="row">
-                <div class="field">
-                    <label>📌 CODE *</label>
-                    <input type="text" id="code" placeholder="e.g., 161005">
-                </div>
-                <div class="field">
-                    <label>🏷️ NAME (EN) *</label>
-                    <input type="text" id="name" placeholder="e.g., Black Pepper Corn">
-                </div>
-                <div class="field">
-                    <label>🌙 NAME (AR)</label>
-                    <input type="text" id="nameAr" placeholder="e.g., حب الفلفل الأسود">
+        <!-- PANEL 2: JSON GENERATOR (Menu Items) -->
+        <div id="generatorPanel" class="panel">
+            <div class="panel-header">
+                <h2>📦 Generate Menu JSON (One Line + Trailing Commas)</h2>
+                <div>
+                    <button class="btn btn-primary" onclick="copyJSON()">📋 Copy JSON</button>
+                    <button class="btn btn-secondary" onclick="downloadJSON()">💾 Download</button>
                 </div>
             </div>
-            <div class="row">
-                <div class="field">
-                    <label>📦 UNIT *</label>
-                    <input type="text" id="unit" placeholder="e.g., kg, pcs, 750g pkt">
+            <div class="form-group">
+                <div class="row">
+                    <div class="field">
+                        <label>📌 CODE *</label>
+                        <input type="text" id="code" placeholder="e.g., 161005">
+                    </div>
+                    <div class="field">
+                        <label>🏷️ NAME (EN) *</label>
+                        <input type="text" id="name" placeholder="e.g., Black Pepper Corn">
+                    </div>
+                    <div class="field">
+                        <label>🌙 NAME (AR)</label>
+                        <input type="text" id="nameAr" placeholder="e.g., حب الفلفل الأسود">
+                    </div>
                 </div>
-                <div class="field">
-                    <label>🔢 MAX LIMIT *</label>
-                    <input type="number" id="maxLimit" value="2" step="0.5">
+                <div class="row">
+                    <div class="field">
+                        <label>📦 UNIT *</label>
+                        <input type="text" id="unit" placeholder="e.g., kg, pcs, 750g pkt">
+                    </div>
+                    <div class="field">
+                        <label>🔢 MAX LIMIT *</label>
+                        <input type="number" id="maxLimit" value="2" step="0.5">
+                    </div>
+                    <div class="field">
+                        <label>⚡ STEP *</label>
+                        <input type="number" id="step" value="1" step="0.5">
+                    </div>
+                    <div class="field">
+                        <label>💰 PRICE (AVE) *</label>
+                        <input type="number" id="price" value="45.50" step="0.01">
+                    </div>
                 </div>
-                <div class="field">
-                    <label>⚡ STEP *</label>
-                    <input type="number" id="step" value="1" step="0.5">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
+                    <button class="btn btn-success" onclick="addItem()">➕ ADD ITEM</button>
+                    <button class="btn btn-secondary" onclick="clearForm()">🗑️ Clear Form</button>
+                    <button class="btn btn-warning" onclick="addSample()">📋 Add Sample</button>
+                    <button class="btn btn-danger" onclick="clearAllItems()">Clear All Items</button>
                 </div>
-                <div class="field">
-                    <label>💰 PRICE (AVE) *</label>
-                    <input type="number" id="price" value="45.50" step="0.01">
-                </div>
-            </div>
-            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 10px;">
-                <button class="btn btn-success" onclick="addItem()">➕ ADD ITEM</button>
-                <button class="btn btn-secondary" onclick="clearForm()">🗑️ Clear Form</button>
-                <button class="btn btn-warning" onclick="addSample()">📋 Add Sample</button>
-                <button class="btn btn-danger" onclick="clearAllItems()">Clear All Items</button>
-            </div>
 
-            <hr>
+                <hr>
 
-            <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                <strong>📋 ITEMS LIST</strong>
-                <span class="counter" id="itemCount">0 items</span>
-            </div>
-            <div id="itemsList" class="items-list">
-                <div style="padding: 20px; text-align: center; color: #9ca3af;">No items added yet</div>
-            </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                    <strong>📋 ITEMS LIST</strong>
+                    <span class="counter" id="itemCount">0 items</span>
+                </div>
+                <div id="itemsList" class="items-list">
+                    <div style="padding: 20px; text-align: center; color: #9ca3af;">No items added yet</div>
+                </div>
 
-            <hr>
+                <hr>
 
-            <div style="margin-top: 15px;">
-                <strong>📄 JSON OUTPUT</strong>
-                <textarea id="jsonOutput" rows="10" readonly placeholder="JSON will appear here..." style="margin-top: 10px;"></textarea>
-            </div>
-            <div class="note">
-                ⚡ Format: Each item on one line with trailing comma (except last). Ready to copy-paste.
+                <div style="margin-top: 15px;">
+                    <strong>📄 JSON OUTPUT</strong>
+                    <textarea id="jsonOutput" rows="10" readonly placeholder="JSON will appear here..." style="margin-top: 10px;"></textarea>
+                </div>
+                <div class="note">
+                    ⚡ Format: Each item on one line with trailing comma (except last). Ready to copy-paste.
+                </div>
             </div>
         </div>
     </div>
 </div>
 
 <script>
+// ==================== PASSWORD ====================
+const DEV_PASSWORD = "Dev@2025Secure!";
+
+function checkDevLogin() {
+    const pass = document.getElementById("devPasswordInput").value;
+    if (pass === DEV_PASSWORD) {
+        document.getElementById("loginOverlay").style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+    } else {
+        document.getElementById("loginErrorMsg").innerHTML = "❌ Wrong password!";
+    }
+}
+
+// Enter key on password input
+document.getElementById("devPasswordInput")?.addEventListener("keypress", function(e) {
+    if (e.key === "Enter") checkDevLogin();
+});
+
 // ==================== FIRESTORE ORDERS ====================
 let currentOrderDocId = null;
 
+function getRequestStatus(items) {
+    if(!items || items.length === 0) return "pending";
+    let allProcessed = true;
+    let approved = 0, rejected = 0;
+    items.forEach(item => {
+        if(item.status === "approved") approved++;
+        else if(item.status === "rejected") rejected++;
+        else allProcessed = false;
+    });
+    if(items.length > 0 && items[0].completedVia === "accept") return "accepted";
+    if(allProcessed) {
+        if(approved === items.length) return "approved";
+        if(rejected === items.length) return "rejected";
+        return "accepted";
+    }
+    return "pending";
+}
+
 async function listAllOrders() {
     try {
-        const snapshot = await db.collection("kitchen_requests").orderBy("timestamp", "desc").limit(30).get();
+        const snapshot = await db.collection("kitchen_requests").orderBy("timestamp", "desc").limit(50).get();
         const container = document.getElementById("ordersList");
         container.innerHTML = "<strong>📋 Recent Orders (click to edit):</strong><br><br>";
         if (snapshot.empty) { container.innerHTML += "<div>No orders found</div>"; return; }
         snapshot.forEach(doc => {
             const data = doc.data();
+            const status = getRequestStatus(data.items);
+            let statusClass = "status-pending";
+            let statusText = "Pending";
+            if (status === "approved") { statusClass = "status-approved"; statusText = "Approved"; }
+            else if (status === "rejected") { statusClass = "status-rejected"; statusText = "Rejected"; }
+            else if (status === "accepted") { statusClass = "status-accepted"; statusText = "Accepted"; }
+            
             container.innerHTML += `<div class="doc-item" onclick="loadOrderById('${doc.id}')">
                 <span class="doc-id">🆔 ${doc.id.substring(0, 20)}...</span>
                 <span>📌 ${data.requestId || 'N/A'} | ${data.chefName || '?'} | ${data.section || '?'}</span>
+                <span class="status-badge ${statusClass}">${statusText}</span>
                 <button class="btn btn-secondary" style="padding:4px 12px;" onclick="event.stopPropagation();deleteOrderById('${doc.id}')">🗑️</button>
+                <button class="btn btn-restore" style="padding:4px 12px;" onclick="event.stopPropagation();restoreOrderToPending('${doc.id}')">🔄 Restore</button>
             </div>`;
         });
     } catch(e) { showToast("Error: " + e.message, true); }
@@ -475,6 +596,113 @@ async function deleteOrderById(docId) {
             document.getElementById("orderViewer").style.display = "none";
         }
     }
+}
+
+// ============ RESTORE TO PENDING FUNCTION ============
+async function restoreOrderToPending(docId) {
+    if (!confirm(`Restore order ${docId} to PENDING status?\n\nThis will reset all approved/rejected items back to pending.`)) return;
+    
+    try {
+        const doc = await db.collection("kitchen_requests").doc(docId).get();
+        if (!doc.exists) { showToast("Document not found", true); return; }
+        
+        const data = doc.data();
+        if (data.items && Array.isArray(data.items)) {
+            let changed = false;
+            data.items.forEach(item => {
+                if (item.status === "approved" || item.status === "rejected") {
+                    item.status = "pending";
+                    // Remove approval/rejection data
+                    delete item.approvedQty;
+                    delete item.approvedBy;
+                    delete item.approvedAt;
+                    delete item.rejectionReason;
+                    delete item.rejectedBy;
+                    delete item.rejectedAt;
+                    changed = true;
+                }
+                // Also remove completedVia flag if exists
+                if (item.completedVia) delete item.completedVia;
+            });
+            // Remove document-level completedVia
+            if (data.completedVia) delete data.completedVia;
+            
+            if (changed) {
+                await db.collection("kitchen_requests").doc(docId).update({ items: data.items });
+                showToast(`✅ Restored ${docId} to PENDING status`);
+                listAllOrders();
+                
+                // If currently viewing this document, refresh the view
+                if (currentOrderDocId === docId) {
+                    await fetchOrderDocument();
+                }
+            } else {
+                showToast(`Order ${docId} is already in PENDING status`);
+            }
+        } else {
+            showToast("No items found in this order", true);
+        }
+    } catch(e) { showToast("Restore failed: " + e.message, true); }
+}
+
+async function restoreSingleToPending() {
+    if (currentOrderDocId) {
+        await restoreOrderToPending(currentOrderDocId);
+    } else {
+        showToast("No document loaded", true);
+    }
+}
+
+async function showRestoreAllModal() {
+    const pendingRestore = [];
+    try {
+        const snapshot = await db.collection("kitchen_requests").get();
+        snapshot.forEach(doc => {
+            const status = getRequestStatus(doc.data().items);
+            if (status !== "pending") {
+                pendingRestore.push({ id: doc.id, status: status });
+            }
+        });
+        
+        if (pendingRestore.length === 0) {
+            showToast("No completed orders to restore. All orders are already pending.");
+            return;
+        }
+        
+        if (confirm(`🔄 RESTORE ALL COMPLETED ORDERS TO PENDING?\n\nYou are about to restore ${pendingRestore.length} order(s) that are currently Approved/Rejected/Accepted back to PENDING status.\n\nThis action CANNOT be undone easily.\n\nContinue?`)) {
+            let restored = 0;
+            for (const order of pendingRestore) {
+                try {
+                    const doc = await db.collection("kitchen_requests").doc(order.id).get();
+                    const data = doc.data();
+                    if (data.items) {
+                        let changed = false;
+                        data.items.forEach(item => {
+                            if (item.status === "approved" || item.status === "rejected") {
+                                item.status = "pending";
+                                delete item.approvedQty;
+                                delete item.approvedBy;
+                                delete item.approvedAt;
+                                delete item.rejectionReason;
+                                delete item.rejectedBy;
+                                delete item.rejectedAt;
+                                changed = true;
+                            }
+                            if (item.completedVia) delete item.completedVia;
+                        });
+                        if (data.completedVia) delete data.completedVia;
+                        if (changed) {
+                            await db.collection("kitchen_requests").doc(order.id).update({ items: data.items });
+                            restored++;
+                        }
+                    }
+                } catch(e) { console.error(e); }
+            }
+            showToast(`✅ Restored ${restored} orders to PENDING status`);
+            listAllOrders();
+            if (currentOrderDocId) await fetchOrderDocument();
+        }
+    } catch(e) { showToast("Error: " + e.message, true); }
 }
 
 // ==================== JSON GENERATOR ====================
@@ -655,6 +883,7 @@ function switchTab(tab) {
     if (tab === 'orders') {
         document.querySelectorAll('.tab-btn')[0].classList.add('active');
         document.getElementById('ordersPanel').classList.add('active-panel');
+        listAllOrders();
     } else {
         document.querySelectorAll('.tab-btn')[1].classList.add('active');
         document.getElementById('generatorPanel').classList.add('active-panel');
@@ -690,10 +919,9 @@ function handleEnter(e) {
     }
 }
 
-codeInput.addEventListener('keypress', handleEnter);
-nameInput.addEventListener('keypress', handleEnter);
-unitInput.addEventListener('keypress', handleEnter);
-codeInput.focus();
+codeInput?.addEventListener('keypress', handleEnter);
+nameInput?.addEventListener('keypress', handleEnter);
+unitInput?.addEventListener('keypress', handleEnter);
 </script>
 </body>
 </html>
