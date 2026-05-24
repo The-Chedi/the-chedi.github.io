@@ -299,7 +299,7 @@ textarea {
 .kitchen-menu-btn:hover { background: #334155; }
 
 .menu-items-list {
-    max-height: 250px;
+    max-height: 300px;
     overflow-y: auto;
     margin-top: 10px;
 }
@@ -315,7 +315,6 @@ textarea {
     align-items: center;
     flex-wrap: wrap;
     gap: 8px;
-    cursor: pointer;
     transition: all 0.2s;
 }
 
@@ -493,11 +492,11 @@ hr {
                         <button class="btn btn-restore" onclick="restoreSingleToPending()">🔄 Restore to Pending</button>
                     </div>
                     
-                    <!-- MENU SELECTOR - READ FROM /items/*.json -->
+                    <!-- MENU SELECTOR - READ FROM items/ FOLDER -->
                     <div class="menu-selector">
                         <div class="menu-title">
                             📦 ADD ITEM FROM KITCHEN MENU (JSON Files)
-                            <span style="font-size: 0.7rem;">/items/</span>
+                            <span style="font-size: 0.7rem;">📁 items/ folder</span>
                         </div>
                         <div class="kitchen-menu-buttons" id="kitchenMenuButtons"></div>
                         <div id="selectedKitchenName" style="margin-bottom: 10px; font-size: 0.75rem; color: #00d4ff;"></div>
@@ -577,7 +576,7 @@ hr {
                     <textarea id="jsonOutput" rows="10" readonly placeholder="JSON will appear here..." style="margin-top: 10px;"></textarea>
                 </div>
                 <div class="note">
-                    ⚡ Format: Each item on one line with trailing comma (except last). Ready to copy-paste.
+                    ⚡ Format: Each item on one line with trailing comma (except last). Ready to copy-paste into /items/ folder.
                 </div>
             </div>
         </div>
@@ -603,7 +602,7 @@ document.getElementById("devPasswordInput")?.addEventListener("keypress", functi
 });
 
 // ==================== KITCHEN JSON FILES MAPPING ====================
-// Simplified path: just /items/filename.json
+// Files are in the "items" folder at the same level as HTML files
 const KITCHEN_JSON_FILES = {
     "Hot Kitchen": "hot-kitchen.json",
     "Cold Kitchen": "cold-kitchen.json",
@@ -614,8 +613,8 @@ const KITCHEN_JSON_FILES = {
     "Staff Kitchen": "staff-kitchen.json"
 };
 
-// Base path is simply /items/
-const JSON_BASE_PATH = "/items/";
+// Path is relative to the HTML file - files are in "items" folder
+const JSON_BASE_PATH = "items/";
 
 let currentMenuItems = [];
 let currentSelectedKitchen = "Hot Kitchen";
@@ -756,14 +755,14 @@ async function loadKitchenMenuJSON(kitchen) {
         return;
     }
     
-    // Simple path: /items/filename.json
+    // Path: items/filename.json (same folder level as HTML files)
     const jsonPath = `${JSON_BASE_PATH}${fileName}`;
     document.getElementById("selectedKitchenName").innerHTML = `📁 Loading: ${jsonPath}`;
     
     try {
         const response = await fetch(jsonPath);
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status} - File not found. Make sure ${jsonPath} exists in your server's /items/ folder.`);
+            throw new Error(`HTTP ${response.status} - File not found`);
         }
         const data = await response.json();
         
@@ -781,8 +780,8 @@ async function loadKitchenMenuJSON(kitchen) {
         showToast(`✅ Loaded ${currentMenuItems.length} items from ${kitchen}`);
     } catch(e) {
         console.error(e);
-        document.getElementById("selectedKitchenName").innerHTML = `❌ Error loading ${jsonPath}: ${e.message}`;
-        showToast(`Failed to load ${fileName}: ${e.message}`, true);
+        document.getElementById("selectedKitchenName").innerHTML = `❌ Error: ${jsonPath} not found. Create this file in the "items" folder.`;
+        showToast(`❌ ${fileName} not found. Create items/${fileName} file.`, true);
         currentMenuItems = [];
         renderMenuItemsList();
     }
@@ -791,7 +790,7 @@ async function loadKitchenMenuJSON(kitchen) {
 function renderMenuItemsList() {
     const container = document.getElementById("menuItemsList");
     if (!currentMenuItems || currentMenuItems.length === 0) {
-        container.innerHTML = '<div style="padding: 20px; text-align: center; color: #9ca3af;">No items found in this JSON file</div>';
+        container.innerHTML = '<div style="padding: 20px; text-align: center; color: #9ca3af;">No items found. Create the JSON file in the "items" folder.</div>';
         return;
     }
     
