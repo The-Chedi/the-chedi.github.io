@@ -6,7 +6,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-<title>Admin Dashboard - Firebase Doc ID Manager</title>
+<title>Admin Dashboard - Firebase Doc ID Manager + Dev Console</title>
 
 <style>
 * {
@@ -84,6 +84,16 @@ body {
 
 .btn-danger {
     background: #e74c3c;
+}
+
+.btn-dev {
+    background: #2c3e50;
+    border: 1px solid #00d4ff;
+}
+
+.btn-dev-active {
+    background: #00d4ff;
+    color: #1e3c72;
 }
 
 .stats-grid {
@@ -662,12 +672,104 @@ body {
     vertical-align: middle;
 }
 
+/* Developer Console Panel Styles */
+.dev-console-panel {
+    background: #0f172a;
+    border-radius: 16px;
+    border: 1px solid #2a3a5a;
+    margin-top: 24px;
+    overflow: hidden;
+    display: none;
+}
+
+.dev-console-header {
+    background: #1a1a2e;
+    padding: 14px 20px;
+    border-bottom: 2px solid #00d4ff;
+    font-weight: bold;
+    color: #00d4ff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.dev-query-section {
+    display: flex;
+    gap: 12px;
+    padding: 20px;
+    flex-wrap: wrap;
+    background: #0f0f1a;
+}
+
+.dev-query-input {
+    flex: 2;
+    min-width: 200px;
+    padding: 10px 16px;
+    background: #1a1a2e;
+    border: 1px solid #2a3a5a;
+    border-radius: 12px;
+    color: #00ffcc;
+    font-family: monospace;
+}
+
+.dev-json-editor {
+    background: #0d1117;
+    padding: 16px;
+    border-radius: 12px;
+    margin: 20px;
+    border: 1px solid #2a3a5a;
+}
+
+.dev-json-editor textarea {
+    width: 100%;
+    background: #0a0e27;
+    border: 1px solid #2a3a5a;
+    color: #00ffcc;
+    font-family: monospace;
+    font-size: 12px;
+    padding: 16px;
+    border-radius: 12px;
+    resize: vertical;
+}
+
+.dev-doc-list {
+    max-height: 300px;
+    overflow-y: auto;
+    margin: 20px;
+}
+
+.dev-doc-item {
+    background: #111827;
+    padding: 10px 12px;
+    margin-bottom: 8px;
+    border-radius: 12px;
+    border-left: 3px solid #00d4ff;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.btn-dev-action {
+    background: #00d4ff;
+    color: #0a0e27;
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: none;
+    cursor: pointer;
+    font-size: 11px;
+    font-weight: 600;
+}
+
 @media (max-width: 768px) {
     .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
     .stat-card { padding: 12px; }
     .stat-number { font-size: 1.5rem; }
     .firebase-id-badge { font-size: 0.6rem; padding: 2px 8px; }
     .request-header { flex-direction: column; align-items: flex-start; }
+    .dev-query-section { flex-direction: column; }
 }
 
 .container {
@@ -687,6 +789,8 @@ body {
             <button class="user-btn" onclick="selectUser('Nady')">👨‍💼 Nady<br><span class="user-title">Administrator</span></button>
             <button class="user-btn" onclick="selectUser('Ahmed')">👨‍💻 Ahmed<br><span class="user-title">Administrator</span></button>
             <button class="user-btn" onclick="selectUser('Nader')">👨‍💼 Nader<br><span class="user-title">Administrator</span></button>
+            <hr style="margin: 10px 0;">
+            <button class="user-btn" onclick="showDevLogin()" style="background:#2c3e50; color:white;">🛠️ Developer Mode (Advanced)</button>
         </div>
         <input type="password" id="passwordInput" placeholder="Enter password" style="display:none;">
         <button id="loginBtn" style="display:none;" onclick="checkLogin()">Login</button>
@@ -705,7 +809,7 @@ body {
             </div>
             <div style="display: flex; align-items: center; gap: 15px;">
                 <span id="adminNameDisplay" style="font-weight: 600;"></span>
-                <span style="font-size: 10px; opacity: 0.8;">Administrator</span>
+                <span style="font-size: 10px; opacity: 0.8;" id="adminRoleLabel">Administrator</span>
                 <button class="btn-header" onclick="logout()">🚪 Logout</button>
             </div>
             <div class="header-buttons">
@@ -714,6 +818,7 @@ body {
                 <button class="btn-header" onclick="window.print()">🖨️ Print</button>
                 <button class="btn-header" onclick="openRevenue()">💰 Revenue</button>
                 <button class="btn-header btn-danger" onclick="showResetConfirmModal()">🗑️ Reset</button>
+                <button class="btn-header btn-dev" id="devToggleBtn" onclick="toggleDevConsole()" style="display:none;">🛠️ Dev Console</button>
             </div>
         </div>
     </div>
@@ -730,11 +835,48 @@ body {
         <div class="kitchen-filters" id="kitchenFilters"></div>
         <div class="tabs" id="statusTabs"></div>
         <div id="requestsContainer"></div>
+        
+        <!-- Developer Console Panel (Integrated) -->
+        <div id="devConsolePanel" class="dev-console-panel">
+            <div class="dev-console-header">
+                <span>🛠️ DEVELOPER CONSOLE - Direct Firebase Access</span>
+                <button class="btn-header" onclick="toggleDevConsole()" style="background:#dc2626;">✖ Close</button>
+            </div>
+            <div class="dev-query-section">
+                <input type="text" id="devDocIdInput" class="dev-query-input" placeholder="Enter Firestore Document ID to edit...">
+                <button class="btn-header" onclick="fetchDevDocument()" style="background:#00d4ff; color:#000;">📄 Fetch Document</button>
+                <button class="btn-header" onclick="listDevDocuments()" style="background:#334155;">📋 List Recent Documents</button>
+            </div>
+            <div id="devDocViewer" style="display:none;">
+                <div class="dev-json-editor">
+                    <textarea id="devJsonEditor" rows="10" placeholder="Document JSON will appear here... Edit directly and click Save"></textarea>
+                    <div style="display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap;">
+                        <button class="btn-header" onclick="updateDevDocument()" style="background:#10b981;">💾 SAVE to Firestore</button>
+                        <button class="btn-header" onclick="deleteDevDocument()" style="background:#dc2626;">🗑️ DELETE Document</button>
+                        <button class="btn-header" onclick="refreshDevDocument()" style="background:#f59e0b;">⟳ Refresh</button>
+                    </div>
+                </div>
+            </div>
+            <div id="devDocListContainer" class="dev-doc-list"></div>
+            <div style="padding: 0 20px 20px 20px;">
+                <hr style="border-color:#2a3a5a; margin-bottom:16px;">
+                <div><strong>⚡ Quick Batch Actions:</strong></div>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap; margin-top: 12px;">
+                    <button class="btn-header" onclick="batchResetPendingItems()" style="background:#f59e0b;">⟳ Reset All Pending Items</button>
+                    <button class="btn-header" onclick="batchDeleteCompleted()" style="background:#dc2626;">🗑️ Delete Completed Requests</button>
+                    <button class="btn-header" onclick="refreshStatsDev()" style="background:#00d4ff; color:#000;">📊 Refresh Stats</button>
+                </div>
+                <div style="margin-top: 12px; font-size: 11px; color: #9ca3af;">
+                    ⚠️ Developer actions are irreversible. Use with caution.
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
 <script>
 const ADMIN_PASSWORDS = { "Marco": "M1r50123", "Nady": "Nn639123", "Ahmed": "j1cadm1n", "Nader": "nader123" };
+const DEV_PASSWORD = "Dev@2025Secure!";
 const KITCHENS = ["Hot Kitchen", "Cold Kitchen", "Pastry / Bakery", "Butchery", "Beach House", "Nihon Kitchen", "Staff Kitchen"];
 
 let currentAdmin = "";
@@ -743,6 +885,8 @@ let currentStatus = "pending";
 let allRequests = [];
 let selectedUser = "";
 let duplicateMap = new Map();
+let isDevMode = false;
+let currentDevDocId = null;
 
 function goBackToIndex() { window.location.href = "index.html"; }
 function openAnalytics() { window.open("analytics.html", "_blank"); }
@@ -756,17 +900,51 @@ function selectUser(user) {
     document.getElementById("loginError").innerHTML = "";
 }
 
+function showDevLogin() {
+    const pwd = prompt("🔧 Enter Developer Password:");
+    if(pwd === DEV_PASSWORD) {
+        currentAdmin = "DEVELOPER";
+        isDevMode = true;
+        document.getElementById("adminNameDisplay").innerText = "🛠️ DEVELOPER";
+        document.getElementById("adminRoleLabel").innerHTML = "Developer Mode";
+        document.getElementById("passwordModal").style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+        document.getElementById("devToggleBtn").style.display = "inline-block";
+        document.getElementById("devToggleBtn").classList.add("btn-dev-active");
+        localStorage.setItem("devMode", "true");
+        loadRequests();
+    } else {
+        alert("❌ Invalid developer password!");
+    }
+}
+
 function checkLogin() {
     const pass = document.getElementById("passwordInput").value;
     if(selectedUser && ADMIN_PASSWORDS[selectedUser] === pass) {
         currentAdmin = selectedUser;
+        isDevMode = false;
         document.getElementById("adminNameDisplay").innerText = currentAdmin;
+        document.getElementById("adminRoleLabel").innerHTML = "Administrator";
         document.getElementById("passwordModal").style.display = "none";
         document.getElementById("mainContent").style.display = "block";
         localStorage.setItem("admin", currentAdmin);
         loadRequests();
     } else {
         document.getElementById("loginError").innerHTML = "❌ Wrong password!";
+    }
+}
+
+function toggleDevConsole() {
+    if(!isDevMode) {
+        alert("Developer mode not active. Use 'Developer Mode' login option.");
+        return;
+    }
+    const panel = document.getElementById("devConsolePanel");
+    if(panel.style.display === "none" || panel.style.display === "") {
+        panel.style.display = "block";
+        listDevDocuments();
+    } else {
+        panel.style.display = "none";
     }
 }
 
@@ -1034,7 +1212,6 @@ function renderUI() {
             hasIndividualAction = req.items.some(item => item.status === "approved" || item.status === "rejected");
         } else { isCompleted = true; }
         
-        // 🔥 FIREBASE DOC ID DISPLAYED PROMINENTLY
         const firebaseIdHtml = `<span class="firebase-id-badge" onclick="copyFirebaseId('${req.id}')" title="Click to copy Firebase Document ID">
             <i>🆔</i> ${req.id.substring(0, 12)}... <span class="copy-icon">📋</span>
         </span>`;
@@ -1100,15 +1277,153 @@ function renderUI() {
     updateStats();
 }
 
+// ==================== DEVELOPER CONSOLE FUNCTIONS ====================
+async function fetchDevDocument() {
+    const docId = document.getElementById("devDocIdInput").value.trim();
+    if(!docId) { showToast("Enter a Document ID"); return; }
+    try {
+        const docRef = db.collection("kitchen_requests").doc(docId);
+        const docSnap = await docRef.get();
+        if(!docSnap.exists) { showToast("Document not found"); return; }
+        currentDevDocId = docId;
+        const data = { id: docSnap.id, ...docSnap.data() };
+        document.getElementById("devJsonEditor").value = JSON.stringify(data, null, 2);
+        document.getElementById("devDocViewer").style.display = "block";
+        showToast(`Loaded: ${docId}`);
+    } catch(e) { showToast("Error: " + e.message); }
+}
+
+async function updateDevDocument() {
+    if(!currentDevDocId) { showToast("No document loaded"); return; }
+    try {
+        const newData = JSON.parse(document.getElementById("devJsonEditor").value);
+        const { id, ...updateData } = newData;
+        await db.collection("kitchen_requests").doc(currentDevDocId).update(updateData);
+        showToast(`✅ Updated ${currentDevDocId}`);
+        await loadRequests();
+        listDevDocuments();
+    } catch(e) { showToast("Update failed: " + e.message); }
+}
+
+async function deleteDevDocument() {
+    if(!currentDevDocId) return;
+    if(confirm(`⚠️ PERMANENTLY DELETE ${currentDevDocId}? This cannot be undone.`)) {
+        await db.collection("kitchen_requests").doc(currentDevDocId).delete();
+        showToast(`Deleted ${currentDevDocId}`);
+        currentDevDocId = null;
+        document.getElementById("devDocViewer").style.display = "none";
+        document.getElementById("devDocIdInput").value = "";
+        await loadRequests();
+        listDevDocuments();
+    }
+}
+
+function refreshDevDocument() {
+    if(currentDevDocId) fetchDevDocument();
+}
+
+async function listDevDocuments() {
+    try {
+        const snapshot = await db.collection("kitchen_requests").orderBy("timestamp", "desc").limit(30).get();
+        const container = document.getElementById("devDocListContainer");
+        container.innerHTML = "<strong>📄 Recent Documents (click to edit):</strong>";
+        if(snapshot.empty) { container.innerHTML += "<div style='padding:12px;'>No documents found</div>"; return; }
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            container.innerHTML += `<div class="dev-doc-item">
+                <span style="font-family:monospace; font-size:11px;">${doc.id.substring(0, 24)}...</span>
+                <span>📌 ${data.requestId || 'N/A'} | ${data.chefName || '?'} | ${data.section || '?'}</span>
+                <div>
+                    <button class="btn-dev-action" onclick="quickLoadDevDoc('${doc.id}')">✏️ Edit</button>
+                    <button class="btn-dev-action" onclick="quickDeleteDevDoc('${doc.id}')" style="background:#dc2626; color:white;">🗑️</button>
+                </div>
+            </div>`;
+        });
+    } catch(e) { showToast("Error listing docs"); }
+}
+
+function quickLoadDevDoc(id) {
+    document.getElementById("devDocIdInput").value = id;
+    fetchDevDocument();
+}
+
+async function quickDeleteDevDoc(id) {
+    if(confirm(`Delete document ${id}?`)) {
+        await db.collection("kitchen_requests").doc(id).delete();
+        showToast(`Deleted ${id}`);
+        await loadRequests();
+        listDevDocuments();
+        if(currentDevDocId === id) {
+            currentDevDocId = null;
+            document.getElementById("devDocViewer").style.display = "none";
+        }
+    }
+}
+
+async function batchResetPendingItems() {
+    if(!confirm("Reset ALL pending items to original state? This clears approvals/rejections.")) return;
+    const snap = await db.collection("kitchen_requests").get();
+    let count = 0;
+    for(const doc of snap.docs) {
+        const data = doc.data();
+        if(data.items) {
+            let changed = false;
+            data.items.forEach(item => {
+                if(item.status === "approved" || item.status === "rejected") {
+                    item.status = "pending";
+                    delete item.approvedQty;
+                    delete item.approvedBy;
+                    delete item.approvedAt;
+                    delete item.rejectionReason;
+                    delete item.rejectedBy;
+                    delete item.rejectedAt;
+                    changed = true;
+                }
+            });
+            if(changed) {
+                await db.collection("kitchen_requests").doc(doc.id).update({ items: data.items });
+                count++;
+            }
+        }
+    }
+    showToast(`Reset ${count} documents`);
+    await loadRequests();
+}
+
+async function batchDeleteCompleted() {
+    if(!confirm("Delete ALL completed (approved/accepted/rejected) requests?")) return;
+    const snap = await db.collection("kitchen_requests").get();
+    let del = 0;
+    for(const doc of snap.docs) {
+        const status = getRequestStatus(doc.data().items);
+        if(status !== "pending") {
+            await db.collection("kitchen_requests").doc(doc.id).delete();
+            del++;
+        }
+    }
+    showToast(`Deleted ${del} completed requests`);
+    await loadRequests();
+    listDevDocuments();
+}
+
+async function refreshStatsDev() {
+    const snap = await db.collection("kitchen_requests").get();
+    showToast(`Total documents in Firestore: ${snap.size}`);
+    await loadRequests();
+}
+
 function logout() {
-    if(confirm("Logout?")) { localStorage.removeItem("admin"); window.location.href = "index.html"; }
+    if(confirm("Logout?")) { localStorage.removeItem("admin"); localStorage.removeItem("devMode"); window.location.href = "index.html"; }
 }
 function escapeHtml(str) { return str?.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])) || ''; }
 function showToast(msg) { const t = document.createElement("div"); t.className = "toast"; t.innerText = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2500); }
 
-const saved = localStorage.getItem("admin");
-if(saved && ADMIN_PASSWORDS[saved]) {
-    currentAdmin = saved;
+const savedAdmin = localStorage.getItem("admin");
+const savedDevMode = localStorage.getItem("devMode");
+if(savedDevMode === "true") {
+    showDevLogin();
+} else if(savedAdmin && ADMIN_PASSWORDS[savedAdmin]) {
+    currentAdmin = savedAdmin;
     document.getElementById("adminNameDisplay").innerText = currentAdmin;
     document.getElementById("passwordModal").style.display = "none";
     document.getElementById("mainContent").style.display = "block";
