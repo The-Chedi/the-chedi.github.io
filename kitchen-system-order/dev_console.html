@@ -221,19 +221,21 @@ textarea {
 .btn-secondary { background: #334155; color: white; }
 .btn-restore { background: #8b5cf6; color: white; }
 .btn-add-item { background: #00d4ff; color: #0a0e27; }
+.btn-disabled { background: #4a5568; color: #a0aec0; cursor: not-allowed; opacity: 0.6; }
 
 .btn:hover { transform: scale(1.02); opacity: 0.9; }
+.btn-disabled:hover { transform: none; opacity: 0.6; }
 
-/* Document List */
+/* Document List - Uniform spacing */
 .doc-list {
-    max-height: 350px;
+    max-height: 400px;
     overflow-y: auto;
     margin-top: 20px;
 }
 
 .doc-item {
     background: #111827;
-    padding: 12px 16px;
+    padding: 14px 18px;
     margin-bottom: 8px;
     border-radius: 12px;
     border-left: 3px solid #00d4ff;
@@ -241,18 +243,42 @@ textarea {
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: 10px;
+    gap: 12px;
     cursor: pointer;
+    font-size: 0.8rem;
 }
 
 .doc-item:hover { background: #1f2937; }
 
-.doc-id { font-family: monospace; font-size: 11px; color: #00d4ff; }
-.status-badge { padding: 2px 8px; border-radius: 20px; font-size: 0.65rem; font-weight: bold; }
+.doc-id { font-family: monospace; font-size: 11px; color: #00d4ff; background: #0a0e27; padding: 4px 8px; border-radius: 8px; }
+.doc-id-full { font-family: monospace; font-size: 10px; color: #00d4ff; word-break: break-all; }
+.doc-info { display: flex; gap: 15px; flex-wrap: wrap; align-items: center; }
+.doc-name { color: #e0e0e0; font-weight: 500; }
+.doc-kitchen { background: #1e293b; padding: 4px 12px; border-radius: 20px; font-size: 0.7rem; }
+
+.status-badge { 
+    padding: 4px 12px; 
+    border-radius: 20px; 
+    font-size: 0.7rem; 
+    font-weight: bold;
+    min-width: 80px;
+    text-align: center;
+}
 .status-pending { background: #f59e0b; color: #1a1a2e; }
 .status-approved { background: #10b981; color: white; }
 .status-rejected { background: #dc2626; color: white; }
 .status-accepted { background: #8b5cf6; color: white; }
+
+/* Action buttons group */
+.doc-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-small {
+    padding: 5px 12px;
+    font-size: 0.7rem;
+}
 
 /* Menu Items Selector */
 .menu-selector {
@@ -381,6 +407,16 @@ hr {
     margin-top: 15px;
 }
 
+.warning-box {
+    background: #dc262620;
+    border-left: 3px solid #dc2626;
+    padding: 10px 15px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+    font-size: 0.75rem;
+    color: #fca5a5;
+}
+
 /* JSON Generator Items List */
 .items-list {
     background: #0a0e27;
@@ -466,7 +502,7 @@ hr {
             <span class="badge">Load Kitchen JSON</span>
             <span class="badge">Add Items from Menu</span>
         </h1>
-        <div style="margin-top: 8px; font-size: 0.7rem;">Only the order's kitchen is enabled | Click kitchen button to load items</div>
+        <div style="margin-top: 8px; font-size: 0.7rem;">⚠️ For Approved/Rejected/Accepted orders: You MUST click "Restore to Pending" first before any edits</div>
     </div>
 
     <div class="container">
@@ -490,11 +526,14 @@ hr {
                     <input type="text" id="orderDocId" class="form-input" placeholder="Enter Firestore Document ID...">
                 </div>
                 <div id="orderViewer" style="display:none;">
+                    <div id="orderStatusWarning" class="warning-box" style="display:none;">
+                        ⚠️ This order is <strong id="warningStatusText">COMPLETED</strong>. You MUST click <strong>"Restore to Pending"</strong> before making any edits or adding items.
+                    </div>
                     <textarea id="orderJsonEditor" rows="10" placeholder="Document JSON will appear here..."></textarea>
                     <div style="display: flex; gap: 12px; margin-top: 16px; flex-wrap: wrap;">
-                        <button class="btn btn-success" onclick="saveOrderDocument()">💾 SAVE to Firestore</button>
-                        <button class="btn btn-danger" onclick="deleteOrderDocument()">🗑️ DELETE Document</button>
-                        <button class="btn btn-restore" onclick="restoreSingleToPending()">🔄 Restore to Pending</button>
+                        <button class="btn btn-success" id="saveOrderBtn" onclick="saveOrderDocument()">💾 SAVE to Firestore</button>
+                        <button class="btn btn-danger" id="deleteOrderBtn" onclick="deleteOrderDocument()">🗑️ DELETE Document</button>
+                        <button class="btn btn-restore" id="restoreOrderBtn" onclick="restoreSingleToPending()">🔄 Restore to Pending</button>
                     </div>
                     
                     <!-- MENU SELECTOR - Only order's kitchen is enabled -->
@@ -621,13 +660,12 @@ const JSON_BASE_PATH = "items/";
 
 let currentMenuItems = [];
 let currentSelectedKitchen = "";
-let orderKitchen = ""; // Store the order's kitchen
-let currentMenuLoaded = false;
-
-// ==================== FIRESTORE ORDERS ====================
+let orderKitchen = "";
+let currentOrderStatus = "pending";
 let currentOrderDocId = null;
 let currentOrderData = null;
 
+// ==================== FIRESTORE ORDERS ====================
 function getRequestStatus(items) {
     if(!items || items.length === 0) return "pending";
     let allProcessed = true;
@@ -646,6 +684,47 @@ function getRequestStatus(items) {
     return "pending";
 }
 
+function updateEditButtonsBasedOnStatus() {
+    const isPending = (currentOrderStatus === "pending");
+    const saveBtn = document.getElementById("saveOrderBtn");
+    const deleteBtn = document.getElementById("deleteOrderBtn");
+    const restoreBtn = document.getElementById("restoreOrderBtn");
+    const menuButtons = document.querySelectorAll(".kitchen-menu-btn");
+    const addItemButtons = document.querySelectorAll(".btn-add-item");
+    
+    if (!isPending) {
+        if (saveBtn) saveBtn.classList.add("btn-disabled");
+        if (deleteBtn) deleteBtn.classList.add("btn-disabled");
+        if (restoreBtn) restoreBtn.style.display = "inline-block";
+        // Disable menu buttons
+        menuButtons.forEach(btn => {
+            if (!btn.classList.contains("disabled")) {
+                btn.style.pointerEvents = "none";
+                btn.style.opacity = "0.5";
+            }
+        });
+        // Show warning
+        const warningBox = document.getElementById("orderStatusWarning");
+        if (warningBox) {
+            warningBox.style.display = "block";
+            document.getElementById("warningStatusText").innerText = currentOrderStatus.toUpperCase();
+        }
+    } else {
+        if (saveBtn) saveBtn.classList.remove("btn-disabled");
+        if (deleteBtn) deleteBtn.classList.remove("btn-disabled");
+        if (restoreBtn) restoreBtn.style.display = "none";
+        // Enable menu buttons (only the enabled one)
+        document.querySelectorAll(".kitchen-menu-btn").forEach(btn => {
+            if (!btn.classList.contains("disabled")) {
+                btn.style.pointerEvents = "auto";
+                btn.style.opacity = "1";
+            }
+        });
+        const warningBox = document.getElementById("orderStatusWarning");
+        if (warningBox) warningBox.style.display = "none";
+    }
+}
+
 async function listAllOrders() {
     try {
         const snapshot = await db.collection("kitchen_requests").orderBy("timestamp", "desc").limit(50).get();
@@ -661,12 +740,21 @@ async function listAllOrders() {
             else if (status === "rejected") { statusClass = "status-rejected"; statusText = "Rejected"; }
             else if (status === "accepted") { statusClass = "status-accepted"; statusText = "Accepted"; }
             
+            // Uniform spacing for all orders
             container.innerHTML += `<div class="doc-item" onclick="loadOrderById('${doc.id}')">
-                <span class="doc-id">🆔 ${doc.id.substring(0, 20)}...</span>
-                <span>📌 ${data.requestId || 'N/A'} | ${data.chefName || '?'} | ${data.section || '?'}</span>
-                <span class="status-badge ${statusClass}">${statusText}</span>
-                <button class="btn btn-secondary" style="padding:4px 12px;" onclick="event.stopPropagation();deleteOrderById('${doc.id}')">🗑️</button>
-                <button class="btn btn-restore" style="padding:4px 12px;" onclick="event.stopPropagation();restoreOrderToPending('${doc.id}')">🔄 Restore</button>
+                <div class="doc-info">
+                    <span class="doc-id">🆔 ${doc.id.substring(0, 20)}...</span>
+                    <span class="doc-name">📌 ${data.requestId || 'N/A'}</span>
+                    <span class="doc-name">👨‍🍳 ${data.chefName || '?'}</span>
+                    <span class="doc-kitchen">${data.section || '?'}</span>
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <span class="status-badge ${statusClass}">${statusText}</span>
+                    <div class="doc-actions">
+                        <button class="btn btn-secondary btn-small" onclick="event.stopPropagation();deleteOrderById('${doc.id}')">🗑️</button>
+                        <button class="btn btn-restore btn-small" onclick="event.stopPropagation();restoreOrderToPending('${doc.id}')">🔄 Restore</button>
+                    </div>
+                </div>
             </div>`;
         });
     } catch(e) { showToast("Error: " + e.message, true); }
@@ -685,25 +773,32 @@ async function fetchOrderDocument() {
         if (!doc.exists) { showToast("Document not found", true); return; }
         currentOrderDocId = docId;
         currentOrderData = { id: doc.id, ...doc.data() };
+        currentOrderStatus = getRequestStatus(currentOrderData.items);
+        
         document.getElementById("orderJsonEditor").value = JSON.stringify(currentOrderData, null, 2);
         document.getElementById("orderViewer").style.display = "block";
         
-        // Get order's kitchen section
         orderKitchen = currentOrderData.section || "Hot Kitchen";
-        showToast(`✅ Loaded: ${docId} | Kitchen: ${orderKitchen}`);
+        showToast(`✅ Loaded: ${docId} | Status: ${currentOrderStatus.toUpperCase()} | Kitchen: ${orderKitchen}`);
+        
+        // Update UI based on order status
+        updateEditButtonsBasedOnStatus();
         
         // Render kitchen buttons with only the order's kitchen enabled
         renderKitchenMenuButtons();
         
         // Clear items list until user clicks the enabled button
         document.getElementById("menuItemsList").innerHTML = '<div style="padding: 20px; text-align: center; color: #9ca3af;">Click the enabled kitchen button above to load menu items</div>';
-        currentMenuLoaded = false;
         
     } catch(e) { showToast("Error: " + e.message, true); }
 }
 
 async function saveOrderDocument() {
     if (!currentOrderDocId) { showToast("No document loaded", true); return; }
+    if (currentOrderStatus !== "pending") {
+        showToast("❌ Cannot save: Order is not in PENDING status. Click 'Restore to Pending' first.", true);
+        return;
+    }
     try {
         const newData = JSON.parse(document.getElementById("orderJsonEditor").value);
         const { id, ...updateData } = newData;
@@ -716,6 +811,10 @@ async function saveOrderDocument() {
 
 async function deleteOrderDocument() {
     if (!currentOrderDocId) return;
+    if (currentOrderStatus !== "pending") {
+        showToast("❌ Cannot delete: Order is not in PENDING status. Click 'Restore to Pending' first.", true);
+        return;
+    }
     if (confirm(`Delete ${currentOrderDocId} permanently?`)) {
         await db.collection("kitchen_requests").doc(currentOrderDocId).delete();
         showToast(`Deleted ${currentOrderDocId}`);
@@ -744,7 +843,7 @@ async function deleteOrderById(docId) {
     }
 }
 
-// ============ KITCHEN MENU BUTTONS - Only order's kitchen enabled ============
+// ============ KITCHEN MENU BUTTONS ============
 function renderKitchenMenuButtons() {
     const container = document.getElementById("kitchenMenuButtons");
     container.innerHTML = "";
@@ -766,6 +865,10 @@ function renderKitchenMenuButtons() {
                 showToast(`Only the order's kitchen (${orderKitchen}) is enabled. Load an order with a different kitchen first.`, true);
                 return;
             }
+            if (currentOrderStatus !== "pending") {
+                showToast(`❌ Cannot load items: Order is ${currentOrderStatus.toUpperCase()}. Click 'Restore to Pending' first.`, true);
+                return;
+            }
             currentSelectedKitchen = kitchen;
             renderKitchenMenuButtons();
             loadKitchenMenuJSON(kitchen);
@@ -773,7 +876,6 @@ function renderKitchenMenuButtons() {
         container.appendChild(btn);
     });
     
-    // Add info text if no order loaded
     if (!orderKitchen) {
         const infoDiv = document.createElement("div");
         infoDiv.style.fontSize = "0.7rem";
@@ -813,7 +915,6 @@ async function loadKitchenMenuJSON(kitchen) {
         renderMenuItemsList();
         document.getElementById("selectedKitchenName").innerHTML = `✅ Loaded ${currentMenuItems.length} items from ${jsonPath}`;
         showToast(`✅ Loaded ${currentMenuItems.length} items from ${kitchen}`);
-        currentMenuLoaded = true;
     } catch(e) {
         console.error(e);
         document.getElementById("selectedKitchenName").innerHTML = `❌ Error: ${jsonPath} not found. Create this file in the "items" folder.`;
@@ -853,6 +954,10 @@ function addMenuItemToOrder(index) {
         showToast("No order loaded. Please fetch an order first.", true);
         return;
     }
+    if (currentOrderStatus !== "pending") {
+        showToast(`❌ Cannot add items: Order is ${currentOrderStatus.toUpperCase()}. Click 'Restore to Pending' first.`, true);
+        return;
+    }
     
     const menuItem = currentMenuItems[index];
     if (!menuItem) return;
@@ -880,6 +985,7 @@ function addMenuItemToOrder(index) {
         currentOrderData.items = [];
     }
     currentOrderData.items.push(newItem);
+    currentOrderStatus = getRequestStatus(currentOrderData.items);
     
     document.getElementById("orderJsonEditor").value = JSON.stringify(currentOrderData, null, 2);
     
@@ -888,7 +994,7 @@ function addMenuItemToOrder(index) {
 
 // ============ RESTORE TO PENDING FUNCTION ============
 async function restoreOrderToPending(docId) {
-    if (!confirm(`Restore order to PENDING status?\n\nThis will reset all approved/rejected items back to pending. You can then add new items from the menu.\n\nContinue?`)) return;
+    if (!confirm(`Restore order to PENDING status?\n\nThis will reset all approved/rejected items back to pending. You can then edit, add, or remove items.\n\nContinue?`)) return;
     
     try {
         const doc = await db.collection("kitchen_requests").doc(docId).get();
@@ -914,13 +1020,17 @@ async function restoreOrderToPending(docId) {
             
             if (changed) {
                 await db.collection("kitchen_requests").doc(docId).update({ items: data.items });
-                showToast(`✅ Restored ${docId} to PENDING status. You can now add new items from the menu.`);
-                listAllOrders();
+                showToast(`✅ Restored ${docId} to PENDING status. You can now edit, add, or remove items.`);
                 if (currentOrderDocId === docId) {
                     await fetchOrderDocument();
                 }
+                listAllOrders();
             } else {
                 showToast(`Order is already in PENDING status`);
+                if (currentOrderDocId === docId) {
+                    currentOrderStatus = "pending";
+                    updateEditButtonsBasedOnStatus();
+                }
             }
         }
     } catch(e) { showToast("Restore failed: " + e.message, true); }
