@@ -657,32 +657,17 @@ body {
     margin: 0 auto;
     padding: 20px;
 }
-
-.loading-spinner {
-    display: inline-block;
-    width: 20px;
-    height: 20px;
-    border: 2px solid #fff;
-    border-top-color: transparent;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin-right: 8px;
-}
-
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
 </style>
 </head>
 <body>
 
-<!-- FIREBASE AUTH LOGIN MODAL - REPLACES THE PASSWORD MODAL -->
+<!-- FIREBASE AUTH LOGIN MODAL -->
 <div id="authModal" class="modal">
     <div class="modal-content">
         <h2>🔐 Admin Login</h2>
         <input type="email" id="loginEmail" placeholder="Email Address">
         <input type="password" id="loginPassword" placeholder="Password">
-        <button onclick="loginWithFirebase()" id="loginAuthBtn">Login</button>
+        <button onclick="loginWithFirebase()">Login</button>
         <div id="loginError" class="error-msg"></div>
         <button class="close-modal" onclick="goBackToIndex()">← Back to Home</button>
         <hr style="margin: 15px 0;">
@@ -748,7 +733,6 @@ async function loginWithFirebase() {
     const email = document.getElementById("loginEmail").value.trim();
     const password = document.getElementById("loginPassword").value;
     const errorDiv = document.getElementById("loginError");
-    const loginBtn = document.getElementById("loginAuthBtn");
     
     if (!email || !password) {
         errorDiv.innerHTML = "Please enter email and password";
@@ -756,8 +740,6 @@ async function loginWithFirebase() {
     }
     
     errorDiv.innerHTML = "";
-    loginBtn.innerHTML = '<span class="loading-spinner"></span> Logging in...';
-    loginBtn.disabled = true;
     
     try {
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
@@ -783,16 +765,10 @@ async function loginWithFirebase() {
             case 'auth/invalid-email':
                 errorMsg = "Invalid email format";
                 break;
-            case 'auth/too-many-requests':
-                errorMsg = "Too many failed attempts. Try again later";
-                break;
             default:
                 errorMsg = error.message;
         }
         errorDiv.innerHTML = errorMsg;
-    } finally {
-        loginBtn.innerHTML = 'Login';
-        loginBtn.disabled = false;
     }
 }
 
@@ -804,7 +780,6 @@ async function logout() {
         document.getElementById("loginEmail").value = "";
         document.getElementById("loginPassword").value = "";
         document.getElementById("loginError").innerHTML = "";
-        localStorage.removeItem("admin");
     }
 }
 
@@ -820,7 +795,7 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
-// ============ ALL ORIGINAL FUNCTIONS BELOW - NO CHANGES ============
+// ============ ALL ORIGINAL FUNCTIONS - NO CHANGES ============
 async function loadRequests() {
     try {
         const snapshot = await db.collection("kitchen_requests").orderBy("timestamp", "desc").get();
@@ -1113,7 +1088,7 @@ function renderUI() {
                 itemsHtml += `<tr style="background:#fee2e2;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td><span class="item-price">${price.toFixed(2)}</span></td><td><strong>0</strong></td><td><strong style="color:#e74c3c;">0.00</strong></td><td><span class="btn-reject" style="background:#e74c3c;opacity:0.7;">❌ Rejected</span></td><td><span class="status-rejected-cell">Rejected</span><div class="admin-info-text">👤 ${escapeHtml(item.rejectedBy || '?')}<br>📅 ${item.rejectedAt || ''}<br>📝 ${escapeHtml(item.rejectionReason || '')}</div></td></tr>`;
             } else {
                 const currentVal = (item.originalQty || 0).toFixed(1);
-                itemsHtml += `<tr style="background:#fff8e7;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td><span class="item-price">${price.toFixed(2)}</span></td><td><input type="number" id="qty_${req.id}_${idx}" class="approval-input" value="${currentVal}" min="0" step="0.5" style="background:#fef9e6;"></td><td><span id="totalValuePreview_${req.id}_${idx}" style="font-weight:600; color:#1e3c72;">${(item.originalQty * price).toFixed(2)}</span></td><td class="action-buttons"><button class="btn-approve" onclick="approveItemFlex('${req.id}', ${idx})">✅ Approve</button><button class="btn-reject" onclick="rejectItem('${req.id}', ${idx})">❌ Reject</button></div></td><td><span class="status-pending-cell">Pending</span><div class="admin-info-text">⚠️ Will be AUTO-APPROVED on Accept</div></td></tr>`;
+                itemsHtml += `<tr style="background:#fff8e7;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td><span class="item-price">${price.toFixed(2)}</span></td><td><input type="number" id="qty_${req.id}_${idx}" class="approval-input" value="${currentVal}" min="0" step="0.5" style="background:#fef9e6;"></td><td><span id="totalValuePreview_${req.id}_${idx}" style="font-weight:600; color:#1e3c72;">${(item.originalQty * price).toFixed(2)}</span></td><td class="action-buttons"><button class="btn-approve" onclick="approveItemFlex('${req.id}', ${idx})">✅ Approve</button><button class="btn-reject" onclick="rejectItem('${req.id}', ${idx})">❌ Reject</button></td><td><span class="status-pending-cell">Pending</span><div class="admin-info-text">⚠️ Will be AUTO-APPROVED on Accept</div></td></tr>`;
                 
                 setTimeout(() => {
                     const input = document.getElementById(`qty_${req.id}_${idx}`);
@@ -1129,7 +1104,7 @@ function renderUI() {
                 }, 50);
             }
         });
-        itemsHtml += `</tbody></table></div>`;
+        itemsHtml += `</tbody></tr></div>`;
         
         let actions = "";
         if(!isCompleted) {
