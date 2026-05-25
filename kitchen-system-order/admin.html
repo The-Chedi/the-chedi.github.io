@@ -232,11 +232,6 @@ body {
     transform: scale(1.02);
 }
 
-.firebase-id-badge i {
-    font-style: normal;
-    font-size: 0.8rem;
-}
-
 .copy-icon {
     background: #0066ff;
     color: white;
@@ -1074,9 +1069,11 @@ function renderUI() {
         } else { isCompleted = true; }
         
         // Firebase ID with BLUE COPY ICON
+        const firebaseIdHtml = `<span class="firebase-id-badge" onclick="copyFirebaseId('${req.id}')" title="Click to copy Firebase Document ID">
+            <i>🆔</i> ${req.id.substring(0, 12)}... <span class="copy-icon">📋</span>
+        </span>`;
         
-        
-        let itemsHtml = `<div class="table-wrapper"><table class="admin-table"><thead><tr><th>Code</th><th>Item</th><th>Requested Qty</th><th>Unit</th><th>Price/Unit (EGP)</th><th>Admin Qty (No Limit)</th><th>Total Value (EGP)</th><th>Action</th><th>Status</th></tr></thead><tbody>`;
+        let itemsHtml = `<div class="table-wrapper"><table class="admin-table"><thead><tr><th>Code</th><th>Item</th><th>Requested Qty</th><th>Unit</th><th>Price/Unit (EGP)</th><th>Admin Qty (No Limit)</th><th>Total Value (EGP)</th><th>Action</th><th>Status</th></table></thead><tbody>`;
         
         req.items.forEach((item, idx) => {
             const price = item.price || 0;
@@ -1105,7 +1102,7 @@ function renderUI() {
                 }, 50);
             }
         });
-        itemsHtml += `</tbody></table></div>`;
+        itemsHtml += `</tbody><table></div>`;
         
         let actions = "";
         if(!isCompleted) {
@@ -1126,23 +1123,19 @@ function renderUI() {
         
         container.innerHTML += `<div class="request-card">
             <div class="request-header">
-                <div><span class="request-id">📄 ${req.requestId}</span>${duplicateWarning}<span class="kitchen-badge ${kitchenClass}" style="margin-left:10px;">${req.section}</span></div>
+                <div><span class="request-id">📄 ${req.requestId}</span>${duplicateWarning}<span class="kitchen-badge ${kitchenClass}" style="margin-left:10px;">${req.section}</span>
+                ${firebaseIdHtml}
+                </div>
                 <div class="request-total-badge">
                     <span>💰 Requested: ${requestedTotalValue.toFixed(2)} EGP</span>
                     <span>✅ Approved: ${approvedTotalValue.toFixed(2)} EGP</span>
                 </div>
                 <span class="status-badge ${statusClass}">${statusText}</span>
             </div>
-            const firebaseIdHtml = `<span class="firebase-id-badge" onclick="copyFirebaseId('${req.id}')" title="Click to copy Firebase Document ID">
-            <i>🆔</i> ${req.id.substring(0, 12)}... <span class="copy-icon">📋</span>
-            </span>`
             <div class="request-info">
                 <div class="info-item"><div class="info-label">👨‍🍳 CHEF</div><div class="info-value">${escapeHtml(req.chefName)}</div></div>
                 <div class="info-item"><div class="info-label">📅 SUBMITTED</div><div class="info-value">${req.submittedAt}</div></div>
                 <div class="info-item"><div class="info-label">🔥 FIRESTORE DOCUMENT ID</div><div class="info-value" style="font-family:monospace; font-size:11px;">${req.id}</div></div>
-            </div>
-            <div style="margin: 0 18px 10px 18px;">
-                ${firebaseIdHtml}
             </div>
             ${itemsHtml}
             ${actions}
