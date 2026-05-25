@@ -7,7 +7,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-<title>Admin Dashboard - Firebase Auth</title>
+<title>Admin Dashboard - Firebase Doc ID Manager</title>
 
 <style>
 * {
@@ -97,36 +97,16 @@ body {
     background: #0066ff;
 }
 
-/* Badge styles - FIXED TO BE VISIBLE */
-.badge-container {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex-wrap: wrap;
-}
-
+/* Badge styles */
 .free-adjust-badge {
     background: #3498db;
     color: white;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.65rem;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-}
-
-.firebase-auth-badge {
-    background: #10b981;
-    color: white;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 0.65rem;
-    font-weight: 600;
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.6rem;
+    margin-left: 8px;
+    vertical-align: middle;
+    display: inline-block;
 }
 
 .stats-grid {
@@ -263,11 +243,6 @@ body {
 .firebase-id-badge:hover {
     background: #e94560;
     transform: scale(1.02);
-}
-
-.firebase-id-badge i {
-    font-style: normal;
-    font-size: 0.8rem;
 }
 
 .copy-icon {
@@ -667,13 +642,52 @@ body {
     width: 90%;
 }
 
+.confirm-modal-content h3 {
+    color: #e74c3c;
+    margin-bottom: 15px;
+    font-size: 1.4rem;
+}
+
+.confirm-modal-content .warning-text {
+    color: #e74c3c;
+    font-weight: bold;
+    margin: 15px 0;
+}
+
+.confirm-modal-content input {
+    width: 100%;
+    padding: 12px;
+    margin: 20px 0;
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    font-size: 16px;
+    text-align: center;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+.confirm-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.confirm-buttons button {
+    flex: 1;
+    padding: 12px;
+    border-radius: 40px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-size: 14px;
+}
+
 @media (max-width: 768px) {
     .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
     .stat-card { padding: 12px; }
     .stat-number { font-size: 1.5rem; }
     .firebase-id-badge { font-size: 0.6rem; padding: 2px 8px; }
     .request-header { flex-direction: column; align-items: flex-start; }
-    .badge-container { justify-content: center; }
 }
 
 .container {
@@ -720,10 +734,7 @@ body {
             <div class="logo">
                 <span class="logo-icon">🔥</span>
                 <span>Admin <span>Dashboard</span></span>
-                <div class="badge-container">
-                    <span class="free-adjust-badge">🆔 FIREBASE DOC ID VISIBLE</span>
-                    <span class="firebase-auth-badge">🔐 Firebase Auth</span>
-                </div>
+                <span class="free-adjust-badge">🆔 FIREBASE DOC ID VISIBLE</span>
             </div>
             <div style="display: flex; align-items: center; gap: 15px;">
                 <span id="adminNameDisplay" style="font-weight: 600;"></span>
@@ -831,7 +842,6 @@ async function logout() {
         document.getElementById("loginEmail").value = "";
         document.getElementById("loginPassword").value = "";
         document.getElementById("loginError").innerHTML = "";
-        localStorage.removeItem("admin");
     }
 }
 
@@ -847,7 +857,7 @@ auth.onAuthStateChanged((user) => {
     }
 });
 
-// ============ ALL ORIGINAL FUNCTIONS - NO CHANGES BELOW ============
+// ============ CORE FUNCTIONS ============
 async function loadRequests() {
     try {
         const snapshot = await db.collection("kitchen_requests").orderBy("timestamp", "desc").get();
@@ -1009,25 +1019,32 @@ function showResetConfirmModal() {
     modal.innerHTML = `
         <div class="confirm-modal-content">
             <h3>⚠️ PERMANENT DELETION ⚠️</h3>
-            <p>Delete <strong>${toDelete.length}</strong> completed request(s)?</p>
+            <p>You are about to delete <strong>${toDelete.length}</strong> completed request(s).</p>
             <p class="warning-text" style="color:#e74c3c; margin:15px 0;">This action cannot be undone!</p>
-            <div class="confirm-buttons" style="display:flex; gap:12px;">
-                <button class="btn-cancel-delete" style="background:#95a5a6; padding:12px; border-radius:40px; flex:1;" onclick="this.closest('.confirm-modal').remove()">Cancel</button>
-                <button class="btn-confirm-delete" id="confirmDeleteBtn" style="background:#e74c3c; padding:12px; border-radius:40px; flex:1;">Delete</button>
+            <p>Type <strong style="color:#e74c3c;">DELETE</strong> below to confirm:</p>
+            <input type="text" id="confirmDeleteInput" placeholder="Type DELETE" autocomplete="off">
+            <div class="confirm-buttons">
+                <button class="btn-cancel-delete" style="background:#95a5a6; color:white;" onclick="this.closest('.confirm-modal').remove()">Cancel</button>
+                <button class="btn-confirm-delete" id="confirmDeleteBtn" style="background:#e74c3c; color:white;" disabled>Delete Permanently</button>
             </div>
         </div>
     `;
     document.body.appendChild(modal);
+    const input = modal.querySelector('#confirmDeleteInput');
     const confirmBtn = modal.querySelector('#confirmDeleteBtn');
+    input.focus();
+    input.addEventListener('input', (e) => { confirmBtn.disabled = e.target.value !== 'DELETE'; });
     confirmBtn.onclick = async () => {
-        modal.remove();
-        let deletedCount = 0;
-        for(const req of toDelete) {
-            try { await db.collection("kitchen_requests").doc(req.id).delete(); deletedCount++; }
-            catch(e) { console.error(e); }
-        }
-        await loadRequests();
-        showToast(`✅ Deleted ${deletedCount} completed requests.`);
+        if(input.value === 'DELETE') {
+            modal.remove();
+            let deletedCount = 0;
+            for(const req of toDelete) {
+                try { await db.collection("kitchen_requests").doc(req.id).delete(); deletedCount++; }
+                catch(e) { console.error(e); }
+            }
+            await loadRequests();
+            showToast(`✅ Deleted ${deletedCount} completed requests.`);
+        } else { showToast("Cancelled"); modal.remove(); }
     };
 }
 
@@ -1135,12 +1152,12 @@ function renderUI() {
             const totalValue = approvedQty * price;
             
             if(item.status === "approved") {
-                itemsHtml += `<tr style="background:#e8f5e9;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td><span class="item-price">${price.toFixed(2)}</span></td><td><strong>${approvedQty.toFixed(1)}</strong></td><td><strong style="color:#27ae60;">${totalValue.toFixed(2)}</strong></td><td><span class="btn-approve" style="background:#27ae60;opacity:0.7;">✅ Approved</span></td><td><span class="status-approved-cell">Approved</span><div class="admin-info-text">👤 ${escapeHtml(item.approvedBy || '?')}<br>📅 ${item.approvedAt || ''}</div></td></tr>`;
+                itemsHtml += `<tr style="background:#e8f5e9;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td><span class="item-price">${price.toFixed(2)}</span></td><td><strong>${approvedQty.toFixed(1)}</strong></td><td><strong style="color:#27ae60;">${totalValue.toFixed(2)}</strong></td><td><span class="btn-approve" style="background:#27ae60;opacity:0.7;">✅ Approved</span></td><td><span class="status-approved-cell">Approved</span><div class="admin-info-text">👤 ${escapeHtml(item.approvedBy || '?')}<br>📅 ${item.approvedAt || ''}</div></div></td></tr>`;
             } else if(item.status === "rejected") {
-                itemsHtml += `<tr style="background:#fee2e2;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td><span class="item-price">${price.toFixed(2)}</span></td><td><strong>0</strong></td><td><strong style="color:#e74c3c;">0.00</strong></td><td><span class="btn-reject" style="background:#e74c3c;opacity:0.7;">❌ Rejected</span></td><td><span class="status-rejected-cell">Rejected</span><div class="admin-info-text">👤 ${escapeHtml(item.rejectedBy || '?')}<br>📅 ${item.rejectedAt || ''}<br>📝 ${escapeHtml(item.rejectionReason || '')}</div></td><tr>`;
+                itemsHtml += `<tr style="background:#fee2e2;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td><span class="item-price">${price.toFixed(2)}</span></td><td><strong>0</strong></td><td><strong style="color:#e74c3c;">0.00</strong></td><td><span class="btn-reject" style="background:#e74c3c;opacity:0.7;">❌ Rejected</span></td><td><span class="status-rejected-cell">Rejected</span><div class="admin-info-text">👤 ${escapeHtml(item.rejectedBy || '?')}<br>📅 ${item.rejectedAt || ''}<br>📝 ${escapeHtml(item.rejectionReason || '')}</div></td></tr>`;
             } else {
                 const currentVal = (item.originalQty || 0).toFixed(1);
-                itemsHtml += `<tr style="background:#fff8e7;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td><span class="item-price">${price.toFixed(2)}</span></td><td><input type="number" id="qty_${req.id}_${idx}" class="approval-input" value="${currentVal}" min="0" step="0.5" style="background:#fef9e6;"></td><td><span id="totalValuePreview_${req.id}_${idx}" style="font-weight:600; color:#1e3c72;">${(item.originalQty * price).toFixed(2)}</span></td><td class="action-buttons"><button class="btn-approve" onclick="approveItemFlex('${req.id}', ${idx})">✅ Approve</button><button class="btn-reject" onclick="rejectItem('${req.id}', ${idx})">❌ Reject</button></td></td><span class="status-pending-cell">Pending</span><div class="admin-info-text">⚠️ Will be AUTO-APPROVED on Accept</div></tr>`;
+                itemsHtml += `<tr style="background:#fff8e7;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td><span class="item-price">${price.toFixed(2)}</span></td><td><input type="number" id="qty_${req.id}_${idx}" class="approval-input" value="${currentVal}" min="0" step="0.5" style="background:#fef9e6;"></td><td><span id="totalValuePreview_${req.id}_${idx}" style="font-weight:600; color:#1e3c72;">${(item.originalQty * price).toFixed(2)}</span></td><td class="action-buttons"><button class="btn-approve" onclick="approveItemFlex('${req.id}', ${idx})">✅ Approve</button><button class="btn-reject" onclick="rejectItem('${req.id}', ${idx})">❌ Reject</button></div></td><td><span class="status-pending-cell">Pending</span><div class="admin-info-text">⚠️ Will be AUTO-APPROVED on Accept</div></td></tr>`;
                 
                 setTimeout(() => {
                     const input = document.getElementById(`qty_${req.id}_${idx}`);
@@ -1187,6 +1204,7 @@ function renderUI() {
             <div class="request-info">
                 <div class="info-item"><div class="info-label">👨‍🍳 CHEF</div><div class="info-value">${escapeHtml(req.chefName)}</div></div>
                 <div class="info-item"><div class="info-label">📅 SUBMITTED</div><div class="info-value">${req.submittedAt}</div></div>
+                <div class="info-item"><div class="info-label">🔥 FIRESTORE DOCUMENT ID</div><div class="info-value" style="font-family:monospace; font-size:11px;">${req.id}</div></div>
             </div>
             ${itemsHtml}
             ${actions}
