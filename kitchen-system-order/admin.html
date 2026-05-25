@@ -1074,9 +1074,7 @@ function renderUI() {
         } else { isCompleted = true; }
         
         // Firebase ID with BLUE COPY ICON
-        const firebaseIdHtml = `<span class="firebase-id-badge" onclick="copyFirebaseId('${req.id}')" title="Click to copy Firebase Document ID">
-            <i>🆔</i> ${req.id.substring(0, 12)}... <span class="copy-icon">📋</span>
-        </span>`;
+        
         
         let itemsHtml = `<div class="table-wrapper"><table class="admin-table"><thead><tr><th>Code</th><th>Item</th><th>Requested Qty</th><th>Unit</th><th>Price/Unit (EGP)</th><th>Admin Qty (No Limit)</th><th>Total Value (EGP)</th><th>Action</th><th>Status</th></tr></thead><tbody>`;
         
@@ -1135,6 +1133,9 @@ function renderUI() {
                 </div>
                 <span class="status-badge ${statusClass}">${statusText}</span>
             </div>
+            const firebaseIdHtml = `<span class="firebase-id-badge" onclick="copyFirebaseId('${req.id}')" title="Click to copy Firebase Document ID">
+            <i>🆔</i> ${req.id.substring(0, 12)}... <span class="copy-icon">📋</span>
+            </span>`;
             <div class="request-info">
                 <div class="info-item"><div class="info-label">👨‍🍳 CHEF</div><div class="info-value">${escapeHtml(req.chefName)}</div></div>
                 <div class="info-item"><div class="info-label">📅 SUBMITTED</div><div class="info-value">${req.submittedAt}</div></div>
