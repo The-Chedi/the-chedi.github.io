@@ -819,6 +819,15 @@ hr {
 </div>
 
 <script>
+   
+// ==================== AUTHORIZED DEVELOPER EMAIL ====================
+// ONLY this email can access the developer console
+const AUTHORIZED_DEVELOPER_EMAIL = "dev@code.com";
+
+function isAuthorized(email) {
+    return email.toLowerCase() === AUTHORIZED_DEVELOPER_EMAIL.toLowerCase();
+}
+
 // ==================== FIREBASE AUTH ====================
 let currentDeveloperEmail = "";
 
@@ -835,10 +844,22 @@ function loginWithFirebase() {
     
     auth.signInWithEmailAndPassword(email, password)
         .then((userCredential) => {
-            currentDeveloperEmail = userCredential.user.email;
+            const userEmail = userCredential.user.email;
+            
+            // Check if this is THE authorized developer
+            if (!isAuthorized(userEmail)) {
+                document.getElementById("loginErrorMsg").innerHTML = "❌ Access Denied. Only dev@code.com can access this console.";
+                auth.signOut();
+                return;
+            }
+            
+            // Authorized - grant access
+            currentDeveloperEmail = userEmail;
             document.getElementById("loginOverlay").style.display = "none";
             document.getElementById("mainContent").style.display = "block";
             document.getElementById("userEmailDisplay").innerHTML = currentDeveloperEmail;
+            
+            // Load your data here
             refreshOrdersList();
             renderKitchenMenuButtons();
         })
