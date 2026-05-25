@@ -1068,12 +1068,16 @@ function renderUI() {
             }
         } else { isCompleted = true; }
         
-        // Firebase ID with BLUE COPY ICON
+        // Firebase ID with BLUE COPY ICON - FIXED POSITION
         const firebaseIdHtml = `<span class="firebase-id-badge" onclick="copyFirebaseId('${req.id}')" title="Click to copy Firebase Document ID">
             <i>🆔</i> ${req.id.substring(0, 12)}... <span class="copy-icon">📋</span>
         </span>`;
         
-        let itemsHtml = `<div class="table-wrapper"><table class="admin-table"><thead><tr><th>Code</th><th>Item</th><th>Requested Qty</th><th>Unit</th><th>Price/Unit (EGP)</th><th>Admin Qty (No Limit)</th><th>Total Value (EGP)</th><th>Action</th><th>Status</th></table></thead><tbody>`;
+        let itemsHtml = `<div class="table-wrapper"><table class="admin-table"><thead>
+            <tr>
+                <th>Code</th><th>Item</th><th>Requested Qty</th><th>Unit</th><th>Price/Unit (EGP)</th><th>Admin Qty (No Limit)</th><th>Total Value (EGP)</th><th>Action</th><th>Status</th>
+            </tr>
+        </thead><tbody>`;
         
         req.items.forEach((item, idx) => {
             const price = item.price || 0;
@@ -1081,12 +1085,42 @@ function renderUI() {
             const totalValue = approvedQty * price;
             
             if(item.status === "approved") {
-                itemsHtml += `<tr style="background:#e8f5e9;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td><span class="item-price">${price.toFixed(2)}</span></td><td><strong>${approvedQty.toFixed(1)}</strong></td><td><strong style="color:#27ae60;">${totalValue.toFixed(2)}</strong></td><td><span class="btn-approve" style="background:#27ae60;opacity:0.7;">✅ Approved</span></td><td><span class="status-approved-cell">Approved</span><div class="admin-info-text">👤 ${escapeHtml(item.approvedBy || '?')}<br>📅 ${item.approvedAt || ''}</div></td></tr>`;
+                itemsHtml += `<tr style="background:#e8f5e9;">
+                    <td>${item.code}</td>
+                    <td><div class="item-name">${escapeHtml(item.name)}</div></td>
+                    <td><span class="requested-qty">${item.originalQty}</span></td>
+                    <td>${item.unit}</td>
+                    <td><span class="item-price">${price.toFixed(2)}</span></td>
+                    <td><strong>${approvedQty.toFixed(1)}</strong></td>
+                    <td><strong style="color:#27ae60;">${totalValue.toFixed(2)}</strong></td>
+                    <td><span class="btn-approve" style="background:#27ae60;opacity:0.7;">✅ Approved</span></td>
+                    <td><span class="status-approved-cell">Approved</span><div class="admin-info-text">👤 ${escapeHtml(item.approvedBy || '?')}<br>📅 ${item.approvedAt || ''}</div></td>
+                </tr>`;
             } else if(item.status === "rejected") {
-                itemsHtml += `<tr style="background:#fee2e2;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td><span class="item-price">${price.toFixed(2)}</span></td><td><strong>0</strong></td><td><strong style="color:#e74c3c;">0.00</strong></td><td><span class="btn-reject" style="background:#e74c3c;opacity:0.7;">❌ Rejected</span></td><td><span class="status-rejected-cell">Rejected</span><div class="admin-info-text">👤 ${escapeHtml(item.rejectedBy || '?')}<br>📅 ${item.rejectedAt || ''}<br>📝 ${escapeHtml(item.rejectionReason || '')}</div></td></tr>`;
+                itemsHtml += `<tr style="background:#fee2e2;">
+                    <td>${item.code}</td>
+                    <td><div class="item-name">${escapeHtml(item.name)}</div></td>
+                    <td><span class="requested-qty">${item.originalQty}</span></td>
+                    <td>${item.unit}</td>
+                    <td><span class="item-price">${price.toFixed(2)}</span></td>
+                    <td><strong>0</strong></td>
+                    <td><strong style="color:#e74c3c;">0.00</strong></td>
+                    <td><span class="btn-reject" style="background:#e74c3c;opacity:0.7;">❌ Rejected</span></td>
+                    <td><span class="status-rejected-cell">Rejected</span><div class="admin-info-text">👤 ${escapeHtml(item.rejectedBy || '?')}<br>📅 ${item.rejectedAt || ''}<br>📝 ${escapeHtml(item.rejectionReason || '')}</div></td>
+                </tr>`;
             } else {
                 const currentVal = (item.originalQty || 0).toFixed(1);
-                itemsHtml += `<tr style="background:#fff8e7;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td><span class="item-price">${price.toFixed(2)}</span></td><td><input type="number" id="qty_${req.id}_${idx}" class="approval-input" value="${currentVal}" min="0" step="0.5" style="background:#fef9e6;"></td><td><span id="totalValuePreview_${req.id}_${idx}" style="font-weight:600; color:#1e3c72;">${(item.originalQty * price).toFixed(2)}</span></td><td class="action-buttons"><button class="btn-approve" onclick="approveItemFlex('${req.id}', ${idx})">✅ Approve</button><button class="btn-reject" onclick="rejectItem('${req.id}', ${idx})">❌ Reject</button></div></td><td><span class="status-pending-cell">Pending</span><div class="admin-info-text">⚠️ Will be AUTO-APPROVED on Accept</div></td></tr>`;
+                itemsHtml += `<tr style="background:#fff8e7;">
+                    <td>${item.code}</td>
+                    <td><div class="item-name">${escapeHtml(item.name)}</div></td>
+                    <td><span class="requested-qty">${item.originalQty}</span></td>
+                    <td>${item.unit}</td>
+                    <td><span class="item-price">${price.toFixed(2)}</span></td>
+                    <td><input type="number" id="qty_${req.id}_${idx}" class="approval-input" value="${currentVal}" min="0" step="0.5" style="background:#fef9e6;"></td>
+                    <td><span id="totalValuePreview_${req.id}_${idx}" style="font-weight:600; color:#1e3c72;">${(item.originalQty * price).toFixed(2)}</span></td>
+                    <td class="action-buttons"><button class="btn-approve" onclick="approveItemFlex('${req.id}', ${idx})">✅ Approve</button><button class="btn-reject" onclick="rejectItem('${req.id}', ${idx})">❌ Reject</button></td>
+                    <td><span class="status-pending-cell">Pending</span><div class="admin-info-text">⚠️ Will be AUTO-APPROVED on Accept</div></td>
+                </tr>`;
                 
                 setTimeout(() => {
                     const input = document.getElementById(`qty_${req.id}_${idx}`);
@@ -1102,7 +1136,7 @@ function renderUI() {
                 }, 50);
             }
         });
-        itemsHtml += `</tbody><table></div>`;
+        itemsHtml += `</tbody></table></div>`;
         
         let actions = "";
         if(!isCompleted) {
@@ -1123,8 +1157,11 @@ function renderUI() {
         
         container.innerHTML += `<div class="request-card">
             <div class="request-header">
-                <div><span class="request-id">📄 ${req.requestId}</span>${duplicateWarning}<span class="kitchen-badge ${kitchenClass}" style="margin-left:10px;">${req.section}</span>
-                ${firebaseIdHtml}
+                <div>
+                    <span class="request-id">📄 ${req.requestId}</span>
+                    ${duplicateWarning}
+                    <span class="kitchen-badge ${kitchenClass}" style="margin-left:10px;">${req.section}</span>
+                    ${firebaseIdHtml}
                 </div>
                 <div class="request-total-badge">
                     <span>💰 Requested: ${requestedTotalValue.toFixed(2)} EGP</span>
