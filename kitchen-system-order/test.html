@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -817,7 +816,7 @@ let currentKitchen = "all";
 let currentStatus = "pending";
 let allRequests = [];
 let selectedUser = "";
-let duplicateMap = new Map(); // Store duplicate signatures
+let duplicateMap = new Map();
 
 function goBackToIndex() { window.location.href = "index.html"; }
 function openAnalytics() { window.open("analytics.html", "_blank"); }
@@ -850,37 +849,25 @@ async function loadRequests() {
         const snapshot = await db.collection("kitchen_requests").orderBy("timestamp", "desc").get();
         allRequests = [];
         snapshot.forEach(doc => allRequests.push({ id: doc.id, ...doc.data() }));
-        findDuplicateRequests(); // Identify duplicates
+        findDuplicateRequests();
         renderUI();
         updateStats();
     } catch(e) { showToast("Error loading"); }
 }
 
-// Function to find duplicate orders (same kitchen, same chef, same items with same quantities)
 function findDuplicateRequests() {
     duplicateMap.clear();
     const signatureMap = new Map();
-    
     for (const req of allRequests) {
-        // Create signature: section|chefName|itemCodes:quantities
         const itemSignature = req.items.map(item => `${item.code}|${item.originalQty}`).join(';');
         const signature = `${req.section}|${req.chefName}|${itemSignature}`;
-        
-        if (!signatureMap.has(signature)) {
-            signatureMap.set(signature, []);
-        }
+        if (!signatureMap.has(signature)) signatureMap.set(signature, []);
         signatureMap.get(signature).push(req);
     }
-    
-    // Mark duplicates (more than one request with same signature)
     for (const [sig, requests] of signatureMap.entries()) {
         if (requests.length > 1) {
             for (const req of requests) {
-                duplicateMap.set(req.id, {
-                    isDuplicate: true,
-                    count: requests.length,
-                    otherIds: requests.filter(r => r.id !== req.id).map(r => r.requestId)
-                });
+                duplicateMap.set(req.id, { isDuplicate: true, count: requests.length, otherIds: requests.filter(r => r.id !== req.id).map(r => r.requestId) });
             }
         }
     }
@@ -889,15 +876,12 @@ function findDuplicateRequests() {
 function getRequestStatus(items) {
     if(!items || items.length === 0) return "pending";
     let allProcessed = true;
-    let approved = 0;
-    let rejected = 0;
-    
+    let approved = 0, rejected = 0;
     items.forEach(item => {
         if(item.status === "approved") approved++;
         else if(item.status === "rejected") rejected++;
         else allProcessed = false;
     });
-    
     if(items.length > 0 && items[0].completedVia === "accept") return "accepted";
     if(allProcessed) {
         if(approved === items.length) return "approved";
@@ -919,7 +903,7 @@ async function updateRequest(id, items) {
 async function approveItemFlex(reqId, idx) {
     const input = document.getElementById(`qty_${reqId}_${idx}`);
     let qty = parseFloat(input?.value || 0);
-    if(isNaN(qty) || qty < 0) { showToast("Enter a valid quantity (0 or more)"); return; }
+    if(isNaN(qty) || qty < 0) { showToast("Enter valid quantity"); return; }
     const req = allRequests.find(r => r.id === reqId);
     if(req) {
         const item = req.items[idx];
@@ -935,7 +919,7 @@ async function approveItemFlex(reqId, idx) {
 }
 
 async function rejectItem(reqId, idx) {
-    const reason = prompt(`Rejection reason (${currentAdmin}):`, "Out of stock or unavailable");
+    const reason = prompt(`Rejection reason (${currentAdmin}):`, "Out of stock");
     if(reason) {
         const req = allRequests.find(r => r.id === reqId);
         if(req) {
@@ -952,7 +936,7 @@ async function rejectItem(reqId, idx) {
 }
 
 async function approveAllFlex(reqId) {
-    if(!confirm(`Approve ALL items with current quantities as ${currentAdmin}? (Quantities can be any number, no limits)`)) return;
+    if(!confirm(`Approve ALL items?`)) return;
     const req = allRequests.find(r => r.id === reqId);
     if(req) {
         for(let i=0; i<req.items.length; i++) {
@@ -973,7 +957,7 @@ async function approveAllFlex(reqId) {
 }
 
 async function rejectAll(reqId) {
-    const reason = prompt(`Rejection reason for ALL (${currentAdmin}):`, "Not available");
+    const reason = prompt(`Rejection reason for ALL:`, "Not available");
     if(reason) {
         const req = allRequests.find(r => r.id === reqId);
         if(req) {
@@ -991,57 +975,41 @@ async function rejectAll(reqId) {
     }
 }
 
-// ============ FIXED ACCEPT FUNCTION - AUTO-APPROVES PENDING ITEMS ============
 async function acceptRequest(reqId) {
-    if(!confirm(`✅ ACCEPT REQUEST?\n\n• Approved items will stay approved\n• Rejected items will stay rejected\n• PENDING items will be AUTO-APPROVED with original quantities\n\nContinue?`)) return;
+    if(!confirm(`✅ ACCEPT REQUEST?\n\n• PENDING items will be AUTO-APPROVED with original quantities\n• Approved/Rejected stay as is\n\nContinue?`)) return;
     const req = allRequests.find(r => r.id === reqId);
     if(req) {
-        let approvedCount = 0;
-        let rejectedCount = 0;
-        let autoApprovedCount = 0;
-        
         req.items.forEach(item => {
             if(item.status !== "approved" && item.status !== "rejected") {
-                // AUTO-APPROVE pending items with original quantity (not reject)
                 item.status = "approved";
                 item.approvedQty = item.originalQty;
                 item.approvedBy = currentAdmin;
                 item.approvedAt = new Date().toLocaleString();
-                autoApprovedCount++;
-                // Remove any rejection data if exists
                 delete item.rejectionReason;
                 delete item.rejectedBy;
                 delete item.rejectedAt;
             }
             item.completedVia = "accept";
-            
-            if(item.status === "approved") approvedCount++;
-            if(item.status === "rejected") rejectedCount++;
         });
-        
         await updateRequest(reqId, req.items);
-        showToast(`✅ Request accepted! ${approvedCount} approved (${autoApprovedCount} auto-approved), ${rejectedCount} rejected`);
+        showToast(`✅ Request accepted!`);
     }
 }
 
 function showResetConfirmModal() {
-    const toDelete = allRequests.filter(req => {
-        const status = getRequestStatus(req.items);
-        return status !== "pending";
-    });
+    const toDelete = allRequests.filter(req => getRequestStatus(req.items) !== "pending");
     if(toDelete.length === 0) { showToast("ℹ️ No completed requests to delete"); return; }
     const modal = document.createElement('div');
     modal.className = 'confirm-modal';
     modal.innerHTML = `
         <div class="confirm-modal-content">
             <h3>⚠️ PERMANENT DELETION ⚠️</h3>
-            <p>You are about to delete <strong>${toDelete.length}</strong> completed request(s).</p>
-            <p class="warning-text">This action cannot be undone!</p>
-            <p>Type <strong style="color:#e74c3c;">DELETE</strong> below to confirm:</p>
-            <input type="text" id="confirmDeleteInput" placeholder="Type DELETE" autocomplete="off">
+            <p>Delete <strong>${toDelete.length}</strong> completed request(s)?</p>
+            <p class="warning-text">Type <strong>DELETE</strong> to confirm:</p>
+            <input type="text" id="confirmDeleteInput" autocomplete="off">
             <div class="confirm-buttons">
                 <button class="btn-cancel-delete" onclick="this.closest('.confirm-modal').remove()">Cancel</button>
-                <button class="btn-confirm-delete" id="confirmDeleteBtn" disabled>Delete Permanently</button>
+                <button class="btn-confirm-delete" id="confirmDeleteBtn" disabled>Delete</button>
             </div>
         </div>
     `;
@@ -1059,7 +1027,7 @@ function showResetConfirmModal() {
                 catch(e) { console.error(e); }
             }
             await loadRequests();
-            showToast(`✅ Deleted ${deletedCount} completed requests.`);
+            showToast(`✅ Deleted ${deletedCount} requests.`);
         } else { showToast("Cancelled"); modal.remove(); }
     };
 }
@@ -1136,9 +1104,8 @@ function renderUI() {
         const requestStatus = getRequestStatus(req.items);
         const kitchenClass = { "Hot Kitchen": "kitchen-hot", "Cold Kitchen": "kitchen-cold", "Pastry / Bakery": "kitchen-pastry", "Butchery": "kitchen-butchery", "Beach House": "kitchen-beach", "Nihon Kitchen": "kitchen-nihon", "Staff Kitchen": "kitchen-staff" }[req.section] || "kitchen-staff";
         
-        // Check if this request is a duplicate
         const duplicateInfo = duplicateMap.get(req.id);
-        const duplicateWarning = duplicateInfo ? `<span class="duplicate-warning">⚠️ DUPLICATE (${duplicateInfo.count} identical orders)</span>` : '';
+        const duplicateWarning = duplicateInfo ? `<span class="duplicate-warning">⚠️ DUPLICATE (${duplicateInfo.count} identical)</span>` : '';
         
         let requestedTotalValue = 0, approvedTotalValue = 0;
         req.items.forEach(item => {
@@ -1158,7 +1125,7 @@ function renderUI() {
             }
         } else { isCompleted = true; }
         
-        let itemsHtml = `<div class="table-wrapper"><table class="admin-table"><thead><tr><th>Code</th><th>Item</th><th>Requested Qty</th><th>Unit</th><th>Price/Unit (EGP)</th><th>Admin Qty (No Limit)</th><th>Total Value (EGP)</th><th>Action</th><th>Status</th></tr></thead><tbody>`;
+        let itemsHtml = `<div class="table-wrapper"><table class="admin-table"><thead><tr><th>Code</th><th>Item</th><th>Requested Qty</th><th>Unit</th><th>Price/Unit</th><th>Admin Qty</th><th>Total Value</th><th>Action</th><th>Status</th></tr></thead><tbody>`;
         
         req.items.forEach((item, idx) => {
             const price = item.price || 0;
@@ -1166,38 +1133,34 @@ function renderUI() {
             const totalValue = approvedQty * price;
             
             if(item.status === "approved") {
-                itemsHtml += `<tr style="background:#e8f5e9;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td><span class="item-price">${price.toFixed(2)}</span></td><td><strong>${approvedQty.toFixed(1)}</strong></td><td><strong style="color:#27ae60;">${totalValue.toFixed(2)}</strong></td><td><span class="btn-approve" style="background:#27ae60;opacity:0.7;">✅ Approved</span></td><td><span class="status-approved-cell">Approved</span><div class="admin-info-text">👤 ${escapeHtml(item.approvedBy || '?')}<br>📅 ${item.approvedAt || ''}</div></td></tr>`;
+                itemsHtml += `<tr style="background:#e8f5e9;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td class="item-price">${price.toFixed(2)}</td><td><strong>${approvedQty.toFixed(1)}</strong></td><td><strong style="color:#27ae60;">${totalValue.toFixed(2)}</strong></td><td><span class="btn-approve" style="background:#27ae60;opacity:0.7;">✅ Approved</span></td><td><span class="status-approved-cell">Approved</span><div class="admin-info-text">👤 ${escapeHtml(item.approvedBy || '?')}<br>📅 ${item.approvedAt || ''}</div></td></tr>`;
             } else if(item.status === "rejected") {
-                itemsHtml += `<tr style="background:#fee2e2;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td><span class="item-price">${price.toFixed(2)}</span></td><td><strong>0</strong></td><td><strong style="color:#e74c3c;">0.00</strong></td><td><span class="btn-reject" style="background:#e74c3c;opacity:0.7;">❌ Rejected</span></td><td><span class="status-rejected-cell">Rejected</span><div class="admin-info-text">👤 ${escapeHtml(item.rejectedBy || '?')}<br>📅 ${item.rejectedAt || ''}<br>📝 ${escapeHtml(item.rejectionReason || '')}</div><\/div></td></tr>`;
+                itemsHtml += `<tr style="background:#fee2e2;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td class="item-price">${price.toFixed(2)}</td><td><strong>0</strong></td><td><strong style="color:#e74c3c;">0.00</strong></td><td><span class="btn-reject" style="background:#e74c3c;opacity:0.7;">❌ Rejected</span></td><td><span class="status-rejected-cell">Rejected</span><div class="admin-info-text">👤 ${escapeHtml(item.rejectedBy || '?')}<br>📅 ${item.rejectedAt || ''}<br>📝 ${escapeHtml(item.rejectionReason || '')}</div></td></tr>`;
             } else {
                 const currentVal = (item.originalQty || 0).toFixed(1);
-                itemsHtml += `<tr style="background:#fff8e7;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td><span class="item-price">${price.toFixed(2)}</span></td><td><input type="number" id="qty_${req.id}_${idx}" class="approval-input" value="${currentVal}" min="0" step="0.5" style="background:#fef9e6;"></td><td><span id="totalValuePreview_${req.id}_${idx}" style="font-weight:600; color:#1e3c72;">${(item.originalQty * price).toFixed(2)}</span></td><td class="action-buttons"><button class="btn-approve" onclick="approveItemFlex('${req.id}', ${idx})">✅ Approve</button><button class="btn-reject" onclick="rejectItem('${req.id}', ${idx})">❌ Reject</button></td><td><span class="status-pending-cell">Pending</span><div class="admin-info-text">⚠️ Will be AUTO-APPROVED on Accept</div></td></tr>`;
-                
+                itemsHtml += `<tr style="background:#fff8e7;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td class="item-price">${price.toFixed(2)}</td><td><input type="number" id="qty_${req.id}_${idx}" class="approval-input" value="${currentVal}" min="0" step="0.5" style="background:#fef9e6;"></td><td><span id="totalValuePreview_${req.id}_${idx}" style="font-weight:600; color:#1e3c72;">${(item.originalQty * price).toFixed(2)}</span></td><td class="action-buttons"><button class="btn-approve" onclick="approveItemFlex('${req.id}', ${idx})">✅ Approve</button><button class="btn-reject" onclick="rejectItem('${req.id}', ${idx})">❌ Reject</button></td><td><span class="status-pending-cell">Pending</span><div class="admin-info-text">⚠️ Auto-approved on Accept</div></td></tr>`;
                 setTimeout(() => {
                     const input = document.getElementById(`qty_${req.id}_${idx}`);
                     const totalSpan = document.getElementById(`totalValuePreview_${req.id}_${idx}`);
                     if(input && totalSpan) {
-                        const updateTotal = () => {
-                            const newQty = parseFloat(input.value) || 0;
-                            totalSpan.innerText = (newQty * price).toFixed(2);
-                        };
+                        const updateTotal = () => { const newQty = parseFloat(input.value) || 0; totalSpan.innerText = (newQty * price).toFixed(2); };
                         input.addEventListener('input', updateTotal);
                         updateTotal();
                     }
                 }, 50);
             }
         });
-        itemsHtml += `</tbody><tr></div>`;
+        itemsHtml += `</tbody></table></div>`;
         
         let actions = "";
         if(!isCompleted) {
             actions = `<div class="request-actions">
-                <button class="btn-approve-all" id="approveAllBtn_${req.id}" onclick="approveAllFlex('${req.id}')" ${hasIndividualAction ? 'disabled' : ''}>✅ Approve All (Flex Qty)</button>
-                <button class="btn-reject-all" id="rejectAllBtn_${req.id}" onclick="rejectAll('${req.id}')" ${hasIndividualAction ? 'disabled' : ''}>❌ Reject All</button>
-                <button class="btn-accept" id="acceptBtn_${req.id}" onclick="acceptRequest('${req.id}')" ${!hasIndividualAction ? 'disabled' : ''}>🟣 Accept (Auto-Approve Pending)</button>
+                <button class="btn-approve-all" onclick="approveAllFlex('${req.id}')" ${hasIndividualAction ? 'disabled' : ''}>✅ Approve All</button>
+                <button class="btn-reject-all" onclick="rejectAll('${req.id}')" ${hasIndividualAction ? 'disabled' : ''}>❌ Reject All</button>
+                <button class="btn-accept" onclick="acceptRequest('${req.id}')" ${!hasIndividualAction ? 'disabled' : ''}>🟣 Accept</button>
             </div>`;
         } else {
-            actions = `<div class="request-actions"><button class="btn-accept" style="background:#6c757d; cursor:default;" disabled>✅ Request Completed - Locked</button></div>`;
+            actions = `<div class="request-actions"><button class="btn-accept" style="background:#6c757d; cursor:default;" disabled>✅ Request Completed</button></div>`;
         }
         
         let statusText = "", statusClass = "";
@@ -1216,47 +1179,19 @@ function renderUI() {
                 <span class="status-badge ${statusClass}">${statusText}</span>
             </div>
             <div class="request-info">
-    <div class="info-item">
-        <div class="info-label">👨‍🍳 CHEF</div>
-                    <div class="info-value">${escapeHtml(req.chefName)}</div>
-                </div>
-
-                <div class="info-item">
-                    <div class="info-label">📅 SUBMITTED</div>
-                    <div class="info-value">${req.submittedAt}</div>
-                </div>
-
-               <div class="info-item">
-                <div class="info-label">🆔 FIREBASE ID</div>
-                <div class="info-value firebase-id"
-                     onclick="copyDocId('${req.id}')">
-                    📋 ${req.id}
-                </div>
+                <div class="info-item"><div class="info-label">👨‍🍳 CHEF</div><div class="info-value">${escapeHtml(req.chefName)}</div></div>
+                <div class="info-item"><div class="info-label">📅 SUBMITTED</div><div class="info-value">${req.submittedAt}</div></div>
+                <div class="info-item"><div class="info-label">🆔 FIREBASE ID</div><div class="info-value firebase-id" onclick="copyDocId('${req.id}')">📋 ${req.id}</div></div>
             </div>
-        </div>
             ${itemsHtml}
             ${actions}
         </div>`;
     });
     updateStats();
 }
-function copyDocId(docId) {
-    navigator.clipboard.writeText(docId)
-        .then(() => {
-            showToast("📋 ID Copied");
-        })
-        .catch(() => {
-            showToast("❌ Copy Failed");
-        });
-}
-function logout() {
-    if(confirm("Are you sure you want to logout?")) {
-        localStorage.removeItem("admin");
-        sessionStorage.clear();
-        window.location.href = "index.html";
-    }
-}
 
+function copyDocId(docId) { navigator.clipboard.writeText(docId).then(() => showToast("📋 ID Copied")).catch(() => showToast("❌ Copy Failed")); }
+function logout() { if(confirm("Logout?")) { localStorage.removeItem("admin"); sessionStorage.clear(); window.location.href = "index.html"; } }
 function escapeHtml(str) { return str?.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])) || ''; }
 function showToast(msg) { const t = document.createElement("div"); t.className = "toast"; t.innerText = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2500); }
 
