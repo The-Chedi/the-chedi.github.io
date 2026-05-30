@@ -176,11 +176,7 @@ hr { border-color: #2a3a5a; margin: 15px 0; }
                         <div class="menu-title">📦 ADD ITEM FROM KITCHEN MENU (JSON Files) <span style="font-size: 0.7rem;">📁 items/ folder</span></div>
                         <div class="kitchen-menu-buttons" id="kitchenMenuButtons"></div>
                         <div id="selectedKitchenName" style="margin-bottom: 10px; font-size: 0.75rem; color: #00d4ff;"></div>
-                        <div id="menuItemsList" class="menu-items-list"><div style="padding:20px;text-align:center;">Click a kitchen button to load items</div></div>
-                        <div class="note">💡 Only the order's kitchen is enabled. Click enabled kitchen to load items, then click "➕ Add" to add to order.</div>
-                    </div>
-                </div>
-                <div class="doc-list">
+          >
                     <div class="doc-list-header"><span class="doc-list-title">📋 RECENT ORDERS (click to edit)</span><div class="doc-list-header-actions"><button class="btn btn-refresh btn-icon" onclick="refreshOrdersList()">⟳ Refresh</button></div></div>
                     <div id="ordersList" class="doc-items-container"></div>
                 </div>
@@ -201,7 +197,11 @@ hr { border-color: #2a3a5a; margin: 15px 0; }
                 <div style="margin-top:15px;"><strong>📄 JSON OUTPUT (AVE format)</strong><textarea id="jsonOutput" rows="10" readonly placeholder="JSON will appear here..." style="margin-top:10px;"></textarea></div>
                 <div class="note">⚡ Each item includes "AVE" field (Average Price). Format: one line per item with trailing commas.</div>
             </div>
-        </div>
+        </div>              <div id="menuItemsList" class="menu-items-list"><div style="padding:20px;text-align:center;">Click a kitchen button to load items</div></div>
+                        <div class="note">💡 Only the order's kitchen is enabled. Click enabled kitchen to load items, then click "➕ Add" to add to order.</div>
+                    </div>
+                </div>
+                <div class="doc-list"
 
         <!-- PANEL 3: USER MANAGEMENT (Firebase Auth Users) -->
         <div id="usersPanel" class="panel">
@@ -257,41 +257,58 @@ hr { border-color: #2a3a5a; margin: 15px 0; }
         </div>
     </div>
 </div>
-
 <script>
-// ============ WAIT FOR FIREBASE TO INITIALIZE ============
-// Firebase is initialized in firebase-config.js
-// Wait for Firebase to be ready
+// ============ FIREBASE IS ALREADY INITIALIZED IN firebase-config.js ============
+// We just need to get references to the services
 let db, auth;
 
-function initializeFirebase() {
-    if (typeof firebase !== 'undefined' && firebase.apps.length) {
+// Wait for Firebase to be ready
+function initializeFirebaseServices() {
+    // Check if Firebase is already initialized
+    if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
         auth = firebase.auth();
         db = firebase.firestore();
         console.log("✅ Firebase services ready");
         
-        // Check if already logged in
-        auth.onAuthStateChanged(async (user) => {
-            if (user) {
-                await loadAuthorizedDevelopers();
-                if(isAuthorized(user.email)) {
-                    currentDeveloperEmail = user.email;
-                    document.getElementById("loginOverlay").style.display = "none";
-                    document.getElementById("mainContent").style.display = "block";
-                    document.getElementById("userEmailDisplay").innerHTML = currentDeveloperEmail;
-                    await loadFreehandModeFromFirestore();
-                    refreshOrdersList();
-                    renderKitchenMenuButtons();
-                    loadKitchenPasswords();
-                } else {
-                    await auth.signOut();
-                }
-            }
-        });
+        // Set up auth state listener
+        setupAuthListener();
     } else {
-        console.error("Firebase not initialized. Check firebase-config.js");
-        setTimeout(initializeFirebase, 500);
+        console.log("⏳ Waiting for Firebase to initialize...");
+        setTimeout(initializeFirebaseServices, 500);
     }
+}
+
+function setupAuthListener() {
+    auth.onAuthStateChanged(async (user) => {
+        console.log("Auth state changed:", user ? user.email : "No user");
+        if (user) {
+            await loadAuthorizedDevelopers();
+            if(isAuthorized(user.email)) {
+                currentDeveloperEmail = user.email;
+                document.getElementById("loginOverlay").style.display = "none";
+                document.getElementById("mainContent").style.display = "block";
+                document.getElementById("userEmailDisplay").innerHTML = currentDeveloperEmail;
+                await loadFreehandModeFromFirestore();
+                refreshOrdersList();
+                renderKitchenMenuButtons();
+                loadKitchenPasswords();
+            } else {
+                console.log("User not authorized:", user.email);
+                await auth.signOut();
+                showLoginForm();
+            }
+        } else {
+            showLoginForm();
+        }
+    });
+}
+
+function showLoginForm() {
+    document.getElementById("loginOverlay").style.display = "flex";
+    document.getElementById("mainContent").style.display = "none";
+    document.getElementById("devEmail").value = "";
+    document.getElementById("devPassword").value = "";
+    document.getElementById("loginErrorMsg").innerHTML = "";
 }
 
 // ============ GLOBAL VARIABLES ============
@@ -573,7 +590,7 @@ function isAuthorized(email) {
 
 window.loginWithFirebase = async function() {
     if(!auth) { 
-        document.getElementById("loginErrorMsg").innerHTML = "Firebase not ready. Please refresh."; 
+        document.getElementById("loginErrorMsg").innerHTML = "Firebase not ready. Please wait..."; 
         return; 
     }
     
@@ -590,6 +607,8 @@ window.loginWithFirebase = async function() {
     
     try {
         const userCred = await auth.signInWithEmailAndPassword(email, password);
+        console.log("Login successful:", userCred.user.email);
+        
         await loadAuthorizedDevelopers();
         
         if(!isAuthorized(userCred.user.email)) {
@@ -598,15 +617,8 @@ window.loginWithFirebase = async function() {
             return;
         }
         
-        currentDeveloperEmail = userCred.user.email;
-        document.getElementById("loginOverlay").style.display = "none";
-        document.getElementById("mainContent").style.display = "block";
-        document.getElementById("userEmailDisplay").innerHTML = currentDeveloperEmail;
-        
-        await loadFreehandModeFromFirestore();
-        refreshOrdersList(); 
-        renderKitchenMenuButtons();
-        loadKitchenPasswords();
+        // Login successful - UI will be handled by auth state listener
+        showToast(`✅ Welcome ${email}`);
         
     } catch(error) {
         console.error("Login error:", error);
@@ -626,15 +638,13 @@ window.loginWithFirebase = async function() {
     }
 };
 
-function logout() { 
-    if(auth && confirm("Logout?")) auth.signOut().then(() => {
-        document.getElementById("mainContent").style.display = "none";
-        document.getElementById("loginOverlay").style.display = "flex";
-        document.getElementById("devEmail").value = "";
-        document.getElementById("devPassword").value = "";
-        document.getElementById("loginErrorMsg").innerHTML = "";
-    }); 
-}
+window.logout = function() { 
+    if(auth && confirm("Logout?")) {
+        auth.signOut().then(() => {
+            showToast("Logged out");
+        });
+    } 
+};
 
 function goBackToIndex() {
     window.location.href = "index.html";
@@ -1047,6 +1057,7 @@ async function createNewUser() {
         document.getElementById("newUserPassword").value = "";
         document.getElementById("newUserConfirmPassword").value = "";
         setTimeout(() => msgDiv.innerHTML = "", 3000);
+        showToast(`✅ User ${email} created`);
     } catch(e) { 
         let errMsg = e.message;
         if(e.code === 'auth/email-already-in-use') errMsg = "Email already in use";
@@ -1066,6 +1077,7 @@ async function sendUserPasswordReset() {
         msgDiv.innerHTML = `<span style='color:#10b981'>✅ Reset email sent to ${email}</span>`;
         document.getElementById("resetUserEmail").value = "";
         setTimeout(() => msgDiv.innerHTML = "", 3000);
+        showToast(`✅ Reset email sent to ${email}`);
     } catch(e) { 
         msgDiv.innerHTML = `<span style='color:#dc2626'>❌ ${e.message}</span>`;
     } 
@@ -1082,6 +1094,11 @@ window.listAllAuthUsers = async function() {
     
     try {
         const snapshot = await db.collection("user_passwords").get();
+        
+        if(snapshot.empty) {
+            container.innerHTML = "<div style='text-align:center;padding:20px;color:#9ca3af;'>No passwords found.</div>";
+            return;
+        }
         
         container.innerHTML = `
             <div style="background: #0a0e27; border-radius: 12px; overflow: hidden;">
@@ -1148,7 +1165,8 @@ function switchTab(t) {
 
 // ============ INITIALIZE ============
 // Start the initialization
-initializeFirebase();
+initializeFirebaseServices();
 </script>
+
 </body>
 </html>
