@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="firebase-config.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
 <title>Chef Dashboard - Kitchen Order System</title>
@@ -828,12 +829,24 @@ body.arabic .items-scroll-container {
 </head>
 <body>
 
+<!-- AUTHENTICATION MODAL -->
+<div id="authModal" class="modal" style="display: flex;">
+    <div class="modal-content">
+        <h2>🔐 Kitchen Access</h2>
+        <p>Enter your password to access the kitchen system</p>
+        <input type="password" id="authPassword" placeholder="Enter password" autocomplete="off">
+        <button id="authLoginBtn">Login</button>
+        <div id="authErrorMsg" class="error-msg"></div>
+    </div>
+</div>
+
+<!-- MAIN CONTENT (HIDDEN UNTIL AUTHENTICATED) -->
+<div id="mainContent" style="display: none;">
 <div class="header">
     <div class="header-content">
         <div class="logo">
             <span class="logo-icon">🍳</span>
             <span>Kitchen Order <span>| Chef</span></span>
-                <!-- Freehand Status Indicator -->
             <div class="freehand-status" id="freehandStatusIndicator">
                  <div class="status-light" id="statusLight"></div>
                 <span class="status-text" id="statusText">Freehand: OFF</span>
@@ -857,8 +870,154 @@ body.arabic .items-scroll-container {
 <button class="admin-btn-mobile" onclick="openAdmin()">👑 Admin Panel</button>
 <button class="admin-fab" onclick="openAdmin()">👑</button>
 <div class="sync-status" id="syncStatus">🔄 Connecting... <span id="autoRefreshIndicator" class="auto-refresh-indicator">(Auto-refresh: 60s)</span></div>
+</div>
 
 <script>
+// ============ FIREBASE AUTHENTICATION ============
+let currentUser = null;
+let userRole = null; // Stores which kitchens this user can access, or "all" for master
+
+// Password storage in Firestore collection: "user_passwords"
+// Each document: { password: "xxx", role: "Hot Kitchen" or "all", createdAt: timestamp }
+
+async function authenticateUser(password) {
+    try {
+        // Query Firestore for matching password
+        const snapshot = await db.collection("user_passwords").where("password", "==", password).get();
+        
+        if (!snapshot.empty) {
+            const userDoc = snapshot.docs[0];
+            const userData = userDoc.data();
+            currentUser = {
+                id: userDoc.id,
+                role: userData.role,
+                password: password
+            };
+            userRole = userData.role;
+            
+            // Store auth state in sessionStorage
+            sessionStorage.setItem("auth_user_id", userDoc.id);
+            sessionStorage.setItem("auth_user_role", userData.role);
+            sessionStorage.setItem("auth_user_password", password);
+            
+            return true;
+        }
+        return false;
+    } catch (error) {
+        console.error("Authentication error:", error);
+        return false;
+    }
+}
+
+function checkExistingAuth() {
+    const savedUserId = sessionStorage.getItem("auth_user_id");
+    const savedRole = sessionStorage.getItem("auth_user_role");
+    const savedPassword = sessionStorage.getItem("auth_user_password");
+    
+    if (savedUserId && savedRole) {
+        currentUser = { id: savedUserId, role: savedRole, password: savedPassword };
+        userRole = savedRole;
+        return true;
+    }
+    return false;
+}
+
+function logout() {
+    if (confirm("Logout? All unlocked kitchens will be locked.")) {
+        sessionStorage.clear();
+        currentUser = null;
+        userRole = null;
+        location.reload();
+    }
+}
+
+function checkKitchenAccess(kitchen) {
+    if (!currentUser) return false;
+    if (userRole === "all") return true;
+    return userRole === kitchen;
+}
+
+// Modified showKitchenPasswordModal to use Firebase auth instead of hardcoded passwords
+function showKitchenPasswordModal(kitchen) {
+    if (!currentUser) {
+        showToast("Please login first");
+        return;
+    }
+    
+    if (!checkKitchenAccess(kitchen)) {
+        showToast(`❌ You don't have access to ${kitchen}`);
+        return;
+    }
+    
+    if(unlockedKitchens[kitchen]) { 
+        selectKitchen(kitchen); 
+        return; 
+    }
+    
+    // Since Firebase auth already verified user, we just unlock the kitchen
+    unlockedKitchens[kitchen] = true;
+    saveUnlockedKitchens();
+    selectKitchen(kitchen);
+}
+
+// Modified verifyKitchenPassword - now just checks access from Firebase auth
+function verifyKitchenPassword() {
+    // This function is kept for compatibility but now uses Firebase auth
+    const kitchen = pendingKitchen;
+    if (checkKitchenAccess(kitchen)) {
+        unlockedKitchens[kitchen] = true;
+        saveUnlockedKitchens();
+        closePasswordModal();
+        selectKitchen(kitchen);
+    } else {
+        document.getElementById("kitchenPasswordError").innerHTML = currentLang === 'ar' ? '❌ لا تملك صلاحية الوصول لهذا المطبخ!' : "❌ You don't have access to this kitchen!";
+    }
+}
+
+// Setup auth modal handlers
+function setupAuthModal() {
+    const modal = document.getElementById("authModal");
+    const passwordInput = document.getElementById("authPassword");
+    const loginBtn = document.getElementById("authLoginBtn");
+    const errorMsg = document.getElementById("authErrorMsg");
+    
+    loginBtn.onclick = async () => {
+        const password = passwordInput.value.trim();
+        if (!password) {
+            errorMsg.innerText = "Please enter password";
+            return;
+        }
+        
+        const success = await authenticateUser(password);
+        if (success) {
+            modal.style.display = "none";
+            document.getElementById("mainContent").style.display = "block";
+            initializeAfterAuth();
+            showToast(`✅ Welcome! Access: ${userRole === "all" ? "All Kitchens" : userRole}`);
+        } else {
+            errorMsg.innerText = "❌ Invalid password. Please try again.";
+            passwordInput.value = "";
+        }
+    };
+    
+    passwordInput.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") loginBtn.click();
+    });
+}
+
+async function initializeAfterAuth() {
+    generatePages();
+    startAutoRefresh();
+    await loadRequestsFromFirebase();
+    loadLastSelectedKitchen();
+    initFreehandModeListener();
+    
+    // Listen to Firestore for real-time updates
+    db.collection("kitchen_requests").onSnapshot(() => { 
+        loadRequestsFromFirebase(); 
+    });
+}
+
 // ============ LANGUAGE TRANSLATIONS ============
 const translations = {
     en: {
@@ -912,7 +1071,7 @@ let currentLang = 'en';
 // ============ FREEHAND MODE FUNCTIONS ============
 
 function updateFreehandUI() {
-    updateFreehandStatusIndicator();  // Add this line
+    updateFreehandStatusIndicator();
     if (currentKitchen) {
         renderItemsList(currentKitchen);
         renderCart(currentKitchen);
@@ -967,6 +1126,7 @@ function getItemName(item) {
 function t(key) { return translations[currentLang][key] || translations['en'][key] || key; }
 
 // ============ KITCHEN CONFIGURATION ============
+// Keep hardcoded passwords for backward compatibility but they won't be used
 const kitchenPasswords = {
     "Hot Kitchen": "hot123", "Cold Kitchen": "cold123", "Pastry / Bakery": "pastry123",
     "Butchery": "butchery123", "Beach House": "beach123", "Nihon Kitchen": "nihon123", "Staff Kitchen": "123456"
@@ -992,6 +1152,7 @@ let currentItemsList = [];
 let autoRefreshInterval = null;
 let freehandModeActive = false;
 let freehandUnsubscribe = null;
+
 // Update freehand status indicator in header
 function updateFreehandStatusIndicator() {
     const statusLight = document.getElementById('statusLight');
@@ -1062,35 +1223,7 @@ function loadUnlockedKitchens() { const saved = localStorage.getItem("unlockedKi
 function saveUnlockedKitchens() { localStorage.setItem("unlockedKitchens", JSON.stringify(unlockedKitchens)); }
 loadUnlockedKitchens();
 
-function showKitchenPasswordModal(kitchen) {
-    if(unlockedKitchens[kitchen]) { selectKitchen(kitchen); return; }
-    pendingKitchen = kitchen;
-    const modalDiv = document.createElement("div");
-    modalDiv.className = "modal";
-    modalDiv.id = "kitchenPasswordModal";
-    modalDiv.innerHTML = `<div class="modal-content"><h2>🔐 ${currentLang === 'ar' ? 'الوصول إلى المطبخ' : 'Kitchen Access'}</h2>
-        <p>${currentLang === 'ar' ? 'أدخل كلمة المرور لـ' : 'Enter password for'} <strong>${kitchen}</strong></p>
-        <input type="password" id="kitchenPasswordInput" placeholder="${currentLang === 'ar' ? 'أدخل كلمة المرور' : 'Enter password'}" autocomplete="off">
-        <button id="verifyPassBtn">${currentLang === 'ar' ? 'فتح المطبخ' : 'Unlock Kitchen'}</button>
-        <div id="kitchenPasswordError" class="error-msg"></div>
-        <button class="close-modal" id="closeModalBtn">${currentLang === 'ar' ? 'إلغاء' : 'Cancel'}</button></div>`;
-    document.body.appendChild(modalDiv);
-    document.getElementById("verifyPassBtn").onclick = () => verifyKitchenPassword();
-    document.getElementById("closeModalBtn").onclick = () => closePasswordModal();
-    document.getElementById("kitchenPasswordInput").focus();
-}
-
 function closePasswordModal() { const modal = document.getElementById("kitchenPasswordModal"); if(modal) modal.remove(); pendingKitchen = null; }
-function verifyKitchenPassword() {
-    const inputPassword = document.getElementById("kitchenPasswordInput").value;
-    const kitchen = pendingKitchen;
-    if(inputPassword === kitchenPasswords[kitchen]) {
-        unlockedKitchens[kitchen] = true;
-        saveUnlockedKitchens();
-        closePasswordModal();
-        selectKitchen(kitchen);
-    } else { document.getElementById("kitchenPasswordError").innerHTML = currentLang === 'ar' ? '❌ كلمة مرور خاطئة!' : "❌ Wrong password!"; }
-}
 
 async function loadRequestsFromFirebase() {
     try {
@@ -1464,7 +1597,7 @@ function openAdmin() { window.open("admin.html", "_blank"); }
 function showToast(msg) { const toast = document.createElement("div"); toast.className = "toast"; toast.innerText = msg; document.body.appendChild(toast); setTimeout(() => toast.remove(), 2500); }
 function escapeHtml(str) { return str ? str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])) : ''; }
 
-function logout() {
+function logoutSystem() {
     if (confirm("Logout? All unlocked kitchens will be locked.")) {
         if(autoRefreshInterval) clearInterval(autoRefreshInterval);
         unlockedKitchens = {};
@@ -1475,9 +1608,12 @@ function logout() {
         currentKitchen = null;
         sessionStorage.clear();
         showToast("Logged out.");
-        setTimeout(() => window.location.href = "index.html", 1000);
+        setTimeout(() => location.reload(), 1000);
     }
 }
+
+// Override logout function
+window.logout = logoutSystem;
 
 async function selectKitchen(kitchen) {
     currentKitchen = kitchen;
@@ -1522,19 +1658,27 @@ function generatePages() {
     const pages = document.getElementById("kitchenPagesContainer");
     tabs.innerHTML = "";
     pages.innerHTML = "";
-    kitchens.forEach(k => { tabs.innerHTML += `<button class="tab-btn" onclick="showKitchenPasswordModal('${k}')">${k}</button>`; pages.innerHTML += createKitchenPage(k); });
+    kitchens.forEach(k => { 
+        tabs.innerHTML += `<button class="tab-btn" onclick="showKitchenPasswordModal('${k}')">${k}</button>`; 
+        pages.innerHTML += createKitchenPage(k); 
+    });
 }
 
-function loadLastSelectedKitchen() { const lastKitchen = localStorage.getItem("lastSelectedKitchen"); if (lastKitchen && unlockedKitchens[lastKitchen]) { selectKitchen(lastKitchen); } }
+function loadLastSelectedKitchen() { 
+    const lastKitchen = localStorage.getItem("lastSelectedKitchen"); 
+    if (lastKitchen && unlockedKitchens[lastKitchen]) { 
+        selectKitchen(lastKitchen); 
+    } 
+}
 
-generatePages();
-startAutoRefresh();
-loadRequestsFromFirebase();
-loadLastSelectedKitchen();
-db.collection("kitchen_requests").onSnapshot(() => { loadRequestsFromFirebase(); });
-// Initialize Freehand Mode Listener
-initFreehandModeListener();
-
+// Check for existing auth session and initialize
+if (checkExistingAuth()) {
+    document.getElementById("authModal").style.display = "none";
+    document.getElementById("mainContent").style.display = "block";
+    initializeAfterAuth();
+} else {
+    setupAuthModal();
+}
 </script>
 </body>
 </html>
