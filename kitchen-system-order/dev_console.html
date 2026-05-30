@@ -112,6 +112,8 @@ hr { border-color: #2a3a5a; margin: 15px 0; }
 .freehand-banner { background: #f59e0b20; border: 2px solid #f59e0b; border-radius: 12px; padding: 10px 15px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
 .freehand-banner.active { background: #10b98120; border-color: #10b981; }
 .freehand-banner.inactive { background: #dc262620; border-color: #dc2626; }
+.password-user-card { background: #1a1a2e; padding: 15px; margin-bottom: 12px; border-radius: 12px; border-left: 3px solid #00d4ff; }
+.password-role-select { background: #0a0e27; border: 1px solid #2a3a5a; padding: 6px 12px; border-radius: 8px; color: white; font-family: monospace; }
 </style>
 </head>
 <body>
@@ -142,6 +144,7 @@ hr { border-color: #2a3a5a; margin: 15px 0; }
             <button class="tab-btn active" onclick="switchTab('orders')">📋 Edit Firestore Orders</button>
             <button class="tab-btn" onclick="switchTab('generator')">📦 JSON Generator (AVE)</button>
             <button class="tab-btn" onclick="switchTab('users')">👥 User Management</button>
+            <button class="tab-btn" onclick="switchTab('passwords')">🔑 Kitchen Passwords</button>
         </div>
 
         <!-- PANEL 1: FIRESTORE ORDERS EDITOR -->
@@ -199,13 +202,56 @@ hr { border-color: #2a3a5a; margin: 15px 0; }
             </div>
         </div>
 
-        <!-- PANEL 3: USER MANAGEMENT -->
+        <!-- PANEL 3: USER MANAGEMENT (Firebase Auth Users) -->
         <div id="usersPanel" class="panel">
-            <div class="panel-header"><h2>👥 User Management - Add Users & Reset Passwords</h2></div>
+            <div class="panel-header"><h2>👥 User Management - Create/Delete/Reset Users</h2></div>
             <div class="form-group">
                 <div class="user-card"><h3>➕ Add New User</h3><div class="form-row"><input type="email" id="newUserEmail" class="form-input" placeholder="Email"><input type="password" id="newUserPassword" class="form-input" placeholder="Password"><input type="password" id="newUserConfirmPassword" class="form-input" placeholder="Confirm"><button class="btn btn-success" onclick="createNewUser()">Create User</button></div><div id="addUserMsg" style="margin-top:10px;"></div></div>
+                
                 <div class="user-card"><h3>🔑 Reset Password</h3><div class="form-row"><input type="email" id="resetUserEmail" class="form-input" placeholder="User Email"><button class="btn btn-warning" onclick="sendUserPasswordReset()">Send Reset Email</button></div><div id="resetUserMsg" style="margin-top:10px;"></div></div>
-                <div class="user-card"><h3>✅ Authorized Developers</h3><div id="authorizedDevsList"></div><div class="form-row"><input type="email" id="newDevEmail" class="form-input" placeholder="Developer Email"><button class="btn btn-primary" onclick="addAuthorizedDeveloper()">➕ Add to Authorized List</button></div><div class="note">💡 Only emails in this list can login. Add email, then create account.</div></div>
+                
+                <div class="user-card"><h3>✅ Authorized Developers</h3><div id="authorizedDevsList"></div><div class="form-row"><input type="email" id="newDevEmail" class="form-input" placeholder="Developer Email"><button class="btn btn-primary" onclick="addAuthorizedDeveloper()">➕ Add to Authorized List</button></div><div class="note">💡 Only emails in this list can login to Developer Console.</div></div>
+                
+                <div class="user-card"><h3>👥 All Firebase Auth Users</h3><button class="btn btn-primary" onclick="listAllAuthUsers()">⟳ Refresh User List</button><div id="allUsersList" style="margin-top: 15px; max-height: 400px; overflow-y: auto;"></div></div>
+            </div>
+        </div>
+
+        <!-- PANEL 4: KITCHEN PASSWORDS MANAGEMENT (Firestore user_passwords collection) -->
+        <div id="passwordsPanel" class="panel">
+            <div class="panel-header"><h2>🔑 Kitchen Passwords Management (user_passwords collection)</h2></div>
+            <div class="form-group">
+                <div class="user-card"><h3>➕ Add New Kitchen Password</h3>
+                    <div class="form-row">
+                        <input type="text" id="newPasswordValue" class="form-input" placeholder="Password (e.g., hot123)">
+                        <select id="newPasswordRole" class="form-input password-role-select">
+                            <option value="Hot Kitchen">Hot Kitchen</option>
+                            <option value="Cold Kitchen">Cold Kitchen</option>
+                            <option value="Pastry / Bakery">Pastry / Bakery</option>
+                            <option value="Butchery">Butchery</option>
+                            <option value="Beach House">Beach House</option>
+                            <option value="Nihon Kitchen">Nihon Kitchen</option>
+                            <option value="Staff Kitchen">Staff Kitchen</option>
+                            <option value="all">all (Master Access)</option>
+                        </select>
+                        <button class="btn btn-success" onclick="addKitchenPassword()">➕ Add Password</button>
+                    </div>
+                    <div id="addPasswordMsg" style="margin-top:10px;"></div>
+                </div>
+                
+                <div class="user-card"><h3>📋 Existing Kitchen Passwords</h3>
+                    <button class="btn btn-primary" onclick="loadKitchenPasswords()">⟳ Refresh Passwords</button>
+                    <div id="kitchenPasswordsList" style="margin-top: 15px;"></div>
+                </div>
+                
+                <div class="user-card"><h3>ℹ️ How Kitchen Passwords Work</h3>
+                    <div class="note" style="text-align: left; background: #0a0e27; padding: 15px; border-radius: 12px;">
+                        • Each password in the <code>user_passwords</code> collection grants access to a specific kitchen<br>
+                        • Users enter JUST the password (no email) on the chef.html login screen<br>
+                        • Role "<strong>all</strong>" gives access to ALL kitchens (Master Password)<br>
+                        • Role with specific kitchen name (e.g., "Hot Kitchen") gives access only to that kitchen<br>
+                        • Passwords are checked against Firestore, not Firebase Auth
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -249,8 +295,178 @@ const KITCHEN_JSON_FILES = {
 };
 const JSON_BASE_PATH = "items/";
 
-// ============ GLOBAL FREEHAND MODE FUNCTIONS (Stored in Firestore) ============
-// Save freehand mode to Firestore so all pages can access it
+// ============ KITCHEN PASSWORDS MANAGEMENT ============
+
+// Add new kitchen password to Firestore
+window.addKitchenPassword = async function() {
+    const password = document.getElementById("newPasswordValue").value.trim();
+    const role = document.getElementById("newPasswordRole").value;
+    const msgDiv = document.getElementById("addPasswordMsg");
+    
+    if(!password) {
+        msgDiv.innerHTML = "<span style='color:#dc2626'>❌ Please enter a password</span>";
+        setTimeout(() => msgDiv.innerHTML = "", 3000);
+        return;
+    }
+    
+    msgDiv.innerHTML = "<span style='color:#00d4ff'>⏳ Adding password...</span>";
+    
+    try {
+        // Check if password already exists
+        const existing = await db.collection("user_passwords").where("password", "==", password).get();
+        if(!existing.empty) {
+            msgDiv.innerHTML = "<span style='color:#dc2626'>❌ Password already exists!</span>";
+            setTimeout(() => msgDiv.innerHTML = "", 3000);
+            return;
+        }
+        
+        await db.collection("user_passwords").add({
+            password: password,
+            role: role,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        
+        msgDiv.innerHTML = `<span style='color:#10b981'>✅ Password "${password}" added for role: ${role}</span>`;
+        document.getElementById("newPasswordValue").value = "";
+        setTimeout(() => msgDiv.innerHTML = "", 3000);
+        loadKitchenPasswords();
+        showToast(`✅ Added password for ${role}`);
+    } catch(e) {
+        msgDiv.innerHTML = `<span style='color:#dc2626'>❌ Error: ${e.message}</span>`;
+        console.error(e);
+    }
+};
+
+// Load all kitchen passwords from Firestore
+window.loadKitchenPasswords = async function() {
+    const container = document.getElementById("kitchenPasswordsList");
+    if(!container) return;
+    
+    container.innerHTML = "<div style='text-align:center;padding:20px;'>⏳ Loading passwords...</div>";
+    
+    try {
+        const snapshot = await db.collection("user_passwords").orderBy("createdAt", "desc").get();
+        
+        if(snapshot.empty) {
+            container.innerHTML = "<div style='text-align:center;padding:20px;color:#9ca3af;'>No passwords found. Add one above.</div>";
+            return;
+        }
+        
+        container.innerHTML = "";
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const roleClass = data.role === "all" ? "status-approved" : "status-pending";
+            container.innerHTML += `
+                <div class="password-user-card" id="passwordCard_${doc.id}">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                        <div>
+                            <strong style="color:#00d4ff; font-size:1rem;">🔑 ${escapeHtml(data.password)}</strong>
+                            <span class="status-badge ${roleClass}" style="margin-left: 10px;">🎯 ${escapeHtml(data.role)}</span>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <select id="roleSelect_${doc.id}" class="password-role-select" style="padding: 6px 12px;">
+                                <option value="Hot Kitchen" ${data.role === "Hot Kitchen" ? "selected" : ""}>Hot Kitchen</option>
+                                <option value="Cold Kitchen" ${data.role === "Cold Kitchen" ? "selected" : ""}>Cold Kitchen</option>
+                                <option value="Pastry / Bakery" ${data.role === "Pastry / Bakery" ? "selected" : ""}>Pastry / Bakery</option>
+                                <option value="Butchery" ${data.role === "Butchery" ? "selected" : ""}>Butchery</option>
+                                <option value="Beach House" ${data.role === "Beach House" ? "selected" : ""}>Beach House</option>
+                                <option value="Nihon Kitchen" ${data.role === "Nihon Kitchen" ? "selected" : ""}>Nihon Kitchen</option>
+                                <option value="Staff Kitchen" ${data.role === "Staff Kitchen" ? "selected" : ""}>Staff Kitchen</option>
+                                <option value="all" ${data.role === "all" ? "selected" : ""}>all (Master Access)</option>
+                            </select>
+                            <button class="btn btn-warning btn-icon" onclick="updateKitchenPassword('${doc.id}')" style="padding: 6px 12px;">✏️ Update</button>
+                            <button class="btn btn-danger btn-icon" onclick="deleteKitchenPassword('${doc.id}')" style="padding: 6px 12px;">🗑️ Delete</button>
+                        </div>
+                    </div>
+                    <div style="font-size: 0.65rem; color: #9ca3af; margin-top: 8px;">
+                        Created: ${data.createdAt ? new Date(data.createdAt.toDate()).toLocaleString() : 'Unknown'}
+                    </div>
+                </div>
+            `;
+        });
+    } catch(e) {
+        console.error("Error loading passwords:", e);
+        container.innerHTML = `<div style='text-align:center;padding:20px;color:#dc2626;'>❌ Error loading: ${e.message}</div>`;
+    }
+};
+
+// Update kitchen password role
+window.updateKitchenPassword = async function(docId) {
+    const newRole = document.getElementById(`roleSelect_${docId}`).value;
+    
+    if(!confirm(`Update password role to "${newRole}"?`)) return;
+    
+    try {
+        await db.collection("user_passwords").doc(docId).update({
+            role: newRole,
+            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        showToast(`✅ Updated role to ${newRole}`);
+        loadKitchenPasswords();
+    } catch(e) {
+        showToast(`❌ Error: ${e.message}`, true);
+    }
+};
+
+// Delete kitchen password
+window.deleteKitchenPassword = async function(docId) {
+    if(!confirm("⚠️ Delete this password permanently? Users using this password will lose access.")) return;
+    
+    try {
+        await db.collection("user_passwords").doc(docId).delete();
+        showToast("🗑️ Password deleted");
+        loadKitchenPasswords();
+    } catch(e) {
+        showToast(`❌ Error: ${e.message}`, true);
+    }
+};
+
+// ============ FIREBASE AUTH USER MANAGEMENT ============
+
+// List all Firebase Auth users (requires Admin SDK, so we use Cloud Function or direct DB)
+// Since client SDK can't list users, we'll show users stored in Firestore
+window.listAllAuthUsers = async function() {
+    const container = document.getElementById("allUsersList");
+    if(!container) return;
+    
+    container.innerHTML = "<div style='text-align:center;padding:20px;'>⏳ Loading users...</div>";
+    
+    try {
+        // Get users from Firestore user_passwords collection
+        const passwordSnapshot = await db.collection("user_passwords").get();
+        
+        container.innerHTML = `
+            <div style="background: #0a0e27; border-radius: 12px; overflow: hidden;">
+                <div style="background: #1a1a2e; padding: 12px; display: grid; grid-template-columns: 2fr 2fr 1fr; gap: 10px; font-weight: bold; color: #00d4ff;">
+                    <div>Password</div>
+                    <div>Role / Access</div>
+                    <div>Actions</div>
+                </div>
+        `;
+        
+        passwordSnapshot.forEach(doc => {
+            const data = doc.data();
+            const roleDisplay = data.role === "all" ? "🔓 ALL KITCHENS" : `🍽️ ${data.role}`;
+            container.innerHTML += `
+                <div style="padding: 12px; border-bottom: 1px solid #2a3a5a; display: grid; grid-template-columns: 2fr 2fr 1fr; gap: 10px; align-items: center;">
+                    <div><code style="background:#0a0e27; padding:4px 8px; border-radius:6px;">${escapeHtml(data.password)}</code></div>
+                    <div><span class="status-badge ${data.role === 'all' ? 'status-approved' : 'status-pending'}">${roleDisplay}</span></div>
+                    <div>
+                        <button class="btn btn-danger btn-icon" onclick="deleteKitchenPassword('${doc.id}')" style="padding: 4px 10px;">🗑️ Delete</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML += `</div><div class="note" style="margin-top: 10px;">💡 Total: ${passwordSnapshot.size} password(s) stored. Users login using these passwords (no email required).</div>`;
+        
+    } catch(e) {
+        console.error("Error listing users:", e);
+        container.innerHTML = `<div style='text-align:center;padding:20px;color:#dc2626;'>❌ Error: ${e.message}</div>`;
+    }
+};
+
+// ============ GLOBAL FREEHAND MODE FUNCTIONS ============
 async function saveFreehandModeToFirestore(isEnabled) {
     try {
         await db.collection("settings").doc("global_settings").set({
@@ -264,7 +480,6 @@ async function saveFreehandModeToFirestore(isEnabled) {
     }
 }
 
-// Load freehand mode from Firestore
 async function loadFreehandModeFromFirestore() {
     try {
         const doc = await db.collection("settings").doc("global_settings").get();
@@ -272,7 +487,6 @@ async function loadFreehandModeFromFirestore() {
             freehandMode = doc.data().freehandMode;
             console.log("✅ Freehand mode loaded from Firestore:", freehandMode);
         } else {
-            // Default to false
             freehandMode = false;
             await saveFreehandModeToFirestore(false);
         }
@@ -284,7 +498,6 @@ async function loadFreehandModeFromFirestore() {
     }
 }
 
-// ============ FREEHAND MODE TOGGLE ============
 window.toggleFreehandMode = async function() {
     const warningMsg = freehandMode 
         ? "⚠️ Disable Freehand Mode?\n\nWhen disabled, quantity limits will be restored for all users." 
@@ -368,7 +581,6 @@ function isAuthorized(email) {
     return AUTHORIZED_DEVELOPERS.includes(email.toLowerCase()); 
 }
 
-// LOGIN FUNCTION
 window.loginWithFirebase = async function() {
     const email = document.getElementById("devEmail").value.trim();
     const password = document.getElementById("devPassword").value;
@@ -396,12 +608,10 @@ window.loginWithFirebase = async function() {
         document.getElementById("mainContent").style.display = "block";
         document.getElementById("userEmailDisplay").innerHTML = currentDeveloperEmail;
         
-        // Load freehand mode from Firestore FIRST
         await loadFreehandModeFromFirestore();
-        
-        // Load initial data
         refreshOrdersList(); 
         renderKitchenMenuButtons();
+        loadKitchenPasswords(); // Load passwords on login
         
     } catch(error) {
         console.error("Login error:", error);
@@ -429,6 +639,10 @@ function logout() {
         document.getElementById("devPassword").value = "";
         document.getElementById("loginErrorMsg").innerHTML = "";
     }); 
+}
+
+function goBackToIndex() {
+    window.location.href = "index.html";
 }
 
 // ============ ORDER MANAGEMENT FUNCTIONS ============
@@ -810,7 +1024,7 @@ function downloadJSON() {
     showToast("📎 JSON file downloaded");
 }
 
-// ============ USER MANAGEMENT ============
+// ============ USER MANAGEMENT (Firebase Auth) ============
 async function createNewUser() { 
     const email = document.getElementById("newUserEmail").value.trim(); 
     const pwd = document.getElementById("newUserPassword").value; 
@@ -871,9 +1085,14 @@ function switchTab(t) {
     } else if(t === 'generator') { 
         document.querySelectorAll('.tab-btn')[1].classList.add('active'); 
         document.getElementById('generatorPanel').classList.add('active-panel'); 
-    } else { 
+    } else if(t === 'users') { 
         document.querySelectorAll('.tab-btn')[2].classList.add('active'); 
         document.getElementById('usersPanel').classList.add('active-panel'); 
+        listAllAuthUsers();
+    } else if(t === 'passwords') { 
+        document.querySelectorAll('.tab-btn')[3].classList.add('active'); 
+        document.getElementById('passwordsPanel').classList.add('active-panel'); 
+        loadKitchenPasswords();
     } 
 }
 
@@ -889,6 +1108,7 @@ auth.onAuthStateChanged(async (user) => {
             await loadFreehandModeFromFirestore();
             refreshOrdersList();
             renderKitchenMenuButtons();
+            loadKitchenPasswords();
         } else {
             await auth.signOut();
         }
