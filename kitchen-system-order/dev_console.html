@@ -6,7 +6,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-<script src="firebase-config.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
 <title>Developer Console - Complete Control</title>
 <style>
@@ -17,6 +16,7 @@ body { font-family: 'Courier New', 'Segoe UI', monospace; background: #0a0e27; c
 .badge { background: #00d4ff; color: #0a0e27; padding: 4px 12px; border-radius: 40px; font-size: 0.7rem; font-weight: bold; }
 .badge-restricted { background: #dc2626; color: white; }
 .badge-freehand { background: #f59e0b; color: #1a1a2e; }
+.badge-password { background: #8b5cf6; color: white; }
 .container { max-width: 1600px; margin: 0 auto; padding: 24px; }
 .login-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 10000; display: flex; justify-content: center; align-items: center; }
 .login-box { background: #0f172a; border: 2px solid #00d4ff; border-radius: 24px; padding: 40px; width: 400px; text-align: center; }
@@ -113,8 +113,16 @@ hr { border-color: #2a3a5a; margin: 15px 0; }
 .freehand-banner { background: #f59e0b20; border: 2px solid #f59e0b; border-radius: 12px; padding: 10px 15px; margin-bottom: 15px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
 .freehand-banner.active { background: #10b98120; border-color: #10b981; }
 .freehand-banner.inactive { background: #dc262620; border-color: #dc2626; }
-.password-user-card { background: #1a1a2e; padding: 15px; margin-bottom: 12px; border-radius: 12px; border-left: 3px solid #00d4ff; }
-.password-role-select { background: #0a0e27; border: 1px solid #2a3a5a; padding: 6px 12px; border-radius: 8px; color: white; font-family: monospace; }
+
+/* Password Management Styles */
+.password-card { background: linear-gradient(135deg, #1a1a2e, #0f172a); border: 2px solid #8b5cf6; border-radius: 16px; padding: 20px; margin-bottom: 20px; }
+.password-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+.kitchen-name { font-size: 1.2rem; font-weight: bold; color: #8b5cf6; }
+.password-value { font-family: monospace; font-size: 1.1rem; background: #0a0e27; padding: 8px 16px; border-radius: 8px; display: inline-block; margin: 10px 0; }
+.password-input-group { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+.password-input { flex: 1; background: #1a1a2e; border: 1px solid #4a3a7a; padding: 10px; border-radius: 8px; color: white; font-family: monospace; }
+.show-hide-btn { background: #334155; padding: 5px 12px; font-size: 0.7rem; }
+.kitchen-password-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; margin-top: 20px; }
 </style>
 </head>
 <body>
@@ -134,7 +142,7 @@ hr { border-color: #2a3a5a; margin: 15px 0; }
 
 <div id="mainContent" style="display:none;">
     <div class="header">
-        <h1>🛠️ DEVELOPER CONSOLE <span class="badge">Edit Orders</span><span class="badge">Kitchen JSON</span><span class="badge">User Management</span><span class="badge badge-freehand" id="freehandBadge">✋ Freehand: OFF</span></h1>
+        <h1>🛠️ DEVELOPER CONSOLE <span class="badge">Edit Orders</span><span class="badge">Kitchen JSON</span><span class="badge">User Management</span><span class="badge badge-password">🔑 Kitchen Passwords</span><span class="badge badge-freehand" id="freehandBadge">✋ Freehand: OFF</span></h1>
         <div style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
             <div style="font-size: 0.7rem;">⚠️ For Approved/Rejected/Accepted orders: Click "Restore to Pending" first</div>
             <div class="user-menu"><span class="user-email" id="userEmailDisplay"></span><button class="btn btn-secondary btn-icon" onclick="logout()">🚪 Logout</button></div>
@@ -176,7 +184,11 @@ hr { border-color: #2a3a5a; margin: 15px 0; }
                         <div class="menu-title">📦 ADD ITEM FROM KITCHEN MENU (JSON Files) <span style="font-size: 0.7rem;">📁 items/ folder</span></div>
                         <div class="kitchen-menu-buttons" id="kitchenMenuButtons"></div>
                         <div id="selectedKitchenName" style="margin-bottom: 10px; font-size: 0.75rem; color: #00d4ff;"></div>
-          >
+                        <div id="menuItemsList" class="menu-items-list"><div style="padding:20px;text-align:center;">Click a kitchen button to load items</div></div>
+                        <div class="note">💡 Only the order's kitchen is enabled. Click enabled kitchen to load items, then click "➕ Add" to add to order.</div>
+                    </div>
+                </div>
+                <div class="doc-list">
                     <div class="doc-list-header"><span class="doc-list-title">📋 RECENT ORDERS (click to edit)</span><div class="doc-list-header-actions"><button class="btn btn-refresh btn-icon" onclick="refreshOrdersList()">⟳ Refresh</button></div></div>
                     <div id="ordersList" class="doc-items-container"></div>
                 </div>
@@ -197,119 +209,83 @@ hr { border-color: #2a3a5a; margin: 15px 0; }
                 <div style="margin-top:15px;"><strong>📄 JSON OUTPUT (AVE format)</strong><textarea id="jsonOutput" rows="10" readonly placeholder="JSON will appear here..." style="margin-top:10px;"></textarea></div>
                 <div class="note">⚡ Each item includes "AVE" field (Average Price). Format: one line per item with trailing commas.</div>
             </div>
-        </div>              <div id="menuItemsList" class="menu-items-list"><div style="padding:20px;text-align:center;">Click a kitchen button to load items</div></div>
-                        <div class="note">💡 Only the order's kitchen is enabled. Click enabled kitchen to load items, then click "➕ Add" to add to order.</div>
-                    </div>
-                </div>
-                <div class="doc-list"
+        </div>
 
-        <!-- PANEL 3: USER MANAGEMENT (Firebase Auth Users) -->
+        <!-- PANEL 3: USER MANAGEMENT -->
         <div id="usersPanel" class="panel">
-            <div class="panel-header"><h2>👥 User Management - Create/Delete/Reset Users</h2></div>
+            <div class="panel-header"><h2>👥 User Management - Add Users & Reset Passwords</h2></div>
             <div class="form-group">
                 <div class="user-card"><h3>➕ Add New User</h3><div class="form-row"><input type="email" id="newUserEmail" class="form-input" placeholder="Email"><input type="password" id="newUserPassword" class="form-input" placeholder="Password"><input type="password" id="newUserConfirmPassword" class="form-input" placeholder="Confirm"><button class="btn btn-success" onclick="createNewUser()">Create User</button></div><div id="addUserMsg" style="margin-top:10px;"></div></div>
-                
                 <div class="user-card"><h3>🔑 Reset Password</h3><div class="form-row"><input type="email" id="resetUserEmail" class="form-input" placeholder="User Email"><button class="btn btn-warning" onclick="sendUserPasswordReset()">Send Reset Email</button></div><div id="resetUserMsg" style="margin-top:10px;"></div></div>
-                
-                <div class="user-card"><h3>✅ Authorized Developers</h3><div id="authorizedDevsList"></div><div class="form-row"><input type="email" id="newDevEmail" class="form-input" placeholder="Developer Email"><button class="btn btn-primary" onclick="addAuthorizedDeveloper()">➕ Add to Authorized List</button></div><div class="note">💡 Only emails in this list can login to Developer Console.</div></div>
-                
-                <div class="user-card"><h3>👥 All Firebase Auth Users</h3><button class="btn btn-primary" onclick="listAllAuthUsers()">⟳ Refresh User List</button><div id="allUsersList" style="margin-top: 15px; max-height: 400px; overflow-y: auto;"></div></div>
+                <div class="user-card"><h3>✅ Authorized Developers</h3><div id="authorizedDevsList"></div><div class="form-row"><input type="email" id="newDevEmail" class="form-input" placeholder="Developer Email"><button class="btn btn-primary" onclick="addAuthorizedDeveloper()">➕ Add to Authorized List</button></div><div class="note">💡 Only emails in this list can login. Add email, then create account.</div></div>
             </div>
         </div>
 
-        <!-- PANEL 4: KITCHEN PASSWORDS MANAGEMENT (Firestore user_passwords collection) -->
+        <!-- PANEL 4: KITCHEN PASSWORD MANAGEMENT (NEW) -->
         <div id="passwordsPanel" class="panel">
-            <div class="panel-header"><h2>🔑 Kitchen Passwords Management (user_passwords collection)</h2></div>
+            <div class="panel-header">
+                <h2>🔐 Kitchen Password Management</h2>
+                <div>
+                    <button class="btn btn-primary" onclick="loadAllKitchenPasswords()">⟳ Refresh Passwords</button>
+                    <button class="btn btn-warning" onclick="resetAllKitchenPasswords()" style="margin-left: 10px;">🔄 Reset All to Default</button>
+                </div>
+            </div>
             <div class="form-group">
-                <div class="user-card"><h3>➕ Add New Kitchen Password</h3>
-                    <div class="form-row">
-                        <input type="text" id="newPasswordValue" class="form-input" placeholder="Password (e.g., hot123)">
-                        <select id="newPasswordRole" class="form-input password-role-select">
-                            <option value="Hot Kitchen">Hot Kitchen</option>
-                            <option value="Cold Kitchen">Cold Kitchen</option>
-                            <option value="Pastry / Bakery">Pastry / Bakery</option>
-                            <option value="Butchery">Butchery</option>
-                            <option value="Beach House">Beach House</option>
-                            <option value="Nihon Kitchen">Nihon Kitchen</option>
-                            <option value="Staff Kitchen">Staff Kitchen</option>
-                            <option value="all">all (Master Access)</option>
-                        </select>
-                        <button class="btn btn-success" onclick="addKitchenPassword()">➕ Add Password</button>
-                    </div>
-                    <div id="addPasswordMsg" style="margin-top:10px;"></div>
+                <div class="info-msg" style="margin-bottom: 20px; padding: 10px; background: #1a1a2e; border-radius: 12px;">
+                    💡 <strong>How it works:</strong> Each kitchen has a unique password. Chefs/Staff must enter this password to access their kitchen dashboard. You can view, change, or reset passwords here.
                 </div>
                 
-                <div class="user-card"><h3>📋 Existing Kitchen Passwords</h3>
-                    <button class="btn btn-primary" onclick="loadKitchenPasswords()">⟳ Refresh Passwords</button>
-                    <div id="kitchenPasswordsList" style="margin-top: 15px;"></div>
-                </div>
-                
-                <div class="user-card"><h3>ℹ️ How Kitchen Passwords Work</h3>
-                    <div class="note" style="text-align: left; background: #0a0e27; padding: 15px; border-radius: 12px;">
-                        • Each password in the <code>user_passwords</code> collection grants access to a specific kitchen<br>
-                        • Users enter JUST the password (no email) on the chef.html login screen<br>
-                        • Role "<strong>all</strong>" gives access to ALL kitchens (Master Password)<br>
-                        • Role with specific kitchen name (e.g., "Hot Kitchen") gives access only to that kitchen<br>
-                        • Passwords are checked against Firestore, not Firebase Auth
+                <!-- Default Password Setting -->
+                <div class="password-card" style="border-color: #f59e0b;">
+                    <div class="password-header">
+                        <span class="kitchen-name">🔧 DEFAULT PASSWORD</span>
+                        <button class="btn btn-secondary" onclick="setDefaultPasswordForAll()">📌 Apply to All Kitchens</button>
                     </div>
+                    <div>Password used when a kitchen doesn't have its own password set</div>
+                    <div class="password-input-group">
+                        <input type="text" id="defaultPasswordInput" class="password-input" placeholder="Enter default password" value="kitchen123">
+                        <button class="btn btn-primary" onclick="updateDefaultPassword()">💾 Update Default Password</button>
+                    </div>
+                    <div id="defaultPasswordDisplay" class="password-value" style="margin-top: 10px;"></div>
+                </div>
+
+                <!-- Kitchen Passwords Grid -->
+                <div id="kitchenPasswordsContainer" class="kitchen-password-grid">
+                    <div style="text-align: center; padding: 40px;">Loading kitchen passwords...</div>
+                </div>
+
+                <div class="note" style="margin-top: 20px;">
+                    🔒 Passwords are stored securely in Firestore under 'kitchen_passwords' collection.<br>
+                    Each kitchen dashboard will use these passwords for authentication.
                 </div>
             </div>
         </div>
     </div>
 </div>
+
 <script>
-// ============ FIREBASE IS ALREADY INITIALIZED IN firebase-config.js ============
-// We just need to get references to the services
-let db, auth;
+// ============ FIREBASE CONFIGURATION ============
+const firebaseConfig = {
+    apiKey: "AIzaSyD57ErKNYwqGbLcriDYYvPUtVIw8jRncXQ",
+    authDomain: "system-order-kitchen.firebaseapp.com",
+    projectId: "system-order-kitchen",
+    storageBucket: "system-order-kitchen.firebasestorage.app",
+    messagingSenderId: "429224554052",
+    appId: "1:429224554052:web:85d32727439fe55efcd611"
+};
 
-// Wait for Firebase to be ready
-function initializeFirebaseServices() {
-    // Check if Firebase is already initialized
-    if (typeof firebase !== 'undefined' && firebase.apps.length > 0) {
-        auth = firebase.auth();
-        db = firebase.firestore();
-        console.log("✅ Firebase services ready");
-        
-        // Set up auth state listener
-        setupAuthListener();
-    } else {
-        console.log("⏳ Waiting for Firebase to initialize...");
-        setTimeout(initializeFirebaseServices, 500);
-    }
+// Initialize Firebase
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
 }
 
-function setupAuthListener() {
-    auth.onAuthStateChanged(async (user) => {
-        console.log("Auth state changed:", user ? user.email : "No user");
-        if (user) {
-            await loadAuthorizedDevelopers();
-            if(isAuthorized(user.email)) {
-                currentDeveloperEmail = user.email;
-                document.getElementById("loginOverlay").style.display = "none";
-                document.getElementById("mainContent").style.display = "block";
-                document.getElementById("userEmailDisplay").innerHTML = currentDeveloperEmail;
-                await loadFreehandModeFromFirestore();
-                refreshOrdersList();
-                renderKitchenMenuButtons();
-                loadKitchenPasswords();
-            } else {
-                console.log("User not authorized:", user.email);
-                await auth.signOut();
-                showLoginForm();
-            }
-        } else {
-            showLoginForm();
-        }
-    });
-}
+const db = firebase.firestore();
+const auth = firebase.auth();
 
-function showLoginForm() {
-    document.getElementById("loginOverlay").style.display = "flex";
-    document.getElementById("mainContent").style.display = "none";
-    document.getElementById("devEmail").value = "";
-    document.getElementById("devPassword").value = "";
-    document.getElementById("loginErrorMsg").innerHTML = "";
-}
+// Enable persistence
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+console.log("✅ Firebase initialized successfully");
 
 // ============ GLOBAL VARIABLES ============
 let currentDeveloperEmail = "";
@@ -329,144 +305,255 @@ const KITCHEN_JSON_FILES = {
 };
 const JSON_BASE_PATH = "items/";
 
-// ============ KITCHEN PASSWORDS MANAGEMENT ============
+// ============ KITCHEN PASSWORD MANAGEMENT FUNCTIONS ============
 
-// Add new kitchen password to Firestore
-window.addKitchenPassword = async function() {
-    if(!db) { showToast("Firebase not ready", true); return; }
+// List of all kitchens (for password management)
+const ALL_KITCHENS = [
+    "Hot Kitchen",
+    "Cold Kitchen",
+    "Pastry / Bakery",
+    "Butchery",
+    "Beach House",
+    "Nihon Kitchen",
+    "Staff Kitchen"
+];
+
+// Load all kitchen passwords from Firestore
+async function loadAllKitchenPasswords() {
+    const container = document.getElementById("kitchenPasswordsContainer");
+    if (!container) return;
     
-    const password = document.getElementById("newPasswordValue").value.trim();
-    const role = document.getElementById("newPasswordRole").value;
-    const msgDiv = document.getElementById("addPasswordMsg");
+    container.innerHTML = '<div style="text-align: center; padding: 40px;">Loading kitchen passwords...</div>';
     
-    if(!password) {
-        msgDiv.innerHTML = "<span style='color:#dc2626'>❌ Please enter a password</span>";
-        setTimeout(() => msgDiv.innerHTML = "", 3000);
+    try {
+        // First, load default password
+        const defaultDoc = await db.collection("kitchen_passwords").doc("default_settings").get();
+        let defaultPassword = "kitchen123";
+        if (defaultDoc.exists && defaultDoc.data().defaultPassword) {
+            defaultPassword = defaultDoc.data().defaultPassword;
+        }
+        document.getElementById("defaultPasswordDisplay").innerHTML = `Current Default: <strong style="color:#00d4ff;">${defaultPassword}</strong>`;
+        document.getElementById("defaultPasswordInput").value = defaultPassword;
+        
+        // Load each kitchen's password
+        const passwordsHtml = [];
+        
+        for (const kitchen of ALL_KITCHENS) {
+            const docRef = db.collection("kitchen_passwords").doc(kitchen);
+            const doc = await docRef.get();
+            let currentPassword = defaultPassword;
+            let isCustom = false;
+            
+            if (doc.exists && doc.data().password) {
+                currentPassword = doc.data().password;
+                isCustom = true;
+            }
+            
+            passwordsHtml.push(`
+                <div class="password-card" id="password-card-${kitchen.replace(/\s/g, '')}">
+                    <div class="password-header">
+                        <span class="kitchen-name">🍳 ${kitchen}</span>
+                        <button class="btn btn-secondary" onclick="resetKitchenPassword('${kitchen}')" style="font-size: 0.7rem;">↺ Reset to Default</button>
+                    </div>
+                    <div class="password-value" id="password-value-${kitchen.replace(/\s/g, '')}">
+                        ${isCustom ? '<span style="color:#f59e0b;">🔐 Custom Password:</span>' : '<span style="color:#9ca3af;">📋 Using Default:</span>'}
+                        <strong style="color: #00d4ff; margin-left: 8px;">${currentPassword}</strong>
+                    </div>
+                    <div class="password-input-group">
+                        <input type="password" id="password-input-${kitchen.replace(/\s/g, '')}" class="password-input" placeholder="Enter new password for ${kitchen}" value="${currentPassword}">
+                        <button class="btn btn-primary btn-icon" onclick="togglePasswordVisibility('${kitchen.replace(/\s/g, '')}')" style="padding: 5px 12px;">👁️</button>
+                        <button class="btn btn-success" onclick="updateKitchenPassword('${kitchen}')">💾 Save</button>
+                    </div>
+                    <div class="note" style="margin-top: 10px;">${isCustom ? 'Custom password set' : 'Using default password'}</div>
+                </div>
+            `);
+        }
+        
+        container.innerHTML = passwordsHtml.join('');
+        showToast("✅ Kitchen passwords loaded successfully");
+        
+    } catch (error) {
+        console.error("Error loading passwords:", error);
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #dc2626;">❌ Error loading passwords: ' + error.message + '</div>';
+        showToast("Error loading passwords", true);
+    }
+}
+
+// Update default password
+async function updateDefaultPassword() {
+    const newDefaultPassword = document.getElementById("defaultPasswordInput").value.trim();
+    if (!newDefaultPassword) {
+        showToast("Please enter a default password", true);
         return;
     }
     
-    msgDiv.innerHTML = "<span style='color:#00d4ff'>⏳ Adding password...</span>";
+    if (newDefaultPassword.length < 4) {
+        showToast("Password must be at least 4 characters", true);
+        return;
+    }
     
     try {
-        // Check if password already exists
-        const existing = await db.collection("user_passwords").where("password", "==", password).get();
-        if(!existing.empty) {
-            msgDiv.innerHTML = "<span style='color:#dc2626'>❌ Password already exists!</span>";
-            setTimeout(() => msgDiv.innerHTML = "", 3000);
-            return;
+        await db.collection("kitchen_passwords").doc("default_settings").set({
+            defaultPassword: newDefaultPassword,
+            updatedAt: new Date().toISOString(),
+            updatedBy: currentDeveloperEmail
+        });
+        
+        showToast(`✅ Default password updated to: ${newDefaultPassword}`);
+        
+        // Reload all passwords to reflect changes
+        await loadAllKitchenPasswords();
+        
+    } catch (error) {
+        console.error("Error updating default password:", error);
+        showToast("Error updating default password: " + error.message, true);
+    }
+}
+
+// Update password for a specific kitchen
+async function updateKitchenPassword(kitchenName) {
+    const inputId = `password-input-${kitchenName.replace(/\s/g, '')}`;
+    const newPassword = document.getElementById(inputId).value.trim();
+    
+    if (!newPassword) {
+        showToast("Please enter a password", true);
+        return;
+    }
+    
+    if (newPassword.length < 4) {
+        showToast("Password must be at least 4 characters", true);
+        return;
+    }
+    
+    try {
+        await db.collection("kitchen_passwords").doc(kitchenName).set({
+            password: newPassword,
+            updatedAt: new Date().toISOString(),
+            updatedBy: currentDeveloperEmail,
+            isCustom: true
+        });
+        
+        showToast(`✅ Password for ${kitchenName} updated successfully!`);
+        
+        // Update the display without full reload
+        const displayId = `password-value-${kitchenName.replace(/\s/g, '')}`;
+        const displayElement = document.getElementById(displayId);
+        if (displayElement) {
+            displayElement.innerHTML = `<span style="color:#f59e0b;">🔐 Custom Password:</span> <strong style="color: #00d4ff; margin-left: 8px;">${newPassword}</strong>`;
         }
         
-        await db.collection("user_passwords").add({
-            password: password,
-            role: role,
-            createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        
-        msgDiv.innerHTML = `<span style='color:#10b981'>✅ Password "${password}" added for role: ${role}</span>`;
-        document.getElementById("newPasswordValue").value = "";
-        setTimeout(() => msgDiv.innerHTML = "", 3000);
-        loadKitchenPasswords();
-        showToast(`✅ Added password for ${role}`);
-    } catch(e) {
-        msgDiv.innerHTML = `<span style='color:#dc2626'>❌ Error: ${e.message}</span>`;
-        console.error(e);
-    }
-};
-
-// Load all kitchen passwords from Firestore
-window.loadKitchenPasswords = async function() {
-    if(!db) return;
-    
-    const container = document.getElementById("kitchenPasswordsList");
-    if(!container) return;
-    
-    container.innerHTML = "<div style='text-align:center;padding:20px;'>⏳ Loading passwords...</div>";
-    
-    try {
-        const snapshot = await db.collection("user_passwords").orderBy("createdAt", "desc").get();
-        
-        if(snapshot.empty) {
-            container.innerHTML = "<div style='text-align:center;padding:20px;color:#9ca3af;'>No passwords found. Add one above.</div>";
-            return;
+        // Update the note
+        const card = document.getElementById(`password-card-${kitchenName.replace(/\s/g, '')}`);
+        if (card) {
+            const note = card.querySelector('.note');
+            if (note) note.innerHTML = 'Custom password set';
         }
         
-        container.innerHTML = "";
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            const roleClass = data.role === "all" ? "status-approved" : "status-pending";
-            container.innerHTML += `
-                <div class="password-user-card" id="passwordCard_${doc.id}">
-                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
-                        <div>
-                            <strong style="color:#00d4ff; font-size:1rem;">🔑 ${escapeHtml(data.password)}</strong>
-                            <span class="status-badge ${roleClass}" style="margin-left: 10px;">🎯 ${escapeHtml(data.role)}</span>
-                        </div>
-                        <div style="display: flex; gap: 8px;">
-                            <select id="roleSelect_${doc.id}" class="password-role-select" style="padding: 6px 12px;">
-                                <option value="Hot Kitchen" ${data.role === "Hot Kitchen" ? "selected" : ""}>Hot Kitchen</option>
-                                <option value="Cold Kitchen" ${data.role === "Cold Kitchen" ? "selected" : ""}>Cold Kitchen</option>
-                                <option value="Pastry / Bakery" ${data.role === "Pastry / Bakery" ? "selected" : ""}>Pastry / Bakery</option>
-                                <option value="Butchery" ${data.role === "Butchery" ? "selected" : ""}>Butchery</option>
-                                <option value="Beach House" ${data.role === "Beach House" ? "selected" : ""}>Beach House</option>
-                                <option value="Nihon Kitchen" ${data.role === "Nihon Kitchen" ? "selected" : ""}>Nihon Kitchen</option>
-                                <option value="Staff Kitchen" ${data.role === "Staff Kitchen" ? "selected" : ""}>Staff Kitchen</option>
-                                <option value="all" ${data.role === "all" ? "selected" : ""}>all (Master Access)</option>
-                            </select>
-                            <button class="btn btn-warning btn-icon" onclick="updateKitchenPassword('${doc.id}')" style="padding: 6px 12px;">✏️ Update</button>
-                            <button class="btn btn-danger btn-icon" onclick="deleteKitchenPassword('${doc.id}')" style="padding: 6px 12px;">🗑️ Delete</button>
-                        </div>
-                    </div>
-                    <div style="font-size: 0.65rem; color: #9ca3af; margin-top: 8px;">
-                        Created: ${data.createdAt ? new Date(data.createdAt.toDate()).toLocaleString() : 'Unknown'}
-                    </div>
-                </div>
-            `;
-        });
-    } catch(e) {
-        console.error("Error loading passwords:", e);
-        container.innerHTML = `<div style='text-align:center;padding:20px;color:#dc2626;'>❌ Error loading: ${e.message}</div>`;
+    } catch (error) {
+        console.error("Error updating kitchen password:", error);
+        showToast("Error updating password: " + error.message, true);
     }
-};
+}
 
-// Update kitchen password role
-window.updateKitchenPassword = async function(docId) {
-    if(!db) return;
-    
-    const newRole = document.getElementById(`roleSelect_${docId}`).value;
-    
-    if(!confirm(`Update password role to "${newRole}"?`)) return;
+// Reset kitchen password to default
+async function resetKitchenPassword(kitchenName) {
+    if (!confirm(`Reset password for ${kitchenName} to the default password?`)) return;
     
     try {
-        await db.collection("user_passwords").doc(docId).update({
-            role: newRole,
-            updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-        showToast(`✅ Updated role to ${newRole}`);
-        loadKitchenPasswords();
-    } catch(e) {
-        showToast(`❌ Error: ${e.message}`, true);
+        // Delete the custom password document
+        await db.collection("kitchen_passwords").doc(kitchenName).delete();
+        
+        showToast(`✅ Password for ${kitchenName} reset to default`);
+        
+        // Reload all passwords
+        await loadAllKitchenPasswords();
+        
+    } catch (error) {
+        console.error("Error resetting kitchen password:", error);
+        showToast("Error resetting password: " + error.message, true);
     }
-};
+}
 
-// Delete kitchen password
-window.deleteKitchenPassword = async function(docId) {
-    if(!db) return;
-    
-    if(!confirm("⚠️ Delete this password permanently? Users using this password will lose access.")) return;
+// Reset all kitchens to use default password
+async function resetAllKitchenPasswords() {
+    if (!confirm("⚠️ WARNING: This will reset ALL kitchen passwords to the default password. Continue?")) return;
     
     try {
-        await db.collection("user_passwords").doc(docId).delete();
-        showToast("🗑️ Password deleted");
-        loadKitchenPasswords();
-    } catch(e) {
-        showToast(`❌ Error: ${e.message}`, true);
+        // Get default password first
+        const defaultDoc = await db.collection("kitchen_passwords").doc("default_settings").get();
+        let defaultPassword = "kitchen123";
+        if (defaultDoc.exists && defaultDoc.data().defaultPassword) {
+            defaultPassword = defaultDoc.data().defaultPassword;
+        }
+        
+        // Delete all custom kitchen password documents
+        const batch = db.batch();
+        for (const kitchen of ALL_KITCHENS) {
+            const docRef = db.collection("kitchen_passwords").doc(kitchen);
+            batch.delete(docRef);
+        }
+        await batch.commit();
+        
+        showToast(`✅ All kitchen passwords reset to default: ${defaultPassword}`);
+        
+        // Reload all passwords
+        await loadAllKitchenPasswords();
+        
+    } catch (error) {
+        console.error("Error resetting all passwords:", error);
+        showToast("Error resetting passwords: " + error.message, true);
     }
-};
+}
+
+// Set default password for all kitchens (overwrites custom passwords)
+async function setDefaultPasswordForAll() {
+    const defaultPassword = document.getElementById("defaultPasswordInput").value.trim();
+    if (!defaultPassword) {
+        showToast("Please set a default password first", true);
+        return;
+    }
+    
+    if (!confirm(`⚠️ Set "${defaultPassword}" as the password for ALL kitchens? This will override any custom passwords.`)) return;
+    
+    try {
+        // First update default password
+        await db.collection("kitchen_passwords").doc("default_settings").set({
+            defaultPassword: defaultPassword,
+            updatedAt: new Date().toISOString(),
+            updatedBy: currentDeveloperEmail
+        });
+        
+        // Delete all custom kitchen password documents
+        const batch = db.batch();
+        for (const kitchen of ALL_KITCHENS) {
+            const docRef = db.collection("kitchen_passwords").doc(kitchen);
+            batch.delete(docRef);
+        }
+        await batch.commit();
+        
+        showToast(`✅ All kitchens now use default password: ${defaultPassword}`);
+        
+        // Reload all passwords
+        await loadAllKitchenPasswords();
+        
+    } catch (error) {
+        console.error("Error setting default for all kitchens:", error);
+        showToast("Error: " + error.message, true);
+    }
+}
+
+// Toggle password visibility
+function togglePasswordVisibility(kitchenKey) {
+    const input = document.getElementById(`password-input-${kitchenKey}`);
+    if (input.type === "password") {
+        input.type = "text";
+    } else {
+        input.type = "password";
+    }
+}
 
 // ============ GLOBAL FREEHAND MODE FUNCTIONS ============
 async function saveFreehandModeToFirestore(isEnabled) {
-    if(!db) return;
-    
     try {
         await db.collection("settings").doc("global_settings").set({
             freehandMode: isEnabled,
@@ -480,8 +567,6 @@ async function saveFreehandModeToFirestore(isEnabled) {
 }
 
 async function loadFreehandModeFromFirestore() {
-    if(!db) return;
-    
     try {
         const doc = await db.collection("settings").doc("global_settings").get();
         if (doc.exists && doc.data().freehandMode !== undefined) {
@@ -542,8 +627,6 @@ function getQuantityLimits(item) {
 
 // ============ AUTH & AUTHORIZATION ============
 async function loadAuthorizedDevelopers() {
-    if(!db) return;
-    
     try { 
         const doc = await db.collection("settings").doc("authorized_devs").get(); 
         if(doc.exists && doc.data().emails) {
@@ -564,8 +647,6 @@ function displayAuthorizedDevelopers() {
 }
 
 async function addAuthorizedDeveloper() { 
-    if(!db) return;
-    
     const email = document.getElementById("newDevEmail").value.trim(); 
     if(!email || AUTHORIZED_DEVELOPERS.includes(email)){ showToast("Invalid or duplicate",true); return; }
     AUTHORIZED_DEVELOPERS.push(email); 
@@ -576,8 +657,6 @@ async function addAuthorizedDeveloper() {
 }
 
 async function removeAuthorizedDeveloper(email) { 
-    if(!db) return;
-    
     AUTHORIZED_DEVELOPERS = AUTHORIZED_DEVELOPERS.filter(e => e !== email); 
     await db.collection("settings").doc("authorized_devs").set({ emails: AUTHORIZED_DEVELOPERS }); 
     displayAuthorizedDevelopers(); 
@@ -589,11 +668,6 @@ function isAuthorized(email) {
 }
 
 window.loginWithFirebase = async function() {
-    if(!auth) { 
-        document.getElementById("loginErrorMsg").innerHTML = "Firebase not ready. Please wait..."; 
-        return; 
-    }
-    
     const email = document.getElementById("devEmail").value.trim();
     const password = document.getElementById("devPassword").value;
     const errorDiv = document.getElementById("loginErrorMsg");
@@ -607,8 +681,6 @@ window.loginWithFirebase = async function() {
     
     try {
         const userCred = await auth.signInWithEmailAndPassword(email, password);
-        console.log("Login successful:", userCred.user.email);
-        
         await loadAuthorizedDevelopers();
         
         if(!isAuthorized(userCred.user.email)) {
@@ -617,8 +689,14 @@ window.loginWithFirebase = async function() {
             return;
         }
         
-        // Login successful - UI will be handled by auth state listener
-        showToast(`✅ Welcome ${email}`);
+        currentDeveloperEmail = userCred.user.email;
+        document.getElementById("loginOverlay").style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+        document.getElementById("userEmailDisplay").innerHTML = currentDeveloperEmail;
+        
+        await loadFreehandModeFromFirestore();
+        refreshOrdersList(); 
+        renderKitchenMenuButtons();
         
     } catch(error) {
         console.error("Login error:", error);
@@ -638,16 +716,14 @@ window.loginWithFirebase = async function() {
     }
 };
 
-window.logout = function() { 
-    if(auth && confirm("Logout?")) {
-        auth.signOut().then(() => {
-            showToast("Logged out");
-        });
-    } 
-};
-
-function goBackToIndex() {
-    window.location.href = "index.html";
+function logout() { 
+    if(confirm("Logout?")) auth.signOut().then(() => {
+        document.getElementById("mainContent").style.display = "none";
+        document.getElementById("loginOverlay").style.display = "flex";
+        document.getElementById("devEmail").value = "";
+        document.getElementById("devPassword").value = "";
+        document.getElementById("loginErrorMsg").innerHTML = "";
+    }); 
 }
 
 // ============ ORDER MANAGEMENT FUNCTIONS ============
@@ -668,8 +744,6 @@ function getRequestStatus(items) {
 async function refreshOrdersList() { await listAllOrders(); }
 
 async function listAllOrders() { 
-    if(!db) return;
-    
     try { 
         const snap = await db.collection("kitchen_requests").orderBy("timestamp", "desc").limit(50).get(); 
         const cont = document.getElementById("ordersList"); 
@@ -704,8 +778,6 @@ window.loadOrderById = async function(docId) {
 };
 
 async function fetchOrderDocument() { 
-    if(!db) return;
-    
     const id = document.getElementById("orderDocId").value.trim(); 
     if(!id) { showToast("Enter Document ID", true); return; }
     try { 
@@ -742,7 +814,7 @@ function updateEditButtonsBasedOnStatus() {
 }
 
 async function saveOrderDocument() { 
-    if(!db || !currentOrderDocId || currentOrderStatus !== "pending") { 
+    if(!currentOrderDocId || currentOrderStatus !== "pending") { 
         showToast("Cannot save: Order not pending. Restore first.", true); 
         return; 
     } 
@@ -757,7 +829,7 @@ async function saveOrderDocument() {
 }
 
 async function deleteOrderDocument() { 
-    if(!db || !currentOrderDocId || currentOrderStatus !== "pending") { 
+    if(!currentOrderDocId || currentOrderStatus !== "pending") { 
         showToast("Cannot delete: Not pending. Restore first.", true); 
         return; 
     } 
@@ -770,8 +842,6 @@ async function deleteOrderDocument() {
 }
 
 async function deleteOrderById(docId) { 
-    if(!db) return;
-    
     if(confirm("⚠️ Delete this order?")) { 
         await db.collection("kitchen_requests").doc(docId).delete(); 
         showToast("🗑️ Deleted"); 
@@ -904,8 +974,6 @@ window.quickAddItemFromOrder = function() {
 };
 
 async function restoreOrderToPending(docId) { 
-    if(!db) return;
-    
     if(!confirm("Restore order to PENDING status?\n\nThis will reset all approved/rejected items back to pending.")) return; 
     try { 
         const doc = await db.collection("kitchen_requests").doc(docId).get(); 
@@ -1037,10 +1105,8 @@ function downloadJSON() {
     showToast("📎 JSON file downloaded");
 }
 
-// ============ USER MANAGEMENT (Firebase Auth) ============
+// ============ USER MANAGEMENT ============
 async function createNewUser() { 
-    if(!auth) { showToast("Firebase not ready", true); return; }
-    
     const email = document.getElementById("newUserEmail").value.trim(); 
     const pwd = document.getElementById("newUserPassword").value; 
     const confirm = document.getElementById("newUserConfirmPassword").value; 
@@ -1057,7 +1123,6 @@ async function createNewUser() {
         document.getElementById("newUserPassword").value = "";
         document.getElementById("newUserConfirmPassword").value = "";
         setTimeout(() => msgDiv.innerHTML = "", 3000);
-        showToast(`✅ User ${email} created`);
     } catch(e) { 
         let errMsg = e.message;
         if(e.code === 'auth/email-already-in-use') errMsg = "Email already in use";
@@ -1066,8 +1131,6 @@ async function createNewUser() {
 }
 
 async function sendUserPasswordReset() { 
-    if(!auth) { showToast("Firebase not ready", true); return; }
-    
     const email = document.getElementById("resetUserEmail").value.trim(); 
     const msgDiv = document.getElementById("resetUserMsg");
     if(!email) { msgDiv.innerHTML = "<span style='color:#dc2626'>❌ Enter email</span>"; return; }
@@ -1077,59 +1140,10 @@ async function sendUserPasswordReset() {
         msgDiv.innerHTML = `<span style='color:#10b981'>✅ Reset email sent to ${email}</span>`;
         document.getElementById("resetUserEmail").value = "";
         setTimeout(() => msgDiv.innerHTML = "", 3000);
-        showToast(`✅ Reset email sent to ${email}`);
     } catch(e) { 
         msgDiv.innerHTML = `<span style='color:#dc2626'>❌ ${e.message}</span>`;
     } 
 }
-
-// List all users from Firestore (kitchen passwords)
-window.listAllAuthUsers = async function() {
-    if(!db) return;
-    
-    const container = document.getElementById("allUsersList");
-    if(!container) return;
-    
-    container.innerHTML = "<div style='text-align:center;padding:20px;'>⏳ Loading passwords...</div>";
-    
-    try {
-        const snapshot = await db.collection("user_passwords").get();
-        
-        if(snapshot.empty) {
-            container.innerHTML = "<div style='text-align:center;padding:20px;color:#9ca3af;'>No passwords found.</div>";
-            return;
-        }
-        
-        container.innerHTML = `
-            <div style="background: #0a0e27; border-radius: 12px; overflow: hidden;">
-                <div style="background: #1a1a2e; padding: 12px; display: grid; grid-template-columns: 2fr 2fr 1fr; gap: 10px; font-weight: bold; color: #00d4ff;">
-                    <div>Password</div>
-                    <div>Role / Access</div>
-                    <div>Actions</div>
-                </div>
-        `;
-        
-        snapshot.forEach(doc => {
-            const data = doc.data();
-            const roleDisplay = data.role === "all" ? "🔓 ALL KITCHENS" : `🍽️ ${data.role}`;
-            container.innerHTML += `
-                <div style="padding: 12px; border-bottom: 1px solid #2a3a5a; display: grid; grid-template-columns: 2fr 2fr 1fr; gap: 10px; align-items: center;">
-                    <div><code style="background:#0a0e27; padding:4px 8px; border-radius:6px;">${escapeHtml(data.password)}</code></div>
-                    <div><span class="status-badge ${data.role === 'all' ? 'status-approved' : 'status-pending'}">${roleDisplay}</span></div>
-                    <div>
-                        <button class="btn btn-danger btn-icon" onclick="deleteKitchenPassword('${doc.id}')" style="padding: 4px 10px;">🗑️ Delete</button>
-                    </div>
-                </div>
-            `;
-        });
-        
-        container.innerHTML += `</div><div class="note" style="margin-top: 10px;">💡 Total: ${snapshot.size} password(s) stored. Users login using these passwords (no email required).</div>`;
-        
-    } catch(e) {
-        console.error("Error listing users:", e);
-        container.innerHTML = `<div style='text-align:center;padding:20px;color:#dc2626;'>❌ Error: ${e.message}</div>`;
-    }
-};
 
 // ============ UTILITIES ============
 function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
@@ -1152,21 +1166,39 @@ function switchTab(t) {
     } else if(t === 'generator') { 
         document.querySelectorAll('.tab-btn')[1].classList.add('active'); 
         document.getElementById('generatorPanel').classList.add('active-panel'); 
-    } else if(t === 'users') { 
+    } else if(t === 'users') {
         document.querySelectorAll('.tab-btn')[2].classList.add('active'); 
-        document.getElementById('usersPanel').classList.add('active-panel'); 
-        listAllAuthUsers();
-    } else if(t === 'passwords') { 
+        document.getElementById('usersPanel').classList.add('active-panel');
+    } else if(t === 'passwords') {
         document.querySelectorAll('.tab-btn')[3].classList.add('active'); 
-        document.getElementById('passwordsPanel').classList.add('active-panel'); 
-        loadKitchenPasswords();
-    } 
+        document.getElementById('passwordsPanel').classList.add('active-panel');
+        loadAllKitchenPasswords(); // Load passwords when tab is opened
+    }
 }
 
-// ============ INITIALIZE ============
-// Start the initialization
-initializeFirebaseServices();
-</script>
+function goBackToIndex() {
+    window.location.href = '/';
+}
 
+// ============ CHECK IF ALREADY LOGGED IN ============
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        await loadAuthorizedDevelopers();
+        if(isAuthorized(user.email)) {
+            currentDeveloperEmail = user.email;
+            document.getElementById("loginOverlay").style.display = "none";
+            document.getElementById("mainContent").style.display = "block";
+            document.getElementById("userEmailDisplay").innerHTML = currentDeveloperEmail;
+            await loadFreehandModeFromFirestore();
+            refreshOrdersList();
+            renderKitchenMenuButtons();
+        } else {
+            await auth.signOut();
+        }
+    }
+});
+
+loadAuthorizedDevelopers();
+</script>
 </body>
 </html>
