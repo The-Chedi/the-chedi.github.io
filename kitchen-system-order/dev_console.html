@@ -6,6 +6,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
 <title>Developer Console - Complete Control</title>
 <style>
@@ -258,24 +259,40 @@ hr { border-color: #2a3a5a; margin: 15px 0; }
 </div>
 
 <script>
-// ============ FIREBASE CONFIGURATION ============
-const firebaseConfig = {
-    apiKey: "AIzaSyB7xF2kP5jgH6xyGg7-S-T_QgMoBDIoBBc",
-    authDomain: "kitchenordersystem-66eb2.firebaseapp.com",
-    projectId: "kitchenordersystem-66eb2",
-    storageBucket: "kitchenordersystem-66eb2.firebasestorage.app",
-    messagingSenderId: "786074432195",
-    appId: "1:786074432195:web:8381f2cba8f43002232876"
-};
+// ============ WAIT FOR FIREBASE TO INITIALIZE ============
+// Firebase is initialized in firebase-config.js
+// Wait for Firebase to be ready
+let db, auth;
 
-// Initialize Firebase
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-    console.log("✅ Firebase initialized successfully");
+function initializeFirebase() {
+    if (typeof firebase !== 'undefined' && firebase.apps.length) {
+        auth = firebase.auth();
+        db = firebase.firestore();
+        console.log("✅ Firebase services ready");
+        
+        // Check if already logged in
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                await loadAuthorizedDevelopers();
+                if(isAuthorized(user.email)) {
+                    currentDeveloperEmail = user.email;
+                    document.getElementById("loginOverlay").style.display = "none";
+                    document.getElementById("mainContent").style.display = "block";
+                    document.getElementById("userEmailDisplay").innerHTML = currentDeveloperEmail;
+                    await loadFreehandModeFromFirestore();
+                    refreshOrdersList();
+                    renderKitchenMenuButtons();
+                    loadKitchenPasswords();
+                } else {
+                    await auth.signOut();
+                }
+            }
+        });
+    } else {
+        console.error("Firebase not initialized. Check firebase-config.js");
+        setTimeout(initializeFirebase, 500);
+    }
 }
-
-const auth = firebase.auth();
-const db = firebase.firestore();
 
 // ============ GLOBAL VARIABLES ============
 let currentDeveloperEmail = "";
@@ -299,6 +316,8 @@ const JSON_BASE_PATH = "items/";
 
 // Add new kitchen password to Firestore
 window.addKitchenPassword = async function() {
+    if(!db) { showToast("Firebase not ready", true); return; }
+    
     const password = document.getElementById("newPasswordValue").value.trim();
     const role = document.getElementById("newPasswordRole").value;
     const msgDiv = document.getElementById("addPasswordMsg");
@@ -339,6 +358,8 @@ window.addKitchenPassword = async function() {
 
 // Load all kitchen passwords from Firestore
 window.loadKitchenPasswords = async function() {
+    if(!db) return;
+    
     const container = document.getElementById("kitchenPasswordsList");
     if(!container) return;
     
@@ -392,6 +413,8 @@ window.loadKitchenPasswords = async function() {
 
 // Update kitchen password role
 window.updateKitchenPassword = async function(docId) {
+    if(!db) return;
+    
     const newRole = document.getElementById(`roleSelect_${docId}`).value;
     
     if(!confirm(`Update password role to "${newRole}"?`)) return;
@@ -410,6 +433,8 @@ window.updateKitchenPassword = async function(docId) {
 
 // Delete kitchen password
 window.deleteKitchenPassword = async function(docId) {
+    if(!db) return;
+    
     if(!confirm("⚠️ Delete this password permanently? Users using this password will lose access.")) return;
     
     try {
@@ -421,53 +446,10 @@ window.deleteKitchenPassword = async function(docId) {
     }
 };
 
-// ============ FIREBASE AUTH USER MANAGEMENT ============
-
-// List all Firebase Auth users (requires Admin SDK, so we use Cloud Function or direct DB)
-// Since client SDK can't list users, we'll show users stored in Firestore
-window.listAllAuthUsers = async function() {
-    const container = document.getElementById("allUsersList");
-    if(!container) return;
-    
-    container.innerHTML = "<div style='text-align:center;padding:20px;'>⏳ Loading users...</div>";
-    
-    try {
-        // Get users from Firestore user_passwords collection
-        const passwordSnapshot = await db.collection("user_passwords").get();
-        
-        container.innerHTML = `
-            <div style="background: #0a0e27; border-radius: 12px; overflow: hidden;">
-                <div style="background: #1a1a2e; padding: 12px; display: grid; grid-template-columns: 2fr 2fr 1fr; gap: 10px; font-weight: bold; color: #00d4ff;">
-                    <div>Password</div>
-                    <div>Role / Access</div>
-                    <div>Actions</div>
-                </div>
-        `;
-        
-        passwordSnapshot.forEach(doc => {
-            const data = doc.data();
-            const roleDisplay = data.role === "all" ? "🔓 ALL KITCHENS" : `🍽️ ${data.role}`;
-            container.innerHTML += `
-                <div style="padding: 12px; border-bottom: 1px solid #2a3a5a; display: grid; grid-template-columns: 2fr 2fr 1fr; gap: 10px; align-items: center;">
-                    <div><code style="background:#0a0e27; padding:4px 8px; border-radius:6px;">${escapeHtml(data.password)}</code></div>
-                    <div><span class="status-badge ${data.role === 'all' ? 'status-approved' : 'status-pending'}">${roleDisplay}</span></div>
-                    <div>
-                        <button class="btn btn-danger btn-icon" onclick="deleteKitchenPassword('${doc.id}')" style="padding: 4px 10px;">🗑️ Delete</button>
-                    </div>
-                </div>
-            `;
-        });
-        
-        container.innerHTML += `</div><div class="note" style="margin-top: 10px;">💡 Total: ${passwordSnapshot.size} password(s) stored. Users login using these passwords (no email required).</div>`;
-        
-    } catch(e) {
-        console.error("Error listing users:", e);
-        container.innerHTML = `<div style='text-align:center;padding:20px;color:#dc2626;'>❌ Error: ${e.message}</div>`;
-    }
-};
-
 // ============ GLOBAL FREEHAND MODE FUNCTIONS ============
 async function saveFreehandModeToFirestore(isEnabled) {
+    if(!db) return;
+    
     try {
         await db.collection("settings").doc("global_settings").set({
             freehandMode: isEnabled,
@@ -481,6 +463,8 @@ async function saveFreehandModeToFirestore(isEnabled) {
 }
 
 async function loadFreehandModeFromFirestore() {
+    if(!db) return;
+    
     try {
         const doc = await db.collection("settings").doc("global_settings").get();
         if (doc.exists && doc.data().freehandMode !== undefined) {
@@ -541,6 +525,8 @@ function getQuantityLimits(item) {
 
 // ============ AUTH & AUTHORIZATION ============
 async function loadAuthorizedDevelopers() {
+    if(!db) return;
+    
     try { 
         const doc = await db.collection("settings").doc("authorized_devs").get(); 
         if(doc.exists && doc.data().emails) {
@@ -561,6 +547,8 @@ function displayAuthorizedDevelopers() {
 }
 
 async function addAuthorizedDeveloper() { 
+    if(!db) return;
+    
     const email = document.getElementById("newDevEmail").value.trim(); 
     if(!email || AUTHORIZED_DEVELOPERS.includes(email)){ showToast("Invalid or duplicate",true); return; }
     AUTHORIZED_DEVELOPERS.push(email); 
@@ -571,6 +559,8 @@ async function addAuthorizedDeveloper() {
 }
 
 async function removeAuthorizedDeveloper(email) { 
+    if(!db) return;
+    
     AUTHORIZED_DEVELOPERS = AUTHORIZED_DEVELOPERS.filter(e => e !== email); 
     await db.collection("settings").doc("authorized_devs").set({ emails: AUTHORIZED_DEVELOPERS }); 
     displayAuthorizedDevelopers(); 
@@ -582,6 +572,11 @@ function isAuthorized(email) {
 }
 
 window.loginWithFirebase = async function() {
+    if(!auth) { 
+        document.getElementById("loginErrorMsg").innerHTML = "Firebase not ready. Please refresh."; 
+        return; 
+    }
+    
     const email = document.getElementById("devEmail").value.trim();
     const password = document.getElementById("devPassword").value;
     const errorDiv = document.getElementById("loginErrorMsg");
@@ -611,7 +606,7 @@ window.loginWithFirebase = async function() {
         await loadFreehandModeFromFirestore();
         refreshOrdersList(); 
         renderKitchenMenuButtons();
-        loadKitchenPasswords(); // Load passwords on login
+        loadKitchenPasswords();
         
     } catch(error) {
         console.error("Login error:", error);
@@ -632,7 +627,7 @@ window.loginWithFirebase = async function() {
 };
 
 function logout() { 
-    if(confirm("Logout?")) auth.signOut().then(() => {
+    if(auth && confirm("Logout?")) auth.signOut().then(() => {
         document.getElementById("mainContent").style.display = "none";
         document.getElementById("loginOverlay").style.display = "flex";
         document.getElementById("devEmail").value = "";
@@ -663,6 +658,8 @@ function getRequestStatus(items) {
 async function refreshOrdersList() { await listAllOrders(); }
 
 async function listAllOrders() { 
+    if(!db) return;
+    
     try { 
         const snap = await db.collection("kitchen_requests").orderBy("timestamp", "desc").limit(50).get(); 
         const cont = document.getElementById("ordersList"); 
@@ -697,6 +694,8 @@ window.loadOrderById = async function(docId) {
 };
 
 async function fetchOrderDocument() { 
+    if(!db) return;
+    
     const id = document.getElementById("orderDocId").value.trim(); 
     if(!id) { showToast("Enter Document ID", true); return; }
     try { 
@@ -733,7 +732,7 @@ function updateEditButtonsBasedOnStatus() {
 }
 
 async function saveOrderDocument() { 
-    if(!currentOrderDocId || currentOrderStatus !== "pending") { 
+    if(!db || !currentOrderDocId || currentOrderStatus !== "pending") { 
         showToast("Cannot save: Order not pending. Restore first.", true); 
         return; 
     } 
@@ -748,7 +747,7 @@ async function saveOrderDocument() {
 }
 
 async function deleteOrderDocument() { 
-    if(!currentOrderDocId || currentOrderStatus !== "pending") { 
+    if(!db || !currentOrderDocId || currentOrderStatus !== "pending") { 
         showToast("Cannot delete: Not pending. Restore first.", true); 
         return; 
     } 
@@ -761,6 +760,8 @@ async function deleteOrderDocument() {
 }
 
 async function deleteOrderById(docId) { 
+    if(!db) return;
+    
     if(confirm("⚠️ Delete this order?")) { 
         await db.collection("kitchen_requests").doc(docId).delete(); 
         showToast("🗑️ Deleted"); 
@@ -893,6 +894,8 @@ window.quickAddItemFromOrder = function() {
 };
 
 async function restoreOrderToPending(docId) { 
+    if(!db) return;
+    
     if(!confirm("Restore order to PENDING status?\n\nThis will reset all approved/rejected items back to pending.")) return; 
     try { 
         const doc = await db.collection("kitchen_requests").doc(docId).get(); 
@@ -1026,6 +1029,8 @@ function downloadJSON() {
 
 // ============ USER MANAGEMENT (Firebase Auth) ============
 async function createNewUser() { 
+    if(!auth) { showToast("Firebase not ready", true); return; }
+    
     const email = document.getElementById("newUserEmail").value.trim(); 
     const pwd = document.getElementById("newUserPassword").value; 
     const confirm = document.getElementById("newUserConfirmPassword").value; 
@@ -1050,6 +1055,8 @@ async function createNewUser() {
 }
 
 async function sendUserPasswordReset() { 
+    if(!auth) { showToast("Firebase not ready", true); return; }
+    
     const email = document.getElementById("resetUserEmail").value.trim(); 
     const msgDiv = document.getElementById("resetUserMsg");
     if(!email) { msgDiv.innerHTML = "<span style='color:#dc2626'>❌ Enter email</span>"; return; }
@@ -1063,6 +1070,49 @@ async function sendUserPasswordReset() {
         msgDiv.innerHTML = `<span style='color:#dc2626'>❌ ${e.message}</span>`;
     } 
 }
+
+// List all users from Firestore (kitchen passwords)
+window.listAllAuthUsers = async function() {
+    if(!db) return;
+    
+    const container = document.getElementById("allUsersList");
+    if(!container) return;
+    
+    container.innerHTML = "<div style='text-align:center;padding:20px;'>⏳ Loading passwords...</div>";
+    
+    try {
+        const snapshot = await db.collection("user_passwords").get();
+        
+        container.innerHTML = `
+            <div style="background: #0a0e27; border-radius: 12px; overflow: hidden;">
+                <div style="background: #1a1a2e; padding: 12px; display: grid; grid-template-columns: 2fr 2fr 1fr; gap: 10px; font-weight: bold; color: #00d4ff;">
+                    <div>Password</div>
+                    <div>Role / Access</div>
+                    <div>Actions</div>
+                </div>
+        `;
+        
+        snapshot.forEach(doc => {
+            const data = doc.data();
+            const roleDisplay = data.role === "all" ? "🔓 ALL KITCHENS" : `🍽️ ${data.role}`;
+            container.innerHTML += `
+                <div style="padding: 12px; border-bottom: 1px solid #2a3a5a; display: grid; grid-template-columns: 2fr 2fr 1fr; gap: 10px; align-items: center;">
+                    <div><code style="background:#0a0e27; padding:4px 8px; border-radius:6px;">${escapeHtml(data.password)}</code></div>
+                    <div><span class="status-badge ${data.role === 'all' ? 'status-approved' : 'status-pending'}">${roleDisplay}</span></div>
+                    <div>
+                        <button class="btn btn-danger btn-icon" onclick="deleteKitchenPassword('${doc.id}')" style="padding: 4px 10px;">🗑️ Delete</button>
+                    </div>
+                </div>
+            `;
+        });
+        
+        container.innerHTML += `</div><div class="note" style="margin-top: 10px;">💡 Total: ${snapshot.size} password(s) stored. Users login using these passwords (no email required).</div>`;
+        
+    } catch(e) {
+        console.error("Error listing users:", e);
+        container.innerHTML = `<div style='text-align:center;padding:20px;color:#dc2626;'>❌ Error: ${e.message}</div>`;
+    }
+};
 
 // ============ UTILITIES ============
 function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
@@ -1096,26 +1146,9 @@ function switchTab(t) {
     } 
 }
 
-// ============ CHECK IF ALREADY LOGGED IN ============
-auth.onAuthStateChanged(async (user) => {
-    if (user) {
-        await loadAuthorizedDevelopers();
-        if(isAuthorized(user.email)) {
-            currentDeveloperEmail = user.email;
-            document.getElementById("loginOverlay").style.display = "none";
-            document.getElementById("mainContent").style.display = "block";
-            document.getElementById("userEmailDisplay").innerHTML = currentDeveloperEmail;
-            await loadFreehandModeFromFirestore();
-            refreshOrdersList();
-            renderKitchenMenuButtons();
-            loadKitchenPasswords();
-        } else {
-            await auth.signOut();
-        }
-    }
-});
-
-loadAuthorizedDevelopers();
+// ============ INITIALIZE ============
+// Start the initialization
+initializeFirebase();
 </script>
 </body>
 </html>
