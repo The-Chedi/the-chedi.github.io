@@ -752,22 +752,17 @@ body {
 </style>
 </head>
 <body>
-
 <div id="passwordModal" class="modal">
     <div class="modal-content">
         <h2>🔐 Admin Login</h2>
-        <div class="user-selector">
-            <button class="user-btn" onclick="selectUser('Marco')">👨‍💼 Marco<br><span class="user-title">Administrator</span></button>
-            <button class="user-btn" onclick="selectUser('Nady')">👨‍💼 Nady<br><span class="user-title">Administrator</span></button>
-            <button class="user-btn" onclick="selectUser('Ahmed')">👨‍💻 Ahmed<br><span class="user-title">Administrator</span></button>
-            <button class="user-btn" onclick="selectUser('Nader')">👨‍💼 Nader<br><span class="user-title">Administrator</span></button>
-        </div>
-        <input type="password" id="passwordInput" placeholder="Enter password" style="display:none;">
-        <button id="loginBtn" style="display:none;" onclick="checkLogin()">Login</button>
+        <input type="email" id="loginEmail" placeholder="Email" style="width:100%; padding:12px; margin-bottom:10px; border-radius:40px; border:1px solid #ddd;">
+        <input type="password" id="loginPassword" placeholder="Password" style="width:100%; padding:12px; margin-bottom:10px; border-radius:40px; border:1px solid #ddd;">
+        <button onclick="handleLogin()" style="background:#3498db; color:white; border:none; padding:12px; border-radius:40px; width:100%; margin-bottom:10px;">Login</button>
+        <button class="close-modal" onclick="goBackToIndex()" style="background:#95a5a6;">← Back</button>
         <div id="loginError" class="error-msg"></div>
-        <button class="close-modal" onclick="goBackToIndex()">← Back to Home</button>
     </div>
 </div>
+
 
 <div id="mainContent" style="display:none;">
     <div class="header">
@@ -806,97 +801,76 @@ body {
         <div id="requestsContainer"></div>
     </div>
 </div>
-// Replace the entire <script> section from the original file with this:
-
 <script>
-// Firebase config is loaded from external firebase-config.js
-// Make sure your firebase-config.js includes auth setup
-
 const KITCHENS = ["Hot Kitchen", "Cold Kitchen", "Pastry / Bakery", "Butchery", "Beach House", "Nihon Kitchen", "Staff Kitchen"];
 
-let currentAdmin = null;
+let currentAdmin = "";
 let currentKitchen = "all";
 let currentStatus = "pending";
 let allRequests = [];
 let duplicateMap = new Map();
 
-// DOM Elements
-let passwordModal, mainContent, adminNameDisplay;
-
 function goBackToIndex() { window.location.href = "index.html"; }
 function openAnalytics() { window.open("analytics.html", "_blank"); }
 function openRevenue() { window.open("revenue.html", "_blank"); }
 
-// Firebase Auth - Email/Password Login
-async function handleEmailLogin(email, password) {
+// Firebase Authentication - Login
+let currentAdmin = "";
+
+async function handleLogin() {
+    const email = document.getElementById("loginEmail").value;
+    const password = document.getElementById("loginPassword").value;
     try {
         const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
-        const user = userCredential.user;
-        currentAdmin = user.email.split('@')[0] || user.email;
+        currentAdmin = userCredential.user.email.split('@')[0];
         document.getElementById("adminNameDisplay").innerText = currentAdmin;
         document.getElementById("passwordModal").style.display = "none";
         document.getElementById("mainContent").style.display = "block";
-        localStorage.setItem("adminEmail", user.email);
-        localStorage.setItem("adminName", currentAdmin);
+        localStorage.setItem("admin", currentAdmin);
         await loadRequests();
-        showToast(`✅ Welcome ${currentAdmin}`);
     } catch(error) {
-        document.getElementById("loginError").innerHTML = `❌ ${error.message}`;
+        document.getElementById("loginError").innerHTML = "❌ " + error.message;
     }
 }
 
-async function handleEmailSignup(email, password) {
-    try {
-        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-        const user = userCredential.user;
-        currentAdmin = user.email.split('@')[0] || user.email;
+firebase.auth().onAuthStateChanged(async (user) => {
+    if (user) {
+        currentAdmin = localStorage.getItem("admin") || user.email.split('@')[0];
         document.getElementById("adminNameDisplay").innerText = currentAdmin;
         document.getElementById("passwordModal").style.display = "none";
         document.getElementById("mainContent").style.display = "block";
-        localStorage.setItem("adminEmail", user.email);
-        localStorage.setItem("adminName", currentAdmin);
         await loadRequests();
-        showToast(`✅ Account created! Welcome ${currentAdmin}`);
-    } catch(error) {
-        document.getElementById("loginError").innerHTML = `❌ ${error.message}`;
+    } else {
+        document.getElementById("passwordModal").style.display = "flex";
+        document.getElementById("mainContent").style.display = "none";
+    }
+});
+
+function logout() {
+    if(confirm("Logout?")) {
+        firebase.auth().signOut();
+        localStorage.removeItem("admin");
     }
 }
 
-function showLoginForm() {
-    const modalContent = document.querySelector('.modal-content');
-    modalContent.innerHTML = `
-        <h2>🔐 Admin Login</h2>
-        <input type="email" id="loginEmail" placeholder="Email address" style="width:100%; padding:12px; margin-bottom:10px; border-radius:40px; border:1px solid #ddd;">
-        <input type="password" id="loginPassword" placeholder="Password" style="width:100%; padding:12px; margin-bottom:10px; border-radius:40px; border:1px solid #ddd;">
-        <button onclick="handleEmailLogin(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value)" style="background:#3498db; margin-bottom:10px;">Login</button>
-        <hr style="margin:15px 0;">
-        <h3 style="font-size:14px; margin-bottom:10px;">New Admin? Sign Up</h3>
-        <input type="email" id="signupEmail" placeholder="Email address" style="width:100%; padding:12px; margin-bottom:10px; border-radius:40px; border:1px solid #ddd;">
-        <input type="password" id="signupPassword" placeholder="Password (min 6 chars)" style="width:100%; padding:12px; margin-bottom:10px; border-radius:40px; border:1px solid #ddd;">
-        <button onclick="handleEmailSignup(document.getElementById('signupEmail').value, document.getElementById('signupPassword').value)" style="background:#27ae60;">Sign Up</button>
-        <button class="close-modal" onclick="goBackToIndex()" style="margin-top:15px; background:#95a5a6;">← Back to Home</button>
-    `;
-    document.getElementById("loginError").innerHTML = "";
-}
-
-// Check for existing auth session
-async function checkAuthState() {
-    firebase.auth().onAuthStateChanged(async (user) => {
-        if (user) {
-            // User is signed in
-            currentAdmin = localStorage.getItem("adminName") || user.email.split('@')[0];
-            document.getElementById("adminNameDisplay").innerText = currentAdmin;
-            document.getElementById("passwordModal").style.display = "none";
-            document.getElementById("mainContent").style.display = "block";
-            await loadRequests();
-        } else {
-            // User is signed out
-            document.getElementById("passwordModal").style.display = "flex";
-            document.getElementById("mainContent").style.display = "none";
-            showLoginForm();
-        }
-    });
-}
+// Check authentication state on page load
+firebase.auth().onAuthStateChanged(async (user) => {
+    if (user) {
+        currentAdmin = localStorage.getItem("adminName") || user.email.split('@')[0];
+        document.getElementById("adminNameDisplay").innerText = currentAdmin;
+        document.getElementById("passwordModal").style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+        await loadRequests();
+    } else {
+        document.getElementById("passwordModal").style.display = "flex";
+        document.getElementById("mainContent").style.display = "none";
+        document.getElementById("loginEmail").value = "";
+        document.getElementById("loginPassword").value = "";
+        document.getElementById("signupEmail").value = "";
+        document.getElementById("signupPassword").value = "";
+        document.getElementById("loginError").innerHTML = "";
+    }
+});
 
 async function loadRequests() {
     try {
@@ -906,7 +880,7 @@ async function loadRequests() {
         findDuplicateRequests();
         renderUI();
         updateStats();
-    } catch(e) { showToast("Error loading: " + e.message); }
+    } catch(e) { showToast("Error loading"); }
 }
 
 function findDuplicateRequests() {
@@ -951,7 +925,7 @@ async function updateRequest(id, items) {
         showToast(`✅ Updated by ${currentAdmin}`);
         await loadRequests();
         return true;
-    } catch(e) { showToast("Update error: " + e.message); return false; }
+    } catch(e) { showToast("Update error"); return false; }
 }
 
 async function approveItemFlex(reqId, idx) {
@@ -1251,19 +1225,11 @@ function logout() {
             localStorage.removeItem("adminEmail");
             localStorage.removeItem("adminName");
             showToast("Logged out successfully");
-        }).catch((error) => showToast("Logout error: " + error.message));
+        });
     } 
 }
 function escapeHtml(str) { return str?.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])) || ''; }
 function showToast(msg) { const t = document.createElement("div"); t.className = "toast"; t.innerText = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2500); }
-
-// Initialize
-document.addEventListener("DOMContentLoaded", () => {
-    passwordModal = document.getElementById("passwordModal");
-    mainContent = document.getElementById("mainContent");
-    adminNameDisplay = document.getElementById("adminNameDisplay");
-    checkAuthState();
-});
 </script>
 </body>
 </html>
