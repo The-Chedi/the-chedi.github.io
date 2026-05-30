@@ -123,6 +123,8 @@ hr { border-color: #2a3a5a; margin: 15px 0; }
 .password-input { flex: 1; background: #1a1a2e; border: 1px solid #4a3a7a; padding: 10px; border-radius: 8px; color: white; font-family: monospace; }
 .show-hide-btn { background: #334155; padding: 5px 12px; font-size: 0.7rem; }
 .kitchen-password-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; margin-top: 20px; }
+.select-kitchen { background: #1a1a2e; border: 1px solid #8b5cf6; padding: 12px; border-radius: 12px; margin-bottom: 20px; }
+.select-kitchen select { background: #0a0e27; border: 1px solid #4a3a7a; padding: 10px; border-radius: 8px; color: white; font-family: monospace; width: 100%; margin-top: 10px; }
 </style>
 </head>
 <body>
@@ -135,7 +137,7 @@ hr { border-color: #2a3a5a; margin: 15px 0; }
         <input type="email" id="devEmail" placeholder="Email Address" autocomplete="email">
         <input type="password" id="devPassword" placeholder="Password" autocomplete="current-password">
         <button id="loginBtn" onclick="loginWithFirebase()">🔓 Login to Console</button>
-        <button class="back-btn" onclick="goBackToIndex()">◀ Go Back to Home</button>
+        <button class="back-btn" onclick="goBackToHome()">◀ Go Back to Home</button>
         <div id="loginErrorMsg" class="error-msg"></div>
     </div>
 </div>
@@ -221,7 +223,7 @@ hr { border-color: #2a3a5a; margin: 15px 0; }
             </div>
         </div>
 
-        <!-- PANEL 4: KITCHEN PASSWORD MANAGEMENT (NEW) -->
+        <!-- PANEL 4: KITCHEN PASSWORD MANAGEMENT -->
         <div id="passwordsPanel" class="panel">
             <div class="panel-header">
                 <h2>🔐 Kitchen Password Management</h2>
@@ -245,11 +247,44 @@ hr { border-color: #2a3a5a; margin: 15px 0; }
                     <div class="password-input-group">
                         <input type="text" id="defaultPasswordInput" class="password-input" placeholder="Enter default password" value="kitchen123">
                         <button class="btn btn-primary" onclick="updateDefaultPassword()">💾 Update Default Password</button>
+                        <button class="btn btn-success" onclick="setFirstPasswordForAll()">🚀 Set First Password for ALL Kitchens</button>
                     </div>
                     <div id="defaultPasswordDisplay" class="password-value" style="margin-top: 10px;"></div>
                 </div>
 
-                <!-- Kitchen Passwords Grid -->
+                <!-- Kitchen Selection for Individual Management -->
+                <div class="select-kitchen">
+                    <label style="color: #8b5cf6; font-weight: bold;">🍳 Select Kitchen to Manage:</label>
+                    <select id="kitchenSelect" onchange="loadSelectedKitchenPassword()">
+                        <option value="">-- Select a kitchen --</option>
+                        <option value="Hot Kitchen">🔥 Hot Kitchen</option>
+                        <option value="Cold Kitchen">❄️ Cold Kitchen</option>
+                        <option value="Pastry / Bakery">🥐 Pastry / Bakery</option>
+                        <option value="Butchery">🥩 Butchery</option>
+                        <option value="Beach House">🏖️ Beach House</option>
+                        <option value="Nihon Kitchen">🍣 Nihon Kitchen</option>
+                        <option value="Staff Kitchen">👨‍🍳 Staff Kitchen</option>
+                    </select>
+                </div>
+
+                <!-- Individual Kitchen Password Manager -->
+                <div id="individualKitchenManager" class="password-card" style="display: none;">
+                    <div class="password-header">
+                        <span class="kitchen-name" id="selectedKitchenName"></span>
+                        <button class="btn btn-secondary" onclick="resetSelectedKitchenPassword()">↺ Reset to Default</button>
+                    </div>
+                    <div class="password-value" id="selectedKitchenPasswordDisplay"></div>
+                    <div class="password-input-group">
+                        <input type="password" id="individualPasswordInput" class="password-input" placeholder="Enter new password">
+                        <button class="btn btn-primary btn-icon" onclick="toggleIndividualPasswordVisibility()" style="padding: 5px 12px;">👁️</button>
+                        <button class="btn btn-success" onclick="updateSelectedKitchenPassword()">💾 Save Password</button>
+                    </div>
+                    <div id="individualKitchenNote" class="note" style="margin-top: 10px;"></div>
+                </div>
+
+                <!-- All Kitchens Grid View -->
+                <hr style="margin: 20px 0;">
+                <h3 style="color: #00d4ff; margin-bottom: 15px;">📋 All Kitchens Passwords</h3>
                 <div id="kitchenPasswordsContainer" class="kitchen-password-grid">
                     <div style="text-align: center; padding: 40px;">Loading kitchen passwords...</div>
                 </div>
@@ -307,7 +342,7 @@ const JSON_BASE_PATH = "items/";
 
 // ============ KITCHEN PASSWORD MANAGEMENT FUNCTIONS ============
 
-// List of all kitchens (for password management)
+// List of all kitchens
 const ALL_KITCHENS = [
     "Hot Kitchen",
     "Cold Kitchen",
@@ -318,6 +353,60 @@ const ALL_KITCHENS = [
     "Staff Kitchen"
 ];
 
+let currentDefaultPassword = "kitchen123";
+
+// Set first password for ALL kitchens (initial setup)
+async function setFirstPasswordForAll() {
+    const newPassword = document.getElementById("defaultPasswordInput").value.trim();
+    if (!newPassword) {
+        showToast("Please enter a password", true);
+        return;
+    }
+    
+    if (newPassword.length < 4) {
+        showToast("Password must be at least 4 characters", true);
+        return;
+    }
+    
+    if (!confirm(`⚠️ Set "${newPassword}" as the FIRST PASSWORD for ALL kitchens?\n\nThis will initialize all kitchens with this password.`)) return;
+    
+    try {
+        // Save default password
+        await db.collection("kitchen_passwords").doc("default_settings").set({
+            defaultPassword: newPassword,
+            updatedAt: new Date().toISOString(),
+            updatedBy: currentDeveloperEmail,
+            isFirstSetup: true
+        });
+        
+        // Set password for each kitchen
+        const batch = db.batch();
+        for (const kitchen of ALL_KITCHENS) {
+            const docRef = db.collection("kitchen_passwords").doc(kitchen);
+            batch.set(docRef, {
+                password: newPassword,
+                updatedAt: new Date().toISOString(),
+                updatedBy: currentDeveloperEmail,
+                isCustom: false
+            });
+        }
+        await batch.commit();
+        
+        showToast(`✅ First password "${newPassword}" set for ALL ${ALL_KITCHENS.length} kitchens!`);
+        
+        // Reload all passwords
+        await loadAllKitchenPasswords();
+        
+        // Clear selection
+        document.getElementById("kitchenSelect").value = "";
+        document.getElementById("individualKitchenManager").style.display = "none";
+        
+    } catch (error) {
+        console.error("Error setting first password:", error);
+        showToast("Error: " + error.message, true);
+    }
+}
+
 // Load all kitchen passwords from Firestore
 async function loadAllKitchenPasswords() {
     const container = document.getElementById("kitchenPasswordsContainer");
@@ -326,14 +415,14 @@ async function loadAllKitchenPasswords() {
     container.innerHTML = '<div style="text-align: center; padding: 40px;">Loading kitchen passwords...</div>';
     
     try {
-        // First, load default password
+        // Load default password
         const defaultDoc = await db.collection("kitchen_passwords").doc("default_settings").get();
-        let defaultPassword = "kitchen123";
+        currentDefaultPassword = "kitchen123";
         if (defaultDoc.exists && defaultDoc.data().defaultPassword) {
-            defaultPassword = defaultDoc.data().defaultPassword;
+            currentDefaultPassword = defaultDoc.data().defaultPassword;
         }
-        document.getElementById("defaultPasswordDisplay").innerHTML = `Current Default: <strong style="color:#00d4ff;">${defaultPassword}</strong>`;
-        document.getElementById("defaultPasswordInput").value = defaultPassword;
+        document.getElementById("defaultPasswordDisplay").innerHTML = `Current Default: <strong style="color:#00d4ff;">${currentDefaultPassword}</strong>`;
+        document.getElementById("defaultPasswordInput").value = currentDefaultPassword;
         
         // Load each kitchen's password
         const passwordsHtml = [];
@@ -341,7 +430,7 @@ async function loadAllKitchenPasswords() {
         for (const kitchen of ALL_KITCHENS) {
             const docRef = db.collection("kitchen_passwords").doc(kitchen);
             const doc = await docRef.get();
-            let currentPassword = defaultPassword;
+            let currentPassword = currentDefaultPassword;
             let isCustom = false;
             
             if (doc.exists && doc.data().password) {
@@ -379,6 +468,110 @@ async function loadAllKitchenPasswords() {
     }
 }
 
+// Load selected kitchen password
+async function loadSelectedKitchenPassword() {
+    const select = document.getElementById("kitchenSelect");
+    const kitchenName = select.value;
+    
+    if (!kitchenName) {
+        document.getElementById("individualKitchenManager").style.display = "none";
+        return;
+    }
+    
+    try {
+        const docRef = db.collection("kitchen_passwords").doc(kitchenName);
+        const doc = await docRef.get();
+        let currentPassword = currentDefaultPassword;
+        let isCustom = false;
+        
+        if (doc.exists && doc.data().password) {
+            currentPassword = doc.data().password;
+            isCustom = true;
+        }
+        
+        document.getElementById("selectedKitchenName").innerHTML = `🍳 ${kitchenName}`;
+        document.getElementById("selectedKitchenPasswordDisplay").innerHTML = isCustom ? 
+            `<span style="color:#f59e0b;">🔐 Custom Password:</span> <strong style="color: #00d4ff;">${currentPassword}</strong>` :
+            `<span style="color:#9ca3af;">📋 Using Default Password:</span> <strong style="color: #00d4ff;">${currentPassword}</strong>`;
+        document.getElementById("individualPasswordInput").value = currentPassword;
+        document.getElementById("individualKitchenNote").innerHTML = isCustom ? 'Custom password set' : 'Using default password';
+        document.getElementById("individualKitchenManager").style.display = "block";
+        
+    } catch (error) {
+        showToast("Error loading kitchen password", true);
+    }
+}
+
+// Update selected kitchen password
+async function updateSelectedKitchenPassword() {
+    const select = document.getElementById("kitchenSelect");
+    const kitchenName = select.value;
+    const newPassword = document.getElementById("individualPasswordInput").value.trim();
+    
+    if (!kitchenName) {
+        showToast("Please select a kitchen first", true);
+        return;
+    }
+    
+    if (!newPassword) {
+        showToast("Please enter a password", true);
+        return;
+    }
+    
+    if (newPassword.length < 4) {
+        showToast("Password must be at least 4 characters", true);
+        return;
+    }
+    
+    try {
+        await db.collection("kitchen_passwords").doc(kitchenName).set({
+            password: newPassword,
+            updatedAt: new Date().toISOString(),
+            updatedBy: currentDeveloperEmail,
+            isCustom: true
+        });
+        
+        showToast(`✅ Password for ${kitchenName} updated successfully!`);
+        await loadAllKitchenPasswords();
+        await loadSelectedKitchenPassword();
+        
+    } catch (error) {
+        console.error("Error updating kitchen password:", error);
+        showToast("Error updating password: " + error.message, true);
+    }
+}
+
+// Reset selected kitchen password to default
+async function resetSelectedKitchenPassword() {
+    const select = document.getElementById("kitchenSelect");
+    const kitchenName = select.value;
+    
+    if (!kitchenName) return;
+    
+    if (!confirm(`Reset password for ${kitchenName} to the default password?`)) return;
+    
+    try {
+        await db.collection("kitchen_passwords").doc(kitchenName).delete();
+        showToast(`✅ Password for ${kitchenName} reset to default`);
+        await loadAllKitchenPasswords();
+        await loadSelectedKitchenPassword();
+        
+    } catch (error) {
+        console.error("Error resetting kitchen password:", error);
+        showToast("Error resetting password: " + error.message, true);
+    }
+}
+
+// Toggle individual password visibility
+function toggleIndividualPasswordVisibility() {
+    const input = document.getElementById("individualPasswordInput");
+    if (input.type === "password") {
+        input.type = "text";
+    } else {
+        input.type = "password";
+    }
+}
+
 // Update default password
 async function updateDefaultPassword() {
     const newDefaultPassword = document.getElementById("defaultPasswordInput").value.trim();
@@ -400,8 +593,6 @@ async function updateDefaultPassword() {
         });
         
         showToast(`✅ Default password updated to: ${newDefaultPassword}`);
-        
-        // Reload all passwords to reflect changes
         await loadAllKitchenPasswords();
         
     } catch (error) {
@@ -434,20 +625,7 @@ async function updateKitchenPassword(kitchenName) {
         });
         
         showToast(`✅ Password for ${kitchenName} updated successfully!`);
-        
-        // Update the display without full reload
-        const displayId = `password-value-${kitchenName.replace(/\s/g, '')}`;
-        const displayElement = document.getElementById(displayId);
-        if (displayElement) {
-            displayElement.innerHTML = `<span style="color:#f59e0b;">🔐 Custom Password:</span> <strong style="color: #00d4ff; margin-left: 8px;">${newPassword}</strong>`;
-        }
-        
-        // Update the note
-        const card = document.getElementById(`password-card-${kitchenName.replace(/\s/g, '')}`);
-        if (card) {
-            const note = card.querySelector('.note');
-            if (note) note.innerHTML = 'Custom password set';
-        }
+        await loadAllKitchenPasswords();
         
     } catch (error) {
         console.error("Error updating kitchen password:", error);
@@ -460,12 +638,8 @@ async function resetKitchenPassword(kitchenName) {
     if (!confirm(`Reset password for ${kitchenName} to the default password?`)) return;
     
     try {
-        // Delete the custom password document
         await db.collection("kitchen_passwords").doc(kitchenName).delete();
-        
         showToast(`✅ Password for ${kitchenName} reset to default`);
-        
-        // Reload all passwords
         await loadAllKitchenPasswords();
         
     } catch (error) {
@@ -479,14 +653,6 @@ async function resetAllKitchenPasswords() {
     if (!confirm("⚠️ WARNING: This will reset ALL kitchen passwords to the default password. Continue?")) return;
     
     try {
-        // Get default password first
-        const defaultDoc = await db.collection("kitchen_passwords").doc("default_settings").get();
-        let defaultPassword = "kitchen123";
-        if (defaultDoc.exists && defaultDoc.data().defaultPassword) {
-            defaultPassword = defaultDoc.data().defaultPassword;
-        }
-        
-        // Delete all custom kitchen password documents
         const batch = db.batch();
         for (const kitchen of ALL_KITCHENS) {
             const docRef = db.collection("kitchen_passwords").doc(kitchen);
@@ -494,9 +660,7 @@ async function resetAllKitchenPasswords() {
         }
         await batch.commit();
         
-        showToast(`✅ All kitchen passwords reset to default: ${defaultPassword}`);
-        
-        // Reload all passwords
+        showToast(`✅ All kitchen passwords reset to default: ${currentDefaultPassword}`);
         await loadAllKitchenPasswords();
         
     } catch (error) {
@@ -505,7 +669,7 @@ async function resetAllKitchenPasswords() {
     }
 }
 
-// Set default password for all kitchens (overwrites custom passwords)
+// Set default password for all kitchens
 async function setDefaultPasswordForAll() {
     const defaultPassword = document.getElementById("defaultPasswordInput").value.trim();
     if (!defaultPassword) {
@@ -516,14 +680,12 @@ async function setDefaultPasswordForAll() {
     if (!confirm(`⚠️ Set "${defaultPassword}" as the password for ALL kitchens? This will override any custom passwords.`)) return;
     
     try {
-        // First update default password
         await db.collection("kitchen_passwords").doc("default_settings").set({
             defaultPassword: defaultPassword,
             updatedAt: new Date().toISOString(),
             updatedBy: currentDeveloperEmail
         });
         
-        // Delete all custom kitchen password documents
         const batch = db.batch();
         for (const kitchen of ALL_KITCHENS) {
             const docRef = db.collection("kitchen_passwords").doc(kitchen);
@@ -532,8 +694,6 @@ async function setDefaultPasswordForAll() {
         await batch.commit();
         
         showToast(`✅ All kitchens now use default password: ${defaultPassword}`);
-        
-        // Reload all passwords
         await loadAllKitchenPasswords();
         
     } catch (error) {
@@ -1146,6 +1306,10 @@ async function sendUserPasswordReset() {
 }
 
 // ============ UTILITIES ============
+function goBackToHome() {
+    window.location.href = 'https://the-chedi.github.io/kitchen-system-order/';
+}
+
 function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
 function escapeJSON(str) { return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"'); }
 function showToast(msg, isErr = false) { 
@@ -1172,12 +1336,8 @@ function switchTab(t) {
     } else if(t === 'passwords') {
         document.querySelectorAll('.tab-btn')[3].classList.add('active'); 
         document.getElementById('passwordsPanel').classList.add('active-panel');
-        loadAllKitchenPasswords(); // Load passwords when tab is opened
+        loadAllKitchenPasswords();
     }
-}
-
-function goBackToIndex() {
-    window.location.href = '/';
 }
 
 // ============ CHECK IF ALREADY LOGGED IN ============
