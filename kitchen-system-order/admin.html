@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="firebase-config.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
 <title>Admin Dashboard - Full Quantity Control</title>
@@ -156,7 +157,7 @@ body {
     margin-bottom: 20px;
     flex-wrap: wrap;
 }
- .info-item {
+.info-item {
     display: flex;
     flex-direction: column;
     min-width: 140px;
@@ -542,6 +543,7 @@ body {
     to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
+/* Login Modal Styles */
 .modal {
     display: flex;
     position: fixed;
@@ -561,7 +563,7 @@ body {
     padding: 30px;
     border-radius: 24px;
     text-align: center;
-    max-width: 360px;
+    max-width: 400px;
     width: 90%;
 }
 
@@ -570,42 +572,28 @@ body {
     color: #1e3c72;
 }
 
-.user-selector {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+.modal-content h3 {
+    color: #666;
+    font-size: 0.9rem;
     margin-bottom: 20px;
 }
 
-.user-btn {
-    background: #f0f2f5;
-    border: none;
-    padding: 12px;
-    border-radius: 40px;
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.3s;
+.form-group {
+    margin-bottom: 20px;
 }
 
-.user-btn:hover {
-    background: #e0e0e0;
-}
-
-.user-title {
-    font-size: 11px;
-    color: #666;
-    margin-top: 3px;
-}
-
-.modal-content input {
+.form-group input {
     width: 100%;
     padding: 12px;
-    margin-bottom: 15px;
     border: 1px solid #ddd;
     border-radius: 40px;
     font-size: 14px;
     text-align: center;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: #3498db;
 }
 
 .modal-content button {
@@ -618,6 +606,19 @@ body {
     cursor: pointer;
     width: 100%;
     font-size: 1rem;
+    margin-bottom: 10px;
+}
+
+.modal-content button:hover {
+    background: #2980b9;
+}
+
+.btn-secondary {
+    background: #95a5a6 !important;
+}
+
+.btn-secondary:hover {
+    background: #7f8c8d !important;
 }
 
 .error-msg {
@@ -626,13 +627,18 @@ body {
     font-size: 0.8rem;
 }
 
-.close-modal {
-    background: #95a5a6 !important;
-    margin-top: 10px;
+.loading-spinner {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid rgba(255,255,255,.3);
+    border-radius: 50%;
+    border-top-color: #fff;
+    animation: spin 1s ease-in-out infinite;
 }
 
-.close-modal:hover {
-    background: #7f8c8d;
+@keyframes spin {
+    to { transform: rotate(360deg); }
 }
 
 .confirm-modal {
@@ -728,6 +734,12 @@ body {
     vertical-align: middle;
 }
 
+.user-email {
+    font-size: 12px;
+    opacity: 0.9;
+    margin-left: 10px;
+}
+
 @media (max-width: 768px) {
     .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
     .stat-card { padding: 12px; }
@@ -752,17 +764,23 @@ body {
 </style>
 </head>
 <body>
-<div id="passwordModal" class="modal">
+
+<!-- Login Modal -->
+<div id="loginModal" class="modal">
     <div class="modal-content">
         <h2>🔐 Admin Login</h2>
-        <input type="email" id="loginEmail" placeholder="Email" style="width:100%; padding:12px; margin-bottom:10px; border-radius:40px; border:1px solid #ddd;">
-        <input type="password" id="loginPassword" placeholder="Password" style="width:100%; padding:12px; margin-bottom:10px; border-radius:40px; border:1px solid #ddd;">
-        <button onclick="handleLogin()" style="background:#3498db; color:white; border:none; padding:12px; border-radius:40px; width:100%; margin-bottom:10px;">Login</button>
-        <button class="close-modal" onclick="goBackToIndex()" style="background:#95a5a6;">← Back</button>
+        <h3>Sign in with Firebase</h3>
+        <div class="form-group">
+            <input type="email" id="loginEmail" placeholder="Email address" autocomplete="email">
+        </div>
+        <div class="form-group">
+            <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+        </div>
+        <button id="loginButton" onclick="loginWithEmail()">Login</button>
         <div id="loginError" class="error-msg"></div>
+        <button class="btn-secondary" onclick="goBackToIndex()">← Back to Home</button>
     </div>
 </div>
-
 
 <div id="mainContent" style="display:none;">
     <div class="header">
@@ -774,7 +792,7 @@ body {
             </div>
             <div style="display: flex; align-items: center; gap: 15px;">
                 <span id="adminNameDisplay" style="font-weight: 600;"></span>
-                <span style="font-size: 10px; opacity: 0.8;">Administrator</span>
+                <span class="user-email" id="adminEmailDisplay"></span>
                 <button class="btn-header" onclick="logout()">🚪 Logout</button>
             </div>
             <div class="header-buttons">
@@ -801,6 +819,7 @@ body {
         <div id="requestsContainer"></div>
     </div>
 </div>
+
 <script>
 const KITCHENS = ["Hot Kitchen", "Cold Kitchen", "Pastry / Bakery", "Butchery", "Beach House", "Nihon Kitchen", "Staff Kitchen"];
 
@@ -810,67 +829,93 @@ let currentStatus = "pending";
 let allRequests = [];
 let duplicateMap = new Map();
 
-function goBackToIndex() { window.location.href = "index.html"; }
-function openAnalytics() { window.open("analytics.html", "_blank"); }
-function openRevenue() { window.open("revenue.html", "_blank"); }
+// Firebase Auth state observer
+firebase.auth().onAuthStateChanged((user) => {
+    if (user) {
+        // User is signed in
+        currentAdmin = user.displayName || user.email.split('@')[0];
+        document.getElementById("adminNameDisplay").innerText = currentAdmin;
+        document.getElementById("adminEmailDisplay").innerText = user.email;
+        document.getElementById("loginModal").style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+        loadRequests();
+    } else {
+        // User is signed out
+        document.getElementById("loginModal").style.display = "flex";
+        document.getElementById("mainContent").style.display = "none";
+    }
+});
 
-// Firebase Authentication - Login
-let currentAdmin = "";
-
-async function handleLogin() {
-    const email = document.getElementById("loginEmail").value;
+// Login function
+async function loginWithEmail() {
+    const email = document.getElementById("loginEmail").value.trim();
     const password = document.getElementById("loginPassword").value;
+    const errorDiv = document.getElementById("loginError");
+    const loginBtn = document.getElementById("loginButton");
+    
+    if (!email || !password) {
+        errorDiv.innerHTML = "❌ Please enter both email and password";
+        return;
+    }
+    
+    // Show loading state
+    const originalText = loginBtn.innerHTML;
+    loginBtn.innerHTML = '<span class="loading-spinner"></span> Logging in...';
+    loginBtn.disabled = true;
+    
     try {
         const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
-        currentAdmin = userCredential.user.email.split('@')[0];
-        document.getElementById("adminNameDisplay").innerText = currentAdmin;
-        document.getElementById("passwordModal").style.display = "none";
-        document.getElementById("mainContent").style.display = "block";
-        localStorage.setItem("admin", currentAdmin);
-        await loadRequests();
-    } catch(error) {
-        document.getElementById("loginError").innerHTML = "❌ " + error.message;
+        console.log("Logged in as:", userCredential.user.email);
+        errorDiv.innerHTML = "";
+    } catch (error) {
+        console.error("Login error:", error);
+        let errorMessage = "❌ Login failed: ";
+        switch (error.code) {
+            case 'auth/invalid-email':
+                errorMessage += "Invalid email format";
+                break;
+            case 'auth/user-disabled':
+                errorMessage += "Account disabled";
+                break;
+            case 'auth/user-not-found':
+                errorMessage += "User not found";
+                break;
+            case 'auth/wrong-password':
+                errorMessage += "Wrong password";
+                break;
+            default:
+                errorMessage += error.message;
+        }
+        errorDiv.innerHTML = errorMessage;
+        loginBtn.innerHTML = originalText;
+        loginBtn.disabled = false;
     }
 }
 
-firebase.auth().onAuthStateChanged(async (user) => {
-    if (user) {
-        currentAdmin = localStorage.getItem("admin") || user.email.split('@')[0];
-        document.getElementById("adminNameDisplay").innerText = currentAdmin;
-        document.getElementById("passwordModal").style.display = "none";
-        document.getElementById("mainContent").style.display = "block";
-        await loadRequests();
-    } else {
-        document.getElementById("passwordModal").style.display = "flex";
-        document.getElementById("mainContent").style.display = "none";
-    }
-});
-
-function logout() {
-    if(confirm("Logout?")) {
-        firebase.auth().signOut();
-        localStorage.removeItem("admin");
+// Logout function
+async function logout() {
+    if (confirm("Logout?")) {
+        try {
+            await firebase.auth().signOut();
+            showToast("Logged out successfully");
+        } catch (error) {
+            console.error("Logout error:", error);
+            showToast("Error logging out");
+        }
     }
 }
 
-// Check authentication state on page load
-firebase.auth().onAuthStateChanged(async (user) => {
-    if (user) {
-        currentAdmin = localStorage.getItem("adminName") || user.email.split('@')[0];
-        document.getElementById("adminNameDisplay").innerText = currentAdmin;
-        document.getElementById("passwordModal").style.display = "none";
-        document.getElementById("mainContent").style.display = "block";
-        await loadRequests();
-    } else {
-        document.getElementById("passwordModal").style.display = "flex";
-        document.getElementById("mainContent").style.display = "none";
-        document.getElementById("loginEmail").value = "";
-        document.getElementById("loginPassword").value = "";
-        document.getElementById("signupEmail").value = "";
-        document.getElementById("signupPassword").value = "";
-        document.getElementById("loginError").innerHTML = "";
-    }
-});
+function goBackToIndex() { 
+    window.location.href = "index.html"; 
+}
+
+function openAnalytics() { 
+    window.open("analytics.html", "_blank"); 
+}
+
+function openRevenue() { 
+    window.open("revenue.html", "_blank"); 
+}
 
 async function loadRequests() {
     try {
@@ -880,7 +925,10 @@ async function loadRequests() {
         findDuplicateRequests();
         renderUI();
         updateStats();
-    } catch(e) { showToast("Error loading"); }
+    } catch(e) { 
+        console.error("Error loading requests:", e);
+        showToast("Error loading data"); 
+    }
 }
 
 function findDuplicateRequests() {
@@ -925,7 +973,11 @@ async function updateRequest(id, items) {
         showToast(`✅ Updated by ${currentAdmin}`);
         await loadRequests();
         return true;
-    } catch(e) { showToast("Update error"); return false; }
+    } catch(e) { 
+        console.error("Update error:", e);
+        showToast("Update error"); 
+        return false;
+    }
 }
 
 async function approveItemFlex(reqId, idx) {
@@ -1218,18 +1270,36 @@ function renderUI() {
     updateStats();
 }
 
-function copyDocId(docId) { navigator.clipboard.writeText(docId).then(() => showToast("📋 ID Copied")).catch(() => showToast("❌ Copy Failed")); }
-function logout() { 
-    if(confirm("Logout?")) { 
-        firebase.auth().signOut().then(() => {
-            localStorage.removeItem("adminEmail");
-            localStorage.removeItem("adminName");
-            showToast("Logged out successfully");
-        });
-    } 
+function copyDocId(docId) { 
+    navigator.clipboard.writeText(docId).then(() => showToast("📋 ID Copied")).catch(() => showToast("❌ Copy Failed")); 
 }
-function escapeHtml(str) { return str?.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])) || ''; }
-function showToast(msg) { const t = document.createElement("div"); t.className = "toast"; t.innerText = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2500); }
+
+function escapeHtml(str) { 
+    return str?.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])) || ''; 
+}
+
+function showToast(msg) { 
+    const t = document.createElement("div"); 
+    t.className = "toast"; 
+    t.innerText = msg; 
+    document.body.appendChild(t); 
+    setTimeout(() => t.remove(), 2500); 
+}
+
+// Enable Enter key to login
+document.addEventListener('DOMContentLoaded', () => {
+    const emailInput = document.getElementById('loginEmail');
+    const passwordInput = document.getElementById('loginPassword');
+    
+    const handleEnter = (e) => {
+        if (e.key === 'Enter') {
+            loginWithEmail();
+        }
+    };
+    
+    if (emailInput) emailInput.addEventListener('keypress', handleEnter);
+    if (passwordInput) passwordInput.addEventListener('keypress', handleEnter);
+});
 </script>
 </body>
 </html>
