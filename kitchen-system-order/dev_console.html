@@ -329,6 +329,24 @@ let currentOrderDocId = null, currentOrderData = null, currentOrderStatus = "pen
 let currentMenuItems = [], currentSelectedKitchen = "";
 let freehandMode = false;
 
+
+
+// ============ KITCHEN PASSWORD MANAGEMENT FUNCTIONS ============
+
+// List of all kitchens
+// Replace the ALL_KITCHENS array and KITCHEN_JSON_FILES with these safe versions:
+
+// List of all kitchens with SAFE IDs (no spaces or special characters)
+const ALL_KITCHENS = [
+    { id: "Hot_Kitchen", name: "Hot Kitchen" },
+    { id: "Cold_Kitchen", name: "Cold Kitchen" },
+    { id: "Pastry_Bakery", name: "Pastry / Bakery" },
+    { id: "Butchery", name: "Butchery" },
+    { id: "Beach_House", name: "Beach House" },
+    { id: "Nihon_Kitchen", name: "Nihon Kitchen" },
+    { id: "Staff_Kitchen", name: "Staff Kitchen" }
+];
+
 const KITCHEN_JSON_FILES = { 
     "Hot Kitchen": "hot-kitchen.json",
     "Cold Kitchen": "cold-kitchen.json", 
@@ -339,20 +357,6 @@ const KITCHEN_JSON_FILES = {
     "Staff Kitchen": "staff-kitchen.json"
 };
 const JSON_BASE_PATH = "items/";
-
-// ============ KITCHEN PASSWORD MANAGEMENT FUNCTIONS ============
-
-// List of all kitchens
-const ALL_KITCHENS = [
-    "Hot Kitchen",
-    "Cold Kitchen",
-    "Pastry / Bakery",
-    "Butchery",
-    "Beach House",
-    "Nihon Kitchen",
-    "Staff Kitchen"
-];
-
 let currentDefaultPassword = "kitchen123";
 
 // Set first password for ALL kitchens (initial setup)
