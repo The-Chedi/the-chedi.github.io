@@ -121,7 +121,6 @@ hr { border-color: #2a3a5a; margin: 15px 0; }
 .password-value { font-family: monospace; font-size: 1.1rem; background: #0a0e27; padding: 8px 16px; border-radius: 8px; display: inline-block; margin: 10px 0; }
 .password-input-group { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
 .password-input { flex: 1; background: #1a1a2e; border: 1px solid #4a3a7a; padding: 10px; border-radius: 8px; color: white; font-family: monospace; }
-.show-hide-btn { background: #334155; padding: 5px 12px; font-size: 0.7rem; }
 .kitchen-password-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px; margin-top: 20px; }
 .select-kitchen { background: #1a1a2e; border: 1px solid #8b5cf6; padding: 12px; border-radius: 12px; margin-bottom: 20px; }
 .select-kitchen select { background: #0a0e27; border: 1px solid #4a3a7a; padding: 10px; border-radius: 8px; color: white; font-family: monospace; width: 100%; margin-top: 10px; }
@@ -257,13 +256,13 @@ hr { border-color: #2a3a5a; margin: 15px 0; }
                     <label style="color: #8b5cf6; font-weight: bold;">🍳 Select Kitchen to Manage:</label>
                     <select id="kitchenSelect" onchange="loadSelectedKitchenPassword()">
                         <option value="">-- Select a kitchen --</option>
-                        <option value="Hot Kitchen">🔥 Hot Kitchen</option>
-                        <option value="Cold Kitchen">❄️ Cold Kitchen</option>
-                        <option value="Pastry / Bakery">🥐 Pastry / Bakery</option>
+                        <option value="Hot_Kitchen">🔥 Hot Kitchen</option>
+                        <option value="Cold_Kitchen">❄️ Cold Kitchen</option>
+                        <option value="Pastry_Bakery">🥐 Pastry / Bakery</option>
                         <option value="Butchery">🥩 Butchery</option>
-                        <option value="Beach House">🏖️ Beach House</option>
-                        <option value="Nihon Kitchen">🍣 Nihon Kitchen</option>
-                        <option value="Staff Kitchen">👨‍🍳 Staff Kitchen</option>
+                        <option value="Beach_House">🏖️ Beach House</option>
+                        <option value="Nihon_Kitchen">🍣 Nihon Kitchen</option>
+                        <option value="Staff_Kitchen">👨‍🍳 Staff Kitchen</option>
                     </select>
                 </div>
 
@@ -329,24 +328,6 @@ let currentOrderDocId = null, currentOrderData = null, currentOrderStatus = "pen
 let currentMenuItems = [], currentSelectedKitchen = "";
 let freehandMode = false;
 
-
-
-// ============ KITCHEN PASSWORD MANAGEMENT FUNCTIONS ============
-
-// List of all kitchens
-// Replace the ALL_KITCHENS array and KITCHEN_JSON_FILES with these safe versions:
-
-// List of all kitchens with SAFE IDs (no spaces or special characters)
-const ALL_KITCHENS = [
-    { id: "Hot_Kitchen", name: "Hot Kitchen" },
-    { id: "Cold_Kitchen", name: "Cold Kitchen" },
-    { id: "Pastry_Bakery", name: "Pastry / Bakery" },
-    { id: "Butchery", name: "Butchery" },
-    { id: "Beach_House", name: "Beach House" },
-    { id: "Nihon_Kitchen", name: "Nihon Kitchen" },
-    { id: "Staff_Kitchen", name: "Staff Kitchen" }
-];
-
 const KITCHEN_JSON_FILES = { 
     "Hot Kitchen": "hot-kitchen.json",
     "Cold Kitchen": "cold-kitchen.json", 
@@ -357,6 +338,20 @@ const KITCHEN_JSON_FILES = {
     "Staff Kitchen": "staff-kitchen.json"
 };
 const JSON_BASE_PATH = "items/";
+
+// ============ KITCHEN PASSWORD MANAGEMENT FUNCTIONS ============
+
+// List of all kitchens with SAFE IDs (no spaces or special characters)
+const ALL_KITCHENS = [
+    { id: "Hot_Kitchen", name: "Hot Kitchen", display: "🔥 Hot Kitchen" },
+    { id: "Cold_Kitchen", name: "Cold Kitchen", display: "❄️ Cold Kitchen" },
+    { id: "Pastry_Bakery", name: "Pastry / Bakery", display: "🥐 Pastry / Bakery" },
+    { id: "Butchery", name: "Butchery", display: "🥩 Butchery" },
+    { id: "Beach_House", name: "Beach House", display: "🏖️ Beach House" },
+    { id: "Nihon_Kitchen", name: "Nihon Kitchen", display: "🍣 Nihon Kitchen" },
+    { id: "Staff_Kitchen", name: "Staff Kitchen", display: "👨‍🍳 Staff Kitchen" }
+];
+
 let currentDefaultPassword = "kitchen123";
 
 // Set first password for ALL kitchens (initial setup)
@@ -383,12 +378,13 @@ async function setFirstPasswordForAll() {
             isFirstSetup: true
         });
         
-        // Set password for each kitchen
+        // Set password for each kitchen using SAFE IDs
         const batch = db.batch();
         for (const kitchen of ALL_KITCHENS) {
-            const docRef = db.collection("kitchen_passwords").doc(kitchen);
+            const docRef = db.collection("kitchen_passwords").doc(kitchen.id);
             batch.set(docRef, {
                 password: newPassword,
+                kitchenName: kitchen.name,
                 updatedAt: new Date().toISOString(),
                 updatedBy: currentDeveloperEmail,
                 isCustom: false
@@ -432,7 +428,7 @@ async function loadAllKitchenPasswords() {
         const passwordsHtml = [];
         
         for (const kitchen of ALL_KITCHENS) {
-            const docRef = db.collection("kitchen_passwords").doc(kitchen);
+            const docRef = db.collection("kitchen_passwords").doc(kitchen.id);
             const doc = await docRef.get();
             let currentPassword = currentDefaultPassword;
             let isCustom = false;
@@ -443,19 +439,19 @@ async function loadAllKitchenPasswords() {
             }
             
             passwordsHtml.push(`
-                <div class="password-card" id="password-card-${kitchen.replace(/\s/g, '')}">
+                <div class="password-card" id="password-card-${kitchen.id}">
                     <div class="password-header">
-                        <span class="kitchen-name">🍳 ${kitchen}</span>
-                        <button class="btn btn-secondary" onclick="resetKitchenPassword('${kitchen}')" style="font-size: 0.7rem;">↺ Reset to Default</button>
+                        <span class="kitchen-name">${kitchen.display}</span>
+                        <button class="btn btn-secondary" onclick="resetKitchenPassword('${kitchen.id}')" style="font-size: 0.7rem;">↺ Reset to Default</button>
                     </div>
-                    <div class="password-value" id="password-value-${kitchen.replace(/\s/g, '')}">
+                    <div class="password-value" id="password-value-${kitchen.id}">
                         ${isCustom ? '<span style="color:#f59e0b;">🔐 Custom Password:</span>' : '<span style="color:#9ca3af;">📋 Using Default:</span>'}
                         <strong style="color: #00d4ff; margin-left: 8px;">${currentPassword}</strong>
                     </div>
                     <div class="password-input-group">
-                        <input type="password" id="password-input-${kitchen.replace(/\s/g, '')}" class="password-input" placeholder="Enter new password for ${kitchen}" value="${currentPassword}">
-                        <button class="btn btn-primary btn-icon" onclick="togglePasswordVisibility('${kitchen.replace(/\s/g, '')}')" style="padding: 5px 12px;">👁️</button>
-                        <button class="btn btn-success" onclick="updateKitchenPassword('${kitchen}')">💾 Save</button>
+                        <input type="password" id="password-input-${kitchen.id}" class="password-input" placeholder="Enter new password for ${kitchen.name}" value="${currentPassword}">
+                        <button class="btn btn-primary btn-icon" onclick="togglePasswordVisibility('${kitchen.id}')" style="padding: 5px 12px;">👁️</button>
+                        <button class="btn btn-success" onclick="updateKitchenPassword('${kitchen.id}')">💾 Save</button>
                     </div>
                     <div class="note" style="margin-top: 10px;">${isCustom ? 'Custom password set' : 'Using default password'}</div>
                 </div>
@@ -467,23 +463,27 @@ async function loadAllKitchenPasswords() {
         
     } catch (error) {
         console.error("Error loading passwords:", error);
-        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #dc2626;">❌ Error loading passwords: ' + error.message + '</div>';
-        showToast("Error loading passwords", true);
+        container.innerHTML = '<div style="text-align: center; padding: 40px; color: #dc2626;">❌ Error loading passwords. Please check Firestore rules and try again.</div>';
+        showToast("Error loading passwords: " + error.message, true);
     }
 }
 
 // Load selected kitchen password
 async function loadSelectedKitchenPassword() {
     const select = document.getElementById("kitchenSelect");
-    const kitchenName = select.value;
+    const kitchenId = select.value;
     
-    if (!kitchenName) {
+    if (!kitchenId) {
         document.getElementById("individualKitchenManager").style.display = "none";
         return;
     }
     
+    // Find kitchen info
+    const kitchen = ALL_KITCHENS.find(k => k.id === kitchenId);
+    if (!kitchen) return;
+    
     try {
-        const docRef = db.collection("kitchen_passwords").doc(kitchenName);
+        const docRef = db.collection("kitchen_passwords").doc(kitchenId);
         const doc = await docRef.get();
         let currentPassword = currentDefaultPassword;
         let isCustom = false;
@@ -493,7 +493,7 @@ async function loadSelectedKitchenPassword() {
             isCustom = true;
         }
         
-        document.getElementById("selectedKitchenName").innerHTML = `🍳 ${kitchenName}`;
+        document.getElementById("selectedKitchenName").innerHTML = kitchen.display;
         document.getElementById("selectedKitchenPasswordDisplay").innerHTML = isCustom ? 
             `<span style="color:#f59e0b;">🔐 Custom Password:</span> <strong style="color: #00d4ff;">${currentPassword}</strong>` :
             `<span style="color:#9ca3af;">📋 Using Default Password:</span> <strong style="color: #00d4ff;">${currentPassword}</strong>`;
@@ -509,10 +509,10 @@ async function loadSelectedKitchenPassword() {
 // Update selected kitchen password
 async function updateSelectedKitchenPassword() {
     const select = document.getElementById("kitchenSelect");
-    const kitchenName = select.value;
+    const kitchenId = select.value;
     const newPassword = document.getElementById("individualPasswordInput").value.trim();
     
-    if (!kitchenName) {
+    if (!kitchenId) {
         showToast("Please select a kitchen first", true);
         return;
     }
@@ -527,15 +527,18 @@ async function updateSelectedKitchenPassword() {
         return;
     }
     
+    const kitchen = ALL_KITCHENS.find(k => k.id === kitchenId);
+    
     try {
-        await db.collection("kitchen_passwords").doc(kitchenName).set({
+        await db.collection("kitchen_passwords").doc(kitchenId).set({
             password: newPassword,
+            kitchenName: kitchen.name,
             updatedAt: new Date().toISOString(),
             updatedBy: currentDeveloperEmail,
             isCustom: true
         });
         
-        showToast(`✅ Password for ${kitchenName} updated successfully!`);
+        showToast(`✅ Password for ${kitchen.name} updated successfully!`);
         await loadAllKitchenPasswords();
         await loadSelectedKitchenPassword();
         
@@ -548,15 +551,17 @@ async function updateSelectedKitchenPassword() {
 // Reset selected kitchen password to default
 async function resetSelectedKitchenPassword() {
     const select = document.getElementById("kitchenSelect");
-    const kitchenName = select.value;
+    const kitchenId = select.value;
     
-    if (!kitchenName) return;
+    if (!kitchenId) return;
     
-    if (!confirm(`Reset password for ${kitchenName} to the default password?`)) return;
+    const kitchen = ALL_KITCHENS.find(k => k.id === kitchenId);
+    
+    if (!confirm(`Reset password for ${kitchen.name} to the default password?`)) return;
     
     try {
-        await db.collection("kitchen_passwords").doc(kitchenName).delete();
-        showToast(`✅ Password for ${kitchenName} reset to default`);
+        await db.collection("kitchen_passwords").doc(kitchenId).delete();
+        showToast(`✅ Password for ${kitchen.name} reset to default`);
         await loadAllKitchenPasswords();
         await loadSelectedKitchenPassword();
         
@@ -606,8 +611,8 @@ async function updateDefaultPassword() {
 }
 
 // Update password for a specific kitchen
-async function updateKitchenPassword(kitchenName) {
-    const inputId = `password-input-${kitchenName.replace(/\s/g, '')}`;
+async function updateKitchenPassword(kitchenId) {
+    const inputId = `password-input-${kitchenId}`;
     const newPassword = document.getElementById(inputId).value.trim();
     
     if (!newPassword) {
@@ -620,15 +625,18 @@ async function updateKitchenPassword(kitchenName) {
         return;
     }
     
+    const kitchen = ALL_KITCHENS.find(k => k.id === kitchenId);
+    
     try {
-        await db.collection("kitchen_passwords").doc(kitchenName).set({
+        await db.collection("kitchen_passwords").doc(kitchenId).set({
             password: newPassword,
+            kitchenName: kitchen.name,
             updatedAt: new Date().toISOString(),
             updatedBy: currentDeveloperEmail,
             isCustom: true
         });
         
-        showToast(`✅ Password for ${kitchenName} updated successfully!`);
+        showToast(`✅ Password for ${kitchen.name} updated successfully!`);
         await loadAllKitchenPasswords();
         
     } catch (error) {
@@ -638,12 +646,14 @@ async function updateKitchenPassword(kitchenName) {
 }
 
 // Reset kitchen password to default
-async function resetKitchenPassword(kitchenName) {
-    if (!confirm(`Reset password for ${kitchenName} to the default password?`)) return;
+async function resetKitchenPassword(kitchenId) {
+    const kitchen = ALL_KITCHENS.find(k => k.id === kitchenId);
+    
+    if (!confirm(`Reset password for ${kitchen.name} to the default password?`)) return;
     
     try {
-        await db.collection("kitchen_passwords").doc(kitchenName).delete();
-        showToast(`✅ Password for ${kitchenName} reset to default`);
+        await db.collection("kitchen_passwords").doc(kitchenId).delete();
+        showToast(`✅ Password for ${kitchen.name} reset to default`);
         await loadAllKitchenPasswords();
         
     } catch (error) {
@@ -659,7 +669,7 @@ async function resetAllKitchenPasswords() {
     try {
         const batch = db.batch();
         for (const kitchen of ALL_KITCHENS) {
-            const docRef = db.collection("kitchen_passwords").doc(kitchen);
+            const docRef = db.collection("kitchen_passwords").doc(kitchen.id);
             batch.delete(docRef);
         }
         await batch.commit();
@@ -692,7 +702,7 @@ async function setDefaultPasswordForAll() {
         
         const batch = db.batch();
         for (const kitchen of ALL_KITCHENS) {
-            const docRef = db.collection("kitchen_passwords").doc(kitchen);
+            const docRef = db.collection("kitchen_passwords").doc(kitchen.id);
             batch.delete(docRef);
         }
         await batch.commit();
@@ -707,8 +717,8 @@ async function setDefaultPasswordForAll() {
 }
 
 // Toggle password visibility
-function togglePasswordVisibility(kitchenKey) {
-    const input = document.getElementById(`password-input-${kitchenKey}`);
+function togglePasswordVisibility(kitchenId) {
+    const input = document.getElementById(`password-input-${kitchenId}`);
     if (input.type === "password") {
         input.type = "text";
     } else {
@@ -716,7 +726,21 @@ function togglePasswordVisibility(kitchenKey) {
     }
 }
 
-// ============ GLOBAL FREEHAND MODE FUNCTIONS ============
+// ============ (Rest of your existing functions remain the same) ============
+// [The rest of your functions - saveFreehandModeToFirestore, loadFreehandModeFromFirestore,
+// toggleFreehandMode, updateFreehandModeUI, getQuantityLimits, loadAuthorizedDevelopers,
+// displayAuthorizedDevelopers, addAuthorizedDeveloper, removeAuthorizedDeveloper,
+// isAuthorized, loginWithFirebase, logout, getRequestStatus, refreshOrdersList,
+// listAllOrders, loadOrderById, fetchOrderDocument, updateEditButtonsBasedOnStatus,
+// saveOrderDocument, deleteOrderDocument, deleteOrderById, renderKitchenMenuButtons,
+// loadKitchenMenuJSON, renderMenuItemsList, addMenuItemToOrder, quickAddItemFromOrder,
+// restoreOrderToPending, restoreSingleToPending, updateGeneratorUI, addItem,
+// removeItemGen, clearAllItems, clearForm, addSample, copyJSON, downloadJSON,
+// createNewUser, sendUserPasswordReset, goBackToHome, escapeHtml, escapeJSON,
+// showToast, switchTab]
+
+// I'm including the essential functions here, but please keep your existing ones
+
 async function saveFreehandModeToFirestore(isEnabled) {
     try {
         await db.collection("settings").doc("global_settings").set({
@@ -789,7 +813,6 @@ function getQuantityLimits(item) {
     return { maxLimit: item.maxLimit || 2, step: item.step || 1 };
 }
 
-// ============ AUTH & AUTHORIZATION ============
 async function loadAuthorizedDevelopers() {
     try { 
         const doc = await db.collection("settings").doc("authorized_devs").get(); 
@@ -890,7 +913,6 @@ function logout() {
     }); 
 }
 
-// ============ ORDER MANAGEMENT FUNCTIONS ============
 function getRequestStatus(items) { 
     if(!items || !items.length) return "pending"; 
     let all = true, a = 0, r = 0; 
@@ -1172,7 +1194,6 @@ async function restoreSingleToPending() {
     else showToast("No document loaded", true); 
 }
 
-// ============ JSON GENERATOR ============
 let menuItemsGen = [];
 
 function updateGeneratorUI() { 
@@ -1269,7 +1290,6 @@ function downloadJSON() {
     showToast("📎 JSON file downloaded");
 }
 
-// ============ USER MANAGEMENT ============
 async function createNewUser() { 
     const email = document.getElementById("newUserEmail").value.trim(); 
     const pwd = document.getElementById("newUserPassword").value; 
@@ -1309,9 +1329,8 @@ async function sendUserPasswordReset() {
     } 
 }
 
-// ============ UTILITIES ============
 function goBackToHome() {
-    window.location.href = '/index.html';
+    window.location.href = 'https://the-chedi.github.io/kitchen-system-order/';
 }
 
 function escapeHtml(str) { if(!str) return ''; return str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])); }
