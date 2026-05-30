@@ -1,16 +1,23 @@
 // firebase-config.js
 const firebaseConfig = {
-    apiKey: "AIzaSyB7xF2kP5jgH6xyGg7-S-T_QgMoBDIoBBc",
-    authDomain: "kitchenordersystem-66eb2.firebaseapp.com",
-    projectId: "kitchenordersystem-66eb2",
-    storageBucket: "kitchenordersystem-66eb2.firebasestorage.app",
-    messagingSenderId: "786074432195",
-    appId: "1:786074432195:web:8381f2cba8f43002232876"
+    apiKey: "AIzaSyD57ErKNYwqGbLcriDYYvPUtVIw8jRncXQ",
+    authDomain: "system-order-kitchen.firebaseapp.com",
+    projectId: "system-order-kitchen",
+    storageBucket: "system-order-kitchen.firebasestorage.app",
+    messagingSenderId: "429224554052",
+    appId: "1:429224554052:web:85d32727439fe55efcd611"
 };
 
 // Initialize Firebase
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
+
 const db = firebase.firestore();
+const auth = firebase.auth();
+
+// Enable persistence (keeps user logged in)
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
 console.log("✅ Firebase initialized successfully");
+console.log("✅ Firestore and Auth services ready");
