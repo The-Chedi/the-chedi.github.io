@@ -789,6 +789,41 @@ body.arabic .items-scroll-container {
 .history-toggle-btn:hover {
     background: #6c3483;
 }
+/* Freehand Status Indicator */
+.freehand-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 12px;
+    background: rgba(0,0,0,0.3);
+    padding: 4px 10px;
+    border-radius: 30px;
+    font-size: 0.7rem;
+}
+
+.status-light {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #dc2626;
+    transition: all 0.3s ease;
+}
+
+.status-light.active {
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+    70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.status-text {
+    font-weight: 500;
+}
 </style>
 </head>
 <body>
@@ -798,6 +833,11 @@ body.arabic .items-scroll-container {
         <div class="logo">
             <span class="logo-icon">🍳</span>
             <span>Kitchen Order <span>| Chef</span></span>
+                <!-- Freehand Status Indicator -->
+            <div class="freehand-status" id="freehandStatusIndicator">
+                 <div class="status-light" id="statusLight"></div>
+                <span class="status-text" id="statusText">Freehand: OFF</span>
+            </div>
         </div>
         <div class="header-buttons">
             <button class="lang-btn" id="langToggleBtn" onclick="toggleLanguage()">🇸🇦 العربية</button>
@@ -869,6 +909,33 @@ const translations = {
 
 let currentLang = 'en';
 
+// ============ FREEHAND MODE FUNCTIONS ============
+
+function updateFreehandUI() {
+    updateFreehandStatusIndicator();  // Add this line
+    if (currentKitchen) {
+        renderItemsList(currentKitchen);
+        renderCart(currentKitchen);
+    }
+    const statusMsg = freehandModeActive ? 
+        '🔓 FREEHAND MODE ACTIVE - No quantity limits!' : 
+        '🔒 Freehand mode disabled - Limits restored';
+    showToast(statusMsg);
+}
+function initFreehandModeListener() {
+    if (freehandUnsubscribe) freehandUnsubscribe();
+    
+    freehandUnsubscribe = db.collection("settings").doc("global_settings").onSnapshot((doc) => {
+        if (doc.exists) {
+            freehandModeActive = doc.data().freehandMode === true;
+        } else {
+            freehandModeActive = false;
+        }
+        updateFreehandUI();
+    }, (error) => {
+        console.error("Error listening to freehand mode:", error);
+    });
+}
 function toggleLanguage() {
     if(currentLang === 'en') {
         currentLang = 'ar';
@@ -889,6 +956,7 @@ function toggleLanguage() {
     }
     generatePages();
     if(currentKitchen) selectKitchen(currentKitchen);
+    updateFreehandStatusIndicator();
 }
 
 function getItemName(item) {
@@ -922,7 +990,24 @@ let selectedQuantities = {};
 let addedItemsStatus = {};
 let currentItemsList = [];
 let autoRefreshInterval = null;
-
+let freehandModeActive = false;
+let freehandUnsubscribe = null;
+// Update freehand status indicator in header
+function updateFreehandStatusIndicator() {
+    const statusLight = document.getElementById('statusLight');
+    const statusText = document.getElementById('statusText');
+    if (statusLight && statusText) {
+        if (freehandModeActive) {
+            statusLight.className = 'status-light active';
+            statusText.innerHTML = '🟢 Freehand: ON';
+            statusText.style.color = '#10b981';
+        } else {
+            statusLight.className = 'status-light inactive';
+            statusText.innerHTML = '⚫ Freehand: OFF';
+            statusText.style.color = '#999';
+        }
+    }
+}
 function startAutoRefresh() {
     if(autoRefreshInterval) clearInterval(autoRefreshInterval);
     autoRefreshInterval = setInterval(function() {
@@ -1143,7 +1228,7 @@ function filterItemsByFirstChar(kitchen, searchChar) {
             <div class="item-main-row"><div class="item-info"><div class="item-name">${escapeHtml(displayName)}</div>
             <div class="item-code">${item.code || "N/A"}</div><div class="item-price">💰 ${itemPrice.toFixed(2)} ${t('egp')} / ${item.unit}</div></div>
             <div class="item-meta"><span class="item-unit">${item.unit || "pcs"}</span>
-            <div class="item-max">${t('max')} ${item.maxLimit || 99}</div><div class="item-step">Step: ${stepText}</div></div>
+            <div class="item-max" style="color:${freehandModeActive ? '#10b981' : '#e67e22'};">${t('max')} ${freehandModeActive ? '∞' : (item.maxLimit || 99)}</div><div class="item-step">Step: ${stepText}</div></div>
             <div class="item-actions"><div class="qty-picker">
             <button class="qty-btn" data-step="-${stepValue}" data-code="${item.code}" data-max="${item.maxLimit || 99}">−</button>
             <span class="qty-value" id="qtySpan_${kitchenId}_${safeCode}">${displayQty}</span>
@@ -1193,7 +1278,7 @@ function changeQuantity(kitchen, code, delta, maxLimit) {
     let current = selectedQuantities[kitchen][code] || 0;
     let newQty = parseFloat((current + delta).toFixed(1));
     if (newQty < 0) newQty = 0;
-    if (newQty > maxLimit) newQty = maxLimit;
+    if (!freehandModeActive && newQty > maxLimit) newQty = maxLimit;
     selectedQuantities[kitchen][code] = newQty;
     const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
     const safeCode = (code || "").replace(/[^a-zA-Z0-9]/g, '_');
@@ -1215,10 +1300,10 @@ function addItemWithQuantity(kitchen, code, itemName, unit, maxLimit, price, ste
     if (!item) return;
     const existing = kitchenData[kitchen].cart.find(i => i.code === code);
     let currentQty = existing ? existing.qty : 0;
-    let maxAllowed = item.maxLimit || maxLimit;
+    let maxAllowed = freehandModeActive ? 999999 : (item.maxLimit || maxLimit);
     let remaining = maxAllowed - currentQty;
     let actualQtyToAdd = qty;
-    if (remaining <= 0) { showToast(`⚠️ Maximum ${maxAllowed} ${item.unit || unit} reached!`); return; }
+    if (!freehandModeActive && remaining <= 0) { showToast(`⚠️ Maximum ${maxAllowed} ${item.unit || unit} reached!`); return; }
     if (qty > remaining) { actualQtyToAdd = remaining; showToast(`⚠️ Only ${remaining.toFixed(1)} remaining. Added ${remaining.toFixed(1)} instead of ${qty.toFixed(1)}`); }
     const itemPrice = item.price || price || 0;
     if (existing) { existing.qty += actualQtyToAdd; showToast(`✓ Added ${actualQtyToAdd.toFixed(step === 0.5 ? 1 : 0)} ${getItemName(item)}`); }
@@ -1447,6 +1532,9 @@ startAutoRefresh();
 loadRequestsFromFirebase();
 loadLastSelectedKitchen();
 db.collection("kitchen_requests").onSnapshot(() => { loadRequestsFromFirebase(); });
+// Initialize Freehand Mode Listener
+initFreehandModeListener();
+
 </script>
 </body>
 </html>

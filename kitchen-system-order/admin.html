@@ -3,11 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="firebase-config.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-<title>Admin Dashboard - Firebase Doc ID Manager</title>
+<title>Admin Dashboard - Full Quantity Control</title>
 
 <style>
 * {
@@ -87,15 +86,6 @@ body {
     background: #e74c3c;
 }
 
-.btn-dev {
-    background: #0052cc;
-    border: 1px solid #4d9eff;
-}
-
-.btn-dev:hover {
-    background: #0066ff;
-}
-
 .stats-grid {
     display: grid;
     grid-template-columns: repeat(5, 1fr);
@@ -166,6 +156,48 @@ body {
     margin-bottom: 20px;
     flex-wrap: wrap;
 }
+ .info-item {
+    display: flex;
+    flex-direction: column;
+    min-width: 140px;
+}
+
+.info-label {
+    font-size: 0.65rem;
+    color: #999;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+}
+
+.info-value {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #2c3e50;
+}
+
+.firebase-id {
+    font-family: monospace;
+    font-size: 11px;
+    color: #1e3c72;
+    cursor: pointer;
+    background: #eef4ff;
+    border: 1px solid #d6e4ff;
+    padding: 6px 10px;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    word-break: break-all;
+    max-width: 250px;
+}
+
+.firebase-id:hover {
+    background: #dbeafe;
+    border-color: #93c5fd;
+    transform: scale(1.02);
+}
+
+.firebase-id:active {
+    transform: scale(0.98);
+}   
 
 .tab-btn {
     padding: 8px 20px;
@@ -206,39 +238,6 @@ body {
     font-size: 0.9rem;
     color: #1e3c72;
     font-family: monospace;
-    background: #eef2ff;
-    padding: 4px 12px;
-    border-radius: 40px;
-    display: inline-block;
-}
-
-.firebase-id-badge {
-    background: #2c3e50;
-    color: #ecf0f1;
-    font-family: monospace;
-    font-size: 0.7rem;
-    padding: 4px 12px;
-    border-radius: 40px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-left: 10px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.firebase-id-badge:hover {
-    background: #e94560;
-    transform: scale(1.02);
-}
-
-.copy-icon {
-    background: #0066ff;
-    color: white;
-    padding: 2px 6px;
-    border-radius: 20px;
-    font-size: 0.7rem;
-    margin-left: 5px;
 }
 
 .duplicate-warning {
@@ -571,6 +570,34 @@ body {
     color: #1e3c72;
 }
 
+.user-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+.user-btn {
+    background: #f0f2f5;
+    border: none;
+    padding: 12px;
+    border-radius: 40px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s;
+}
+
+.user-btn:hover {
+    background: #e0e0e0;
+}
+
+.user-title {
+    font-size: 11px;
+    color: #666;
+    margin-top: 3px;
+}
+
 .modal-content input {
     width: 100%;
     padding: 12px;
@@ -631,6 +658,66 @@ body {
     width: 90%;
 }
 
+.confirm-modal-content h3 {
+    color: #e74c3c;
+    margin-bottom: 15px;
+    font-size: 1.4rem;
+}
+
+.confirm-modal-content .warning-text {
+    color: #e74c3c;
+    font-weight: bold;
+    margin: 15px 0;
+}
+
+.confirm-modal-content input {
+    width: 100%;
+    padding: 12px;
+    margin: 20px 0;
+    border: 2px solid #ddd;
+    border-radius: 12px;
+    font-size: 16px;
+    text-align: center;
+    letter-spacing: 2px;
+    font-weight: bold;
+}
+
+.confirm-modal-content input:focus {
+    outline: none;
+    border-color: #e74c3c;
+}
+
+.confirm-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 10px;
+}
+
+.confirm-buttons button {
+    flex: 1;
+    padding: 12px;
+    border-radius: 40px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-size: 14px;
+}
+
+.btn-confirm-delete {
+    background: #e74c3c;
+    color: white;
+}
+
+.btn-confirm-delete:disabled {
+    background: #95a5a6;
+    cursor: not-allowed;
+}
+
+.btn-cancel-delete {
+    background: #95a5a6;
+    color: white;
+}
+
 .free-adjust-badge {
     background: #3498db;
     color: white;
@@ -645,8 +732,16 @@ body {
     .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
     .stat-card { padding: 12px; }
     .stat-number { font-size: 1.5rem; }
-    .firebase-id-badge { font-size: 0.6rem; padding: 2px 8px; }
-    .request-header { flex-direction: column; align-items: flex-start; }
+    .kitchen-filters { overflow-x: auto; flex-wrap: nowrap; }
+    .kitchen-filter-btn { white-space: nowrap; font-size: 11px; }
+    .tabs { overflow-x: auto; flex-wrap: nowrap; }
+    .tab-btn { white-space: nowrap; font-size: 12px; padding: 6px 14px; }
+    .request-info { flex-direction: column; gap: 8px; }
+    .admin-table th, .admin-table td { padding: 8px 6px; font-size: 11px; }
+    .approval-input { width: 70px; padding: 5px; font-size: 11px; }
+    .btn-approve { padding: 4px 10px; font-size: 0.65rem; }
+    .request-actions { flex-direction: column; }
+    .request-total-badge { flex-direction: column; gap: 5px; text-align: center; }
 }
 
 .container {
@@ -658,17 +753,19 @@ body {
 </head>
 <body>
 
-<!-- FIREBASE AUTH LOGIN MODAL -->
-<div id="authModal" class="modal">
+<div id="passwordModal" class="modal">
     <div class="modal-content">
         <h2>🔐 Admin Login</h2>
-        <input type="email" id="loginEmail" placeholder="Email Address">
-        <input type="password" id="loginPassword" placeholder="Password">
-        <button onclick="loginWithFirebase()">Login</button>
+        <div class="user-selector">
+            <button class="user-btn" onclick="selectUser('Marco')">👨‍💼 Marco<br><span class="user-title">Administrator</span></button>
+            <button class="user-btn" onclick="selectUser('Nady')">👨‍💼 Nady<br><span class="user-title">Administrator</span></button>
+            <button class="user-btn" onclick="selectUser('Ahmed')">👨‍💻 Ahmed<br><span class="user-title">Administrator</span></button>
+            <button class="user-btn" onclick="selectUser('Nader')">👨‍💼 Nader<br><span class="user-title">Administrator</span></button>
+        </div>
+        <input type="password" id="passwordInput" placeholder="Enter password" style="display:none;">
+        <button id="loginBtn" style="display:none;" onclick="checkLogin()">Login</button>
         <div id="loginError" class="error-msg"></div>
         <button class="close-modal" onclick="goBackToIndex()">← Back to Home</button>
-        <hr style="margin: 15px 0;">
-        <button onclick="openDevConsole()" style="background:#0052cc; color:white; width:100%; padding:12px; border-radius:40px; border:none; cursor:pointer;">🛠️ Developer Console</button>
     </div>
 </div>
 
@@ -676,15 +773,14 @@ body {
     <div class="header">
         <div class="header-content">
             <div class="logo">
-                <span class="logo-icon">🔥</span>
+                <span class="logo-icon">👑</span>
                 <span>Admin <span>Dashboard</span></span>
-                <span class="free-adjust-badge">🆔 FIREBASE DOC ID VISIBLE</span>
+                <span class="free-adjust-badge">✏️ FULL QUANTITY CONTROL</span>
             </div>
             <div style="display: flex; align-items: center; gap: 15px;">
                 <span id="adminNameDisplay" style="font-weight: 600;"></span>
-                <span id="userEmailDisplay" style="font-size: 10px; opacity: 0.8;"></span>
+                <span style="font-size: 10px; opacity: 0.8;">Administrator</span>
                 <button class="btn-header" onclick="logout()">🚪 Logout</button>
-                <button class="btn-header btn-dev" onclick="openDevConsole()">🛠️ Dev Console</button>
             </div>
             <div class="header-buttons">
                 <button class="btn-header btn-analytics" onclick="openAnalytics()">📊 Analytics</button>
@@ -712,87 +808,42 @@ body {
 </div>
 
 <script>
+const ADMIN_PASSWORDS = { "Marco": "M1r50123", "Nady": "Nn639123", "Ahmed": "j1cadm1n", "Nader": "nader123" };
 const KITCHENS = ["Hot Kitchen", "Cold Kitchen", "Pastry / Bakery", "Butchery", "Beach House", "Nihon Kitchen", "Staff Kitchen"];
 
 let currentAdmin = "";
 let currentKitchen = "all";
 let currentStatus = "pending";
 let allRequests = [];
+let selectedUser = "";
 let duplicateMap = new Map();
 
-// ============ FIREBASE AUTHENTICATION ============
 function goBackToIndex() { window.location.href = "index.html"; }
 function openAnalytics() { window.open("analytics.html", "_blank"); }
 function openRevenue() { window.open("revenue.html", "_blank"); }
-function openDevConsole() { window.open("dev_console.html", "_blank"); }
 
-async function loginWithFirebase() {
-    const email = document.getElementById("loginEmail").value.trim();
-    const password = document.getElementById("loginPassword").value;
-    const errorDiv = document.getElementById("loginError");
-    
-    if (!email || !password) {
-        errorDiv.innerHTML = "Please enter email and password";
-        return;
-    }
-    
-    errorDiv.innerHTML = "";
-    
-    try {
-        const userCredential = await auth.signInWithEmailAndPassword(email, password);
-        const user = userCredential.user;
-        
-        currentAdmin = user.email?.split('@')[0] || "Admin";
-        document.getElementById("adminNameDisplay").innerHTML = currentAdmin;
-        document.getElementById("userEmailDisplay").innerHTML = user.email || "";
-        
-        document.getElementById("authModal").style.display = "none";
+function selectUser(user) {
+    selectedUser = user;
+    document.getElementById("passwordInput").style.display = "block";
+    document.getElementById("loginBtn").style.display = "block";
+    document.getElementById("passwordInput").placeholder = `Password for ${user}`;
+    document.getElementById("loginError").innerHTML = "";
+}
+
+function checkLogin() {
+    const pass = document.getElementById("passwordInput").value;
+    if(selectedUser && ADMIN_PASSWORDS[selectedUser] === pass) {
+        currentAdmin = selectedUser;
+        document.getElementById("adminNameDisplay").innerText = currentAdmin;
+        document.getElementById("passwordModal").style.display = "none";
         document.getElementById("mainContent").style.display = "block";
-        
+        localStorage.setItem("admin", currentAdmin);
         loadRequests();
-    } catch(error) {
-        let errorMsg = "Login failed: ";
-        switch(error.code) {
-            case 'auth/user-not-found':
-                errorMsg = "Invalid email or password";
-                break;
-            case 'auth/wrong-password':
-                errorMsg = "Invalid email or password";
-                break;
-            case 'auth/invalid-email':
-                errorMsg = "Invalid email format";
-                break;
-            default:
-                errorMsg = error.message;
-        }
-        errorDiv.innerHTML = errorMsg;
+    } else {
+        document.getElementById("loginError").innerHTML = "❌ Wrong password!";
     }
 }
 
-async function logout() {
-    if(confirm("Are you sure you want to logout?")) {
-        await auth.signOut();
-        document.getElementById("mainContent").style.display = "none";
-        document.getElementById("authModal").style.display = "flex";
-        document.getElementById("loginEmail").value = "";
-        document.getElementById("loginPassword").value = "";
-        document.getElementById("loginError").innerHTML = "";
-    }
-}
-
-// Check auth state on page load
-auth.onAuthStateChanged((user) => {
-    if (user) {
-        currentAdmin = user.email?.split('@')[0] || "Admin";
-        document.getElementById("adminNameDisplay").innerHTML = currentAdmin;
-        document.getElementById("userEmailDisplay").innerHTML = user.email || "";
-        document.getElementById("authModal").style.display = "none";
-        document.getElementById("mainContent").style.display = "block";
-        loadRequests();
-    }
-});
-
-// ============ ALL ORIGINAL FUNCTIONS - NO CHANGES ============
 async function loadRequests() {
     try {
         const snapshot = await db.collection("kitchen_requests").orderBy("timestamp", "desc").get();
@@ -801,7 +852,7 @@ async function loadRequests() {
         findDuplicateRequests();
         renderUI();
         updateStats();
-    } catch(e) { showToast("Error loading: " + e.message); }
+    } catch(e) { showToast("Error loading"); }
 }
 
 function findDuplicateRequests() {
@@ -816,7 +867,7 @@ function findDuplicateRequests() {
     for (const [sig, requests] of signatureMap.entries()) {
         if (requests.length > 1) {
             for (const req of requests) {
-                duplicateMap.set(req.id, { isDuplicate: true, count: requests.length });
+                duplicateMap.set(req.id, { isDuplicate: true, count: requests.length, otherIds: requests.filter(r => r.id !== req.id).map(r => r.requestId) });
             }
         }
     }
@@ -846,13 +897,13 @@ async function updateRequest(id, items) {
         showToast(`✅ Updated by ${currentAdmin}`);
         await loadRequests();
         return true;
-    } catch(e) { showToast("Update error: " + e.message); return false; }
+    } catch(e) { showToast("Update error"); return false; }
 }
 
 async function approveItemFlex(reqId, idx) {
     const input = document.getElementById(`qty_${reqId}_${idx}`);
     let qty = parseFloat(input?.value || 0);
-    if(isNaN(qty) || qty < 0) { showToast("Enter a valid quantity (0 or more)"); return; }
+    if(isNaN(qty) || qty < 0) { showToast("Enter valid quantity"); return; }
     const req = allRequests.find(r => r.id === reqId);
     if(req) {
         const item = req.items[idx];
@@ -868,7 +919,7 @@ async function approveItemFlex(reqId, idx) {
 }
 
 async function rejectItem(reqId, idx) {
-    const reason = prompt(`Rejection reason (${currentAdmin}):`, "Out of stock or unavailable");
+    const reason = prompt(`Rejection reason (${currentAdmin}):`, "Out of stock");
     if(reason) {
         const req = allRequests.find(r => r.id === reqId);
         if(req) {
@@ -885,7 +936,7 @@ async function rejectItem(reqId, idx) {
 }
 
 async function approveAllFlex(reqId) {
-    if(!confirm(`Approve ALL items with current quantities?`)) return;
+    if(!confirm(`Approve ALL items?`)) return;
     const req = allRequests.find(r => r.id === reqId);
     if(req) {
         for(let i=0; i<req.items.length; i++) {
@@ -898,13 +949,15 @@ async function approveAllFlex(reqId) {
             item.approvedBy = currentAdmin;
             item.approvedAt = new Date().toLocaleString();
             delete item.rejectionReason;
+            delete item.rejectedBy;
+            delete item.rejectedAt;
         }
         await updateRequest(reqId, req.items);
     }
 }
 
 async function rejectAll(reqId) {
-    const reason = prompt(`Rejection reason for ALL (${currentAdmin}):`, "Not available");
+    const reason = prompt(`Rejection reason for ALL:`, "Not available");
     if(reason) {
         const req = allRequests.find(r => r.id === reqId);
         if(req) {
@@ -914,6 +967,8 @@ async function rejectAll(reqId) {
                 item.rejectedBy = currentAdmin;
                 item.rejectedAt = new Date().toLocaleString();
                 item.approvedQty = 0;
+                delete item.approvedBy;
+                delete item.approvedAt;
             });
             await updateRequest(reqId, req.items);
         }
@@ -921,29 +976,24 @@ async function rejectAll(reqId) {
 }
 
 async function acceptRequest(reqId) {
-    if(!confirm(`✅ ACCEPT REQUEST? Pending items will be AUTO-APPROVED with original quantities.`)) return;
+    if(!confirm(`✅ ACCEPT REQUEST?\n\n• PENDING items will be AUTO-APPROVED with original quantities\n• Approved/Rejected stay as is\n\nContinue?`)) return;
     const req = allRequests.find(r => r.id === reqId);
     if(req) {
-        let autoApprovedCount = 0;
         req.items.forEach(item => {
             if(item.status !== "approved" && item.status !== "rejected") {
                 item.status = "approved";
                 item.approvedQty = item.originalQty;
                 item.approvedBy = currentAdmin;
                 item.approvedAt = new Date().toLocaleString();
-                autoApprovedCount++;
                 delete item.rejectionReason;
+                delete item.rejectedBy;
+                delete item.rejectedAt;
             }
             item.completedVia = "accept";
         });
         await updateRequest(reqId, req.items);
-        showToast(`✅ Request accepted! ${autoApprovedCount} items auto-approved.`);
+        showToast(`✅ Request accepted!`);
     }
-}
-
-function copyFirebaseId(docId) {
-    navigator.clipboard.writeText(docId);
-    showToast(`📋 Firebase Doc ID copied: ${docId}`);
 }
 
 function showResetConfirmModal() {
@@ -955,47 +1005,54 @@ function showResetConfirmModal() {
         <div class="confirm-modal-content">
             <h3>⚠️ PERMANENT DELETION ⚠️</h3>
             <p>Delete <strong>${toDelete.length}</strong> completed request(s)?</p>
-            <p class="warning-text" style="color:#e74c3c; margin:15px 0;">This action cannot be undone!</p>
-            <div class="confirm-buttons" style="display:flex; gap:12px;">
-                <button class="btn-cancel-delete" style="background:#95a5a6; padding:12px; border-radius:40px; flex:1;" onclick="this.closest('.confirm-modal').remove()">Cancel</button>
-                <button class="btn-confirm-delete" id="confirmDeleteBtn" style="background:#e74c3c; padding:12px; border-radius:40px; flex:1;">Delete</button>
+            <p class="warning-text">Type <strong>DELETE</strong> to confirm:</p>
+            <input type="text" id="confirmDeleteInput" autocomplete="off">
+            <div class="confirm-buttons">
+                <button class="btn-cancel-delete" onclick="this.closest('.confirm-modal').remove()">Cancel</button>
+                <button class="btn-confirm-delete" id="confirmDeleteBtn" disabled>Delete</button>
             </div>
         </div>
     `;
     document.body.appendChild(modal);
+    const input = modal.querySelector('#confirmDeleteInput');
     const confirmBtn = modal.querySelector('#confirmDeleteBtn');
+    input.focus();
+    input.addEventListener('input', (e) => { confirmBtn.disabled = e.target.value !== 'DELETE'; });
     confirmBtn.onclick = async () => {
-        modal.remove();
-        let deletedCount = 0;
-        for(const req of toDelete) {
-            try { await db.collection("kitchen_requests").doc(req.id).delete(); deletedCount++; }
-            catch(e) { console.error(e); }
-        }
-        await loadRequests();
-        showToast(`✅ Deleted ${deletedCount} completed requests.`);
+        if(input.value === 'DELETE') {
+            modal.remove();
+            let deletedCount = 0;
+            for(const req of toDelete) {
+                try { await db.collection("kitchen_requests").doc(req.id).delete(); deletedCount++; }
+                catch(e) { console.error(e); }
+            }
+            await loadRequests();
+            showToast(`✅ Deleted ${deletedCount} requests.`);
+        } else { showToast("Cancelled"); modal.remove(); }
     };
 }
 
 function exportExcel() {
     if(!allRequests.length) { showToast("No data"); return; }
-    let csv = "Firestore Doc ID,Request ID,Kitchen,Chef,Date,Item,Code,Requested Qty,Unit,Price,Approved Qty,Status,Action By,Total Value\n";
+    let csv = "Request ID,Kitchen,Chef,Date,Item,Code,Requested Qty,Unit,Price/Unit (EGP),Approved Qty,Status,Action By,Total Value (EGP),Duplicate\n";
     allRequests.forEach(req => {
+        const isDup = duplicateMap.has(req.id) ? "YES" : "NO";
         req.items.forEach(item => {
+            let status = item.status, actionBy = "";
             const price = item.price || 0;
             const approvedQty = item.status === "approved" ? (item.approvedQty || 0) : 0;
             const totalValue = approvedQty * price;
-            let statusText = item.status, actionBy = "";
-            if(item.status === "approved") { statusText = "Approved"; actionBy = item.approvedBy || ""; }
-            else if(item.status === "rejected") { statusText = "Rejected"; actionBy = item.rejectedBy || ""; }
-            else if(item.completedVia === "accept") { statusText = "Accepted"; actionBy = item.approvedBy || ""; }
-            else { statusText = "Pending"; actionBy = "-"; }
-            csv += `"${req.id}","${req.requestId}","${req.section}","${req.chefName}","${req.submittedAt}","${item.name}","${item.code}",${item.originalQty},"${item.unit}",${price},${approvedQty},"${statusText}","${actionBy}",${totalValue}\n`;
+            if(item.status === "approved") { status = "Approved"; actionBy = item.approvedBy || ""; }
+            else if(item.status === "rejected") { status = "Rejected"; actionBy = item.rejectedBy || ""; }
+            else if(item.completedVia === "accept") { status = "Accepted"; actionBy = item.approvedBy || item.rejectedBy || currentAdmin; }
+            else { status = "Pending"; actionBy = "-"; }
+            csv += `"${req.requestId}","${req.section}","${req.chefName}","${req.submittedAt}","${item.name}","${item.code}",${item.originalQty},"${item.unit}",${price},${approvedQty},"${status}","${actionBy}",${totalValue},"${isDup}"\n`;
         });
     });
     const blob = new Blob(["\uFEFF" + csv], {type: "text/csv;charset=utf-8"});
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `firebase_requests_${Date.now()}.csv`;
+    link.download = `orders_${Date.now()}.csv`;
     link.click();
 }
 
@@ -1048,7 +1105,7 @@ function renderUI() {
         const kitchenClass = { "Hot Kitchen": "kitchen-hot", "Cold Kitchen": "kitchen-cold", "Pastry / Bakery": "kitchen-pastry", "Butchery": "kitchen-butchery", "Beach House": "kitchen-beach", "Nihon Kitchen": "kitchen-nihon", "Staff Kitchen": "kitchen-staff" }[req.section] || "kitchen-staff";
         
         const duplicateInfo = duplicateMap.get(req.id);
-        const duplicateWarning = duplicateInfo ? `<span class="duplicate-warning">⚠️ DUPLICATE (${duplicateInfo.count} identical orders)</span>` : '';
+        const duplicateWarning = duplicateInfo ? `<span class="duplicate-warning">⚠️ DUPLICATE (${duplicateInfo.count} identical)</span>` : '';
         
         let requestedTotalValue = 0, approvedTotalValue = 0;
         req.items.forEach(item => {
@@ -1068,16 +1125,7 @@ function renderUI() {
             }
         } else { isCompleted = true; }
         
-        // Firebase ID with BLUE COPY ICON - FIXED POSITION
-        const firebaseIdHtml = `<span class="firebase-id-badge" onclick="copyFirebaseId('${req.id}')" title="Click to copy Firebase Document ID">
-            <i>🆔</i> ${req.id.substring(0, 18)}... <span class="copy-icon">📋</span>
-        </span>`;
-        
-        let itemsHtml = `<div class="table-wrapper"><table class="admin-table"><thead>
-            <tr>
-                <th>Code</th><th>Item</th><th>Requested Qty</th><th>Unit</th><th>Price/Unit (EGP)</th><th>Admin Qty (No Limit)</th><th>Total Value (EGP)</th><th>Action</th><th>Status</th>
-            </tr>
-        </thead><tbody>`;
+        let itemsHtml = `<div class="table-wrapper"><table class="admin-table"><thead><tr><th>Code</th><th>Item</th><th>Requested Qty</th><th>Unit</th><th>Price/Unit</th><th>Admin Qty</th><th>Total Value</th><th>Action</th><th>Status</th></tr></thead><tbody>`;
         
         req.items.forEach((item, idx) => {
             const price = item.price || 0;
@@ -1085,51 +1133,17 @@ function renderUI() {
             const totalValue = approvedQty * price;
             
             if(item.status === "approved") {
-                itemsHtml += `<tr style="background:#e8f5e9;">
-                    <td>${item.code}</td>
-                    <td><div class="item-name">${escapeHtml(item.name)}</div></td>
-                    <td><span class="requested-qty">${item.originalQty}</span></td>
-                    <td>${item.unit}</td>
-                    <td><span class="item-price">${price.toFixed(2)}</span></td>
-                    <td><strong>${approvedQty.toFixed(1)}</strong></td>
-                    <td><strong style="color:#27ae60;">${totalValue.toFixed(2)}</strong></td>
-                    <td><span class="btn-approve" style="background:#27ae60;opacity:0.7;">✅ Approved</span></td>
-                    <td><span class="status-approved-cell">Approved</span><div class="admin-info-text">👤 ${escapeHtml(item.approvedBy || '?')}<br>📅 ${item.approvedAt || ''}</div></td>
-                </tr>`;
+                itemsHtml += `<tr style="background:#e8f5e9;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td class="item-price">${price.toFixed(2)}</td><td><strong>${approvedQty.toFixed(1)}</strong></td><td><strong style="color:#27ae60;">${totalValue.toFixed(2)}</strong></td><td><span class="btn-approve" style="background:#27ae60;opacity:0.7;">✅ Approved</span></td><td><span class="status-approved-cell">Approved</span><div class="admin-info-text">👤 ${escapeHtml(item.approvedBy || '?')}<br>📅 ${item.approvedAt || ''}</div></td></tr>`;
             } else if(item.status === "rejected") {
-                itemsHtml += `<tr style="background:#fee2e2;">
-                    <td>${item.code}</td>
-                    <td><div class="item-name">${escapeHtml(item.name)}</div></td>
-                    <td><span class="requested-qty">${item.originalQty}</span></td>
-                    <td>${item.unit}</td>
-                    <td><span class="item-price">${price.toFixed(2)}</span></td>
-                    <td><strong>0</strong></td>
-                    <td><strong style="color:#e74c3c;">0.00</strong></td>
-                    <td><span class="btn-reject" style="background:#e74c3c;opacity:0.7;">❌ Rejected</span></td>
-                    <td><span class="status-rejected-cell">Rejected</span><div class="admin-info-text">👤 ${escapeHtml(item.rejectedBy || '?')}<br>📅 ${item.rejectedAt || ''}<br>📝 ${escapeHtml(item.rejectionReason || '')}</div></td>
-                </tr>`;
+                itemsHtml += `<tr style="background:#fee2e2;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td class="item-price">${price.toFixed(2)}</td><td><strong>0</strong></td><td><strong style="color:#e74c3c;">0.00</strong></td><td><span class="btn-reject" style="background:#e74c3c;opacity:0.7;">❌ Rejected</span></td><td><span class="status-rejected-cell">Rejected</span><div class="admin-info-text">👤 ${escapeHtml(item.rejectedBy || '?')}<br>📅 ${item.rejectedAt || ''}<br>📝 ${escapeHtml(item.rejectionReason || '')}</div></td></tr>`;
             } else {
                 const currentVal = (item.originalQty || 0).toFixed(1);
-                itemsHtml += `<tr style="background:#fff8e7;">
-                    <td>${item.code}</td>
-                    <td><div class="item-name">${escapeHtml(item.name)}</div></td>
-                    <td><span class="requested-qty">${item.originalQty}</span></td>
-                    <td>${item.unit}</td>
-                    <td><span class="item-price">${price.toFixed(2)}</span></td>
-                    <td><input type="number" id="qty_${req.id}_${idx}" class="approval-input" value="${currentVal}" min="0" step="0.5" style="background:#fef9e6;"></td>
-                    <td><span id="totalValuePreview_${req.id}_${idx}" style="font-weight:600; color:#1e3c72;">${(item.originalQty * price).toFixed(2)}</span></td>
-                    <td class="action-buttons"><button class="btn-approve" onclick="approveItemFlex('${req.id}', ${idx})">✅ Approve</button><button class="btn-reject" onclick="rejectItem('${req.id}', ${idx})">❌ Reject</button></td>
-                    <td><span class="status-pending-cell">Pending</span><div class="admin-info-text">⚠️ Will be AUTO-APPROVED on Accept</div></td>
-                </tr>`;
-                
+                itemsHtml += `<tr style="background:#fff8e7;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td class="item-price">${price.toFixed(2)}</td><td><input type="number" id="qty_${req.id}_${idx}" class="approval-input" value="${currentVal}" min="0" step="0.5" style="background:#fef9e6;"></td><td><span id="totalValuePreview_${req.id}_${idx}" style="font-weight:600; color:#1e3c72;">${(item.originalQty * price).toFixed(2)}</span></td><td class="action-buttons"><button class="btn-approve" onclick="approveItemFlex('${req.id}', ${idx})">✅ Approve</button><button class="btn-reject" onclick="rejectItem('${req.id}', ${idx})">❌ Reject</button></td><td><span class="status-pending-cell">Pending</span><div class="admin-info-text">⚠️ Auto-approved on Accept</div></td></tr>`;
                 setTimeout(() => {
                     const input = document.getElementById(`qty_${req.id}_${idx}`);
                     const totalSpan = document.getElementById(`totalValuePreview_${req.id}_${idx}`);
                     if(input && totalSpan) {
-                        const updateTotal = () => {
-                            const newQty = parseFloat(input.value) || 0;
-                            totalSpan.innerText = (newQty * price).toFixed(2);
-                        };
+                        const updateTotal = () => { const newQty = parseFloat(input.value) || 0; totalSpan.innerText = (newQty * price).toFixed(2); };
                         input.addEventListener('input', updateTotal);
                         updateTotal();
                     }
@@ -1141,12 +1155,12 @@ function renderUI() {
         let actions = "";
         if(!isCompleted) {
             actions = `<div class="request-actions">
-                <button class="btn-approve-all" id="approveAllBtn_${req.id}" onclick="approveAllFlex('${req.id}')" ${hasIndividualAction ? 'disabled' : ''}>✅ Approve All (Flex Qty)</button>
-                <button class="btn-reject-all" id="rejectAllBtn_${req.id}" onclick="rejectAll('${req.id}')" ${hasIndividualAction ? 'disabled' : ''}>❌ Reject All</button>
-                <button class="btn-accept" id="acceptBtn_${req.id}" onclick="acceptRequest('${req.id}')" ${!hasIndividualAction ? 'disabled' : ''}>🟣 Accept (Auto-Approve Pending)</button>
+                <button class="btn-approve-all" onclick="approveAllFlex('${req.id}')" ${hasIndividualAction ? 'disabled' : ''}>✅ Approve All</button>
+                <button class="btn-reject-all" onclick="rejectAll('${req.id}')" ${hasIndividualAction ? 'disabled' : ''}>❌ Reject All</button>
+                <button class="btn-accept" onclick="acceptRequest('${req.id}')" ${!hasIndividualAction ? 'disabled' : ''}>🟣 Accept</button>
             </div>`;
         } else {
-            actions = `<div class="request-actions"><button class="btn-accept" style="background:#6c757d; cursor:default;" disabled>✅ Request Completed - Locked</button></div>`;
+            actions = `<div class="request-actions"><button class="btn-accept" style="background:#6c757d; cursor:default;" disabled>✅ Request Completed</button></div>`;
         }
         
         let statusText = "", statusClass = "";
@@ -1157,12 +1171,7 @@ function renderUI() {
         
         container.innerHTML += `<div class="request-card">
             <div class="request-header">
-                <div>
-                    <span class="request-id">📄 ${req.requestId}</span>
-                    ${duplicateWarning}
-                    <span class="kitchen-badge ${kitchenClass}" style="margin-left:10px;">${req.section}</span>
-                    ${firebaseIdHtml}
-                </div>
+                <div><span class="request-id">📄 ${req.requestId}</span>${duplicateWarning}<span class="kitchen-badge ${kitchenClass}" style="margin-left:10px;">${req.section}</span></div>
                 <div class="request-total-badge">
                     <span>💰 Requested: ${requestedTotalValue.toFixed(2)} EGP</span>
                     <span>✅ Approved: ${approvedTotalValue.toFixed(2)} EGP</span>
@@ -1172,7 +1181,7 @@ function renderUI() {
             <div class="request-info">
                 <div class="info-item"><div class="info-label">👨‍🍳 CHEF</div><div class="info-value">${escapeHtml(req.chefName)}</div></div>
                 <div class="info-item"><div class="info-label">📅 SUBMITTED</div><div class="info-value">${req.submittedAt}</div></div>
-                <div class="info-item"><div class="info-label">🔥 FIRESTORE DOCUMENT ID</div><div class="info-value" style="font-family:monospace; font-size:11px;">${req.id}</div></div>
+                <div class="info-item"><div class="info-label">🆔 FIREBASE ID</div><div class="info-value firebase-id" onclick="copyDocId('${req.id}')">📋 ${req.id}</div></div>
             </div>
             ${itemsHtml}
             ${actions}
@@ -1181,8 +1190,19 @@ function renderUI() {
     updateStats();
 }
 
+function copyDocId(docId) { navigator.clipboard.writeText(docId).then(() => showToast("📋 ID Copied")).catch(() => showToast("❌ Copy Failed")); }
+function logout() { if(confirm("Logout?")) { localStorage.removeItem("admin"); sessionStorage.clear(); window.location.href = "index.html"; } }
 function escapeHtml(str) { return str?.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])) || ''; }
 function showToast(msg) { const t = document.createElement("div"); t.className = "toast"; t.innerText = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2500); }
+
+const saved = localStorage.getItem("admin");
+if(saved && ADMIN_PASSWORDS[saved]) {
+    currentAdmin = saved;
+    document.getElementById("adminNameDisplay").innerText = currentAdmin;
+    document.getElementById("passwordModal").style.display = "none";
+    document.getElementById("mainContent").style.display = "block";
+    loadRequests();
+}
 </script>
 </body>
 </html>
