@@ -21,140 +21,902 @@ const firebaseConfig = {
 // Initialize Firebase if not already initialized
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
-    console.log("✅ Firebase initialized from chef.html");
+    console.log("✅ Firebase initialized");
 }
 
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// Enable offline persistence
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.error);
+// ============ MOBILE FIX: Disable persistence for better mobile sync ============
+// Instead of LOCAL persistence which causes issues on mobile, use NONE or fix settings
+db.settings({
+    cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
+});
 
-console.log("✅ Firebase ready - DB and Auth available");
+// Enable offline persistence with proper error handling for mobile
+firebase.firestore().enablePersistence({ synchronizeTabs: true })
+    .then(() => {
+        console.log("✅ Offline persistence enabled for mobile");
+    })
+    .catch((err) => {
+        if (err.code === 'failed-precondition') {
+            console.warn("Multiple tabs open, persistence disabled");
+        } else if (err.code === 'unimplemented') {
+            console.warn("Browser doesn't support persistence");
+        }
+        console.log("⚠️ Persistence not enabled, but real-time sync will work");
+    });
+
+// Disable auth persistence for mobile to avoid conflicts
+auth.setPersistence(firebase.auth.Auth.Persistence.NONE)
+    .then(() => console.log("✅ Auth persistence set to NONE for mobile"))
+    .catch(console.error);
+
+console.log("✅ Firebase ready for mobile");
 </script>
 
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Chef Dashboard - Kitchen Order System</title>
 
 <style>
-/* ... your existing CSS (keeping it compact) ... */
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f4f8; }
+/* ============ MOBILE OPTIMIZATIONS ============ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f0f4f8;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* Force hardware acceleration for mobile */
+.kitchen-page, .card, .request-card {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+}
+
 /* Arabic Styles */
-body.arabic { font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif; direction: rtl; }
-body.arabic .header-content, body.arabic .request-header, body.arabic .request-info, body.arabic .button-group, body.arabic .request-card-header, body.arabic .request-info-row { direction: rtl; }
-body.arabic .card h3 { border-right: 4px solid #3498db; border-left: none; padding-right: 10px; padding-left: 0; }
-body.arabic .info-label { text-align: right; }
-body.arabic .cart-table th, body.arabic .cart-table td { text-align: right; }
-body.arabic .item-meta { text-align: left; }
-body.arabic .qty-picker { direction: ltr; }
-.header { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; padding: 12px 16px; position: sticky; top: 0; z-index: 100; }
-.header-content { display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin: 0 auto; flex-wrap: wrap; gap: 10px; }
-.logo { font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; gap: 8px; }
-.logo-icon { font-size: 1.5rem; }
-.logo span { color: #ffd700; }
-.header-buttons { display: flex; gap: 8px; }
-.refresh-btn, .logout-btn, .hard-reload-btn, .lang-btn { background: rgba(255,255,255,0.2); border: none; padding: 6px 12px; border-radius: 25px; color: white; font-weight: 600; cursor: pointer; font-size: 12px; transition: all 0.3s; }
-.refresh-btn:hover, .logout-btn:hover, .hard-reload-btn:hover, .lang-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.02); }
-.hard-reload-btn { background: rgba(230, 126, 34, 0.8); }
-.lang-btn { background: rgba(0,0,0,0.3); }
-.kitchen-tabs { background: white; padding: 0 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: sticky; top: 60px; z-index: 99; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
-.tabs-container { max-width: 1400px; margin: 0 auto; display: inline-flex; gap: 6px; padding: 10px 0; }
-.tab-btn { padding: 8px 14px; background: #f0f2f5; border: none; border-radius: 30px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-size: 12px; white-space: nowrap; }
-.tab-btn:hover { background: #e0e0e0; transform: translateY(-2px); }
-.tab-btn.active { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; }
-.kitchen-page { display: none; }
-.kitchen-page.active-page { display: block; }
-.card { background: white; border-radius: 16px; padding: 18px; margin-bottom: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
-.card h3 { font-size: 1rem; margin-bottom: 14px; color: #1e3c72; border-left: 4px solid #3498db; padding-left: 10px; }
-.input-group { margin-bottom: 12px; }
-.input-group label { display: block; font-size: 0.7rem; font-weight: 600; color: #555; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-.required { color: #e74c3c; margin-left: 4px; }
-input { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; background: white; }
-input:focus { outline: none; border-color: #3498db; }
-.btn { padding: 10px 16px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 13px; }
-.btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+body.arabic {
+    font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+    direction: rtl;
+}
+
+body.arabic .header-content,
+body.arabic .request-header,
+body.arabic .request-info,
+body.arabic .button-group,
+body.arabic .request-card-header,
+body.arabic .request-info-row {
+    direction: rtl;
+}
+
+body.arabic .card h3 {
+    border-right: 4px solid #3498db;
+    border-left: none;
+    padding-right: 10px;
+    padding-left: 0;
+}
+
+body.arabic .info-label {
+    text-align: right;
+}
+
+body.arabic .cart-table th,
+body.arabic .cart-table td {
+    text-align: right;
+}
+
+body.arabic .item-meta {
+    text-align: left;
+}
+
+body.arabic .qty-picker {
+    direction: ltr;
+}
+
+.header {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: white;
+    padding: 12px 16px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    max-width: 1400px;
+    margin: 0 auto;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.logo {
+    font-size: 1.2rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.logo-icon {
+    font-size: 1.5rem;
+}
+
+.logo span {
+    color: #ffd700;
+}
+
+.header-buttons {
+    display: flex;
+    gap: 8px;
+}
+
+.refresh-btn, .logout-btn, .hard-reload-btn, .lang-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    padding: 6px 12px;
+    border-radius: 25px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.3s;
+}
+
+.refresh-btn:hover, .logout-btn:hover, .hard-reload-btn:hover, .lang-btn:hover {
+    background: rgba(255,255,255,0.3);
+    transform: scale(1.02);
+}
+
+.hard-reload-btn {
+    background: rgba(230, 126, 34, 0.8);
+}
+
+.lang-btn {
+    background: rgba(0,0,0,0.3);
+}
+
+.kitchen-tabs {
+    background: white;
+    padding: 0 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    position: sticky;
+    top: 60px;
+    z-index: 99;
+    overflow-x: auto;
+    white-space: nowrap;
+    -webkit-overflow-scrolling: touch;
+}
+
+.tabs-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: inline-flex;
+    gap: 6px;
+    padding: 10px 0;
+}
+
+.tab-btn {
+    padding: 8px 14px;
+    background: #f0f2f5;
+    border: none;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
+.tab-btn:hover {
+    background: #e0e0e0;
+    transform: translateY(-2px);
+}
+
+.tab-btn.active {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: white;
+}
+
+.kitchen-page {
+    display: none;
+}
+
+.kitchen-page.active-page {
+    display: block;
+}
+
+.card {
+    background: white;
+    border-radius: 16px;
+    padding: 18px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+
+.card h3 {
+    font-size: 1rem;
+    margin-bottom: 14px;
+    color: #1e3c72;
+    border-left: 4px solid #3498db;
+    padding-left: 10px;
+}
+
+.input-group {
+    margin-bottom: 12px;
+}
+
+.input-group label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.required {
+    color: #e74c3c;
+    margin-left: 4px;
+}
+
+input {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 14px;
+    background: white;
+}
+
+input:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 13px;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
 .btn-primary { background: #3498db; color: white; }
 .btn-success { background: #27ae60; color: white; }
 .btn-danger { background: #e74c3c; color: white; }
 .btn-warning { background: #f39c12; color: white; }
-.button-group { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
-.button-group .btn { width: 100%; }
-.table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-.cart-table { min-width: 750px; width: 100%; border-collapse: collapse; }
-.cart-table th, .cart-table td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 12px; }
-.cart-table th { background: #f8f9fa; font-weight: 600; color: #555; }
-.remove-btn { background: #fee2e2; border: none; padding: 5px 12px; border-radius: 20px; color: #e74c3c; font-weight: 600; cursor: pointer; font-size: 11px; }
-.status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+
+.button-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+}
+
+.button-group .btn {
+    width: 100%;
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.cart-table {
+    min-width: 750px;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.cart-table th, .cart-table td {
+    padding: 12px 10px;
+    text-align: left;
+    border-bottom: 1px solid #eee;
+    font-size: 12px;
+}
+
+.cart-table th {
+    background: #f8f9fa;
+    font-weight: 600;
+    color: #555;
+}
+
+.remove-btn {
+    background: #fee2e2;
+    border: none;
+    padding: 5px 12px;
+    border-radius: 20px;
+    color: #e74c3c;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 11px;
+}
+
+.status-badge {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
 .status-pending { background: #f39c12; color: white; }
 .status-approved { background: #27ae60; color: white; }
 .status-rejected { background: #e74c3c; color: white; }
 .status-partial { background: #8e44ad; color: white; }
-.cart-stats { background: #e8f4fd; padding: 10px 12px; border-radius: 10px; margin-bottom: 12px; display: flex; justify-content: space-between; font-weight: 500; font-size: 12px; flex-wrap: wrap; gap: 10px; }
-.empty-state { text-align: center; padding: 30px; color: #999; font-size: 13px; }
-.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 30px; font-size: 12px; z-index: 1000; animation: slideUp 0.3s ease; }
-@keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
-.sync-status { font-size: 10px; text-align: center; margin-top: 10px; padding: 5px 10px; border-radius: 10px; background: #e8f5e9; color: #27ae60; }
-.admin-fab { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 1.3rem; font-weight: bold; cursor: pointer; z-index: 99; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
-.admin-btn-mobile { display: block; width: 100%; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 12px; border-radius: 30px; font-weight: bold; margin-top: 16px; cursor: pointer; font-size: 14px; }
-.request-card { background: white; border-radius: 16px; margin-bottom: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); overflow: hidden; }
-.request-card-header { background: #f8f9fa; padding: 14px 18px; border-bottom: 1px solid #eef2f6; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-.request-id { font-weight: bold; font-size: 1rem; color: #1e3c72; font-family: monospace; }
-.approved-by-text { background: #e8f4fd; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; color: #1e3c72; }
-.approved-by-text span { color: #e94560; }
-.request-info-row { display: flex; gap: 20px; padding: 12px 18px; background: white; border-bottom: 1px solid #eef2f6; flex-wrap: wrap; }
-.info-item { display: flex; flex-direction: column; }
-.info-label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; }
-.info-value { font-weight: 600; font-size: 0.85rem; color: #1e293b; margin-top: 3px; }
-.modal { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; padding: 20px; }
-.modal-content { background: white; padding: 35px 30px; border-radius: 28px; text-align: center; max-width: 380px; width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
-.modal-content h2 { margin-bottom: 15px; color: #1e3c72; font-size: 1.6rem; display: flex; align-items: center; justify-content: center; gap: 10px; }
-.modal-content p { color: #666; margin-bottom: 25px; font-size: 0.9rem; }
-.modal-content input { width: 100%; padding: 14px; margin-bottom: 20px; border: 2px solid #e0e0e0; border-radius: 50px; font-size: 16px; text-align: center; }
-.modal-content input:focus { outline: none; border-color: #3498db; }
-.modal-content button { background: #3498db; color: white; border: none; padding: 14px; border-radius: 50px; font-weight: 600; cursor: pointer; width: 100%; font-size: 1rem; transition: all 0.3s; margin-bottom: 10px; }
-.modal-content button:hover { background: #2980b9; transform: scale(1.02); }
-.error-msg { color: #e74c3c; margin-top: 10px; font-size: 0.85rem; }
-.close-modal { background: #95a5a6 !important; margin-top: 5px; }
-.close-modal:hover { background: #7f8c8d !important; }
-.items-scroll-container { max-height: 500px; overflow-y: auto; border: 1px solid #eef2f6; border-radius: 12px; background: #fafcfc; direction: ltr; }
-body.arabic .items-scroll-container { direction: rtl; }
-.items-grid { display: flex; flex-direction: column; gap: 8px; padding: 12px; }
-.item-card { background: white; border-radius: 12px; padding: 12px; border: 1px solid #e9ecef; }
-.item-card.selected { background: #d4edda; border-color: #27ae60; }
-.item-main-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
-.item-info { flex: 2; min-width: 150px; }
-.item-name { font-weight: 600; font-size: 0.85rem; color: #2c3e50; }
-.item-code { font-size: 0.65rem; color: #7f8c8d; font-family: monospace; margin-top: 3px; }
-.item-price { font-size: 0.7rem; color: #e67e22; margin-top: 2px; }
-.item-meta { text-align: right; min-width: 90px; }
-.item-unit { background: #ecf0f1; padding: 3px 8px; border-radius: 20px; font-size: 0.65rem; font-weight: 500; display: inline-block; }
-.item-max { font-size: 0.65rem; color: #e67e22; margin-top: 4px; }
-.item-step { font-size: 0.6rem; color: #888; margin-top: 2px; }
-.item-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.qty-picker { display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 5px 10px; border-radius: 40px; }
-.qty-btn { width: 36px; height: 36px; border-radius: 30px; border: none; background: white; font-weight: bold; font-size: 1.3rem; cursor: pointer; color: #3498db; }
-.qty-value { min-width: 50px; text-align: center; font-weight: 700; font-size: 1rem; font-family: monospace; }
-.add-item-btn { background: #27ae60; color: white; border: none; padding: 8px 18px; border-radius: 30px; font-weight: 600; font-size: 0.75rem; cursor: pointer; }
-.scroll-info { text-align: center; font-size: 11px; color: #5a6e8a; padding: 8px; background: #f1f5f9; border-radius: 0 0 12px 12px; }
-@media (min-width: 769px) { .button-group { flex-direction: row; } .button-group .btn { width: auto; } .admin-btn-mobile { display: none; } .admin-fab { display: block; } }
-@media (max-width: 768px) { .cart-table th, .cart-table td { padding: 8px 6px; font-size: 11px; } .cart-stats { font-size: 10px; } .request-card-header { flex-direction: column; align-items: flex-start; } }
-.container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-.price-total { font-weight: bold; color: #1e3c72; }
-.rejection-reason { font-size: 0.6rem; color: #e74c3c; margin-top: 2px; }
-.auto-refresh-indicator { font-size: 9px; color: #888; margin-left: 8px; }
-.history-section { margin-top: 20px; border-top: 1px solid #eef2f6; padding-top: 16px; }
-.history-toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
-.history-toolbar input { flex: 1; min-width: 130px; padding: 8px 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 12px; }
-.history-filter-btn { background: #8e44ad; color: white; border: none; padding: 8px 16px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 12px; }
-.history-filter-btn:hover { background: #6c3483; transform: translateY(-1px); }
-.history-toggle-btn { background: #8e44ad; color: white; border: none; padding: 6px 14px; border-radius: 30px; font-weight: 600; cursor: pointer; font-size: 11px; margin-left: 10px; }
-.history-toggle-btn:hover { background: #6c3483; }
-.freehand-status { display: inline-flex; align-items: center; gap: 6px; margin-left: 12px; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 30px; font-size: 0.7rem; }
-.status-light { width: 12px; height: 12px; border-radius: 50%; background: #dc2626; transition: all 0.3s ease; }
-.status-light.active { background: #10b981; box-shadow: 0 0 8px #10b981; animation: pulse 1.5s infinite; }
-@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
-.status-text { font-weight: 500; }
+
+.cart-stats {
+    background: #e8f4fd;
+    padding: 10px 12px;
+    border-radius: 10px;
+    margin-bottom: 12px;
+    display: flex;
+    justify-content: space-between;
+    font-weight: 500;
+    font-size: 12px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 30px;
+    color: #999;
+    font-size: 13px;
+}
+
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #333;
+    color: white;
+    padding: 10px 20px;
+    border-radius: 30px;
+    font-size: 12px;
+    z-index: 1000;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+.sync-status {
+    font-size: 10px;
+    text-align: center;
+    margin-top: 10px;
+    padding: 5px 10px;
+    border-radius: 10px;
+    background: #e8f5e9;
+    color: #27ae60;
+}
+
+/* Mobile connection status indicator */
+.sync-status.disconnected {
+    background: #fee2e2;
+    color: #e74c3c;
+}
+
+.sync-status.connecting {
+    background: #fff3cd;
+    color: #f39c12;
+}
+
+.admin-fab {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    font-size: 1.3rem;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 99;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+.admin-btn-mobile {
+    display: block;
+    width: 100%;
+    background: linear-gradient(135deg, #667eea, #764ba2);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 30px;
+    font-weight: bold;
+    margin-top: 16px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.request-card {
+    background: white;
+    border-radius: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    overflow: hidden;
+}
+
+.request-card-header {
+    background: #f8f9fa;
+    padding: 14px 18px;
+    border-bottom: 1px solid #eef2f6;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.request-id {
+    font-weight: bold;
+    font-size: 1rem;
+    color: #1e3c72;
+    font-family: monospace;
+}
+
+.approved-by-text {
+    background: #e8f4fd;
+    padding: 6px 14px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #1e3c72;
+}
+
+.approved-by-text span {
+    color: #e94560;
+}
+
+.request-info-row {
+    display: flex;
+    gap: 20px;
+    padding: 12px 18px;
+    background: white;
+    border-bottom: 1px solid #eef2f6;
+    flex-wrap: wrap;
+}
+
+.info-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.info-label {
+    font-size: 0.65rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+}
+
+.info-value {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #1e293b;
+    margin-top: 3px;
+}
+
+.modal {
+    display: flex;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.85);
+    z-index: 10000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+
+.modal-content {
+    background: white;
+    padding: 35px 30px;
+    border-radius: 28px;
+    text-align: center;
+    max-width: 380px;
+    width: 90%;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+.modal-content h2 {
+    margin-bottom: 15px;
+    color: #1e3c72;
+    font-size: 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+}
+
+.modal-content p {
+    color: #666;
+    margin-bottom: 25px;
+    font-size: 0.9rem;
+}
+
+.modal-content input {
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 50px;
+    font-size: 16px;
+    text-align: center;
+}
+
+.modal-content input:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.modal-content button {
+    background: #3498db;
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 50px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1rem;
+    transition: all 0.3s;
+    margin-bottom: 10px;
+}
+
+.modal-content button:hover {
+    background: #2980b9;
+    transform: scale(1.02);
+}
+
+.error-msg {
+    color: #e74c3c;
+    margin-top: 10px;
+    font-size: 0.85rem;
+}
+
+.close-modal {
+    background: #95a5a6 !important;
+    margin-top: 5px;
+}
+
+.close-modal:hover {
+    background: #7f8c8d !important;
+}
+
+.items-scroll-container {
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid #eef2f6;
+    border-radius: 12px;
+    background: #fafcfc;
+    direction: ltr;
+    -webkit-overflow-scrolling: touch;
+}
+
+body.arabic .items-scroll-container {
+    direction: rtl;
+}
+
+.items-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 12px;
+}
+
+.item-card {
+    background: white;
+    border-radius: 12px;
+    padding: 12px;
+    border: 1px solid #e9ecef;
+}
+
+.item-card.selected {
+    background: #d4edda;
+    border-color: #27ae60;
+}
+
+.item-main-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.item-info {
+    flex: 2;
+    min-width: 150px;
+}
+
+.item-name {
+    font-weight: 600;
+    font-size: 0.85rem;
+    color: #2c3e50;
+}
+
+.item-code {
+    font-size: 0.65rem;
+    color: #7f8c8d;
+    font-family: monospace;
+    margin-top: 3px;
+}
+
+.item-price {
+    font-size: 0.7rem;
+    color: #e67e22;
+    margin-top: 2px;
+}
+
+.item-meta {
+    text-align: right;
+    min-width: 90px;
+}
+
+.item-unit {
+    background: #ecf0f1;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 0.65rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+.item-max {
+    font-size: 0.65rem;
+    color: #e67e22;
+    margin-top: 4px;
+}
+
+.item-step {
+    font-size: 0.6rem;
+    color: #888;
+    margin-top: 2px;
+}
+
+.item-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.qty-picker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #f1f5f9;
+    padding: 5px 10px;
+    border-radius: 40px;
+}
+
+.qty-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 30px;
+    border: none;
+    background: white;
+    font-weight: bold;
+    font-size: 1.3rem;
+    cursor: pointer;
+    color: #3498db;
+}
+
+.qty-value {
+    min-width: 50px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1rem;
+    font-family: monospace;
+}
+
+.add-item-btn {
+    background: #27ae60;
+    color: white;
+    border: none;
+    padding: 8px 18px;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    cursor: pointer;
+}
+
+.scroll-info {
+    text-align: center;
+    font-size: 11px;
+    color: #5a6e8a;
+    padding: 8px;
+    background: #f1f5f9;
+    border-radius: 0 0 12px 12px;
+}
+
+@media (min-width: 769px) {
+    .button-group {
+        flex-direction: row;
+    }
+    .button-group .btn {
+        width: auto;
+    }
+    .admin-btn-mobile {
+        display: none;
+    }
+    .admin-fab {
+        display: block;
+    }
+}
+
+@media (max-width: 768px) {
+    .cart-table th, .cart-table td {
+        padding: 8px 6px;
+        font-size: 11px;
+    }
+    .cart-stats {
+        font-size: 10px;
+    }
+    .request-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .header-buttons button {
+        padding: 4px 10px;
+        font-size: 10px;
+    }
+    .logo {
+        font-size: 1rem;
+    }
+}
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.price-total {
+    font-weight: bold;
+    color: #1e3c72;
+}
+
+.rejection-reason {
+    font-size: 0.6rem;
+    color: #e74c3c;
+    margin-top: 2px;
+}
+
+.auto-refresh-indicator {
+    font-size: 9px;
+    color: #888;
+    margin-left: 8px;
+}
+
+.history-section {
+    margin-top: 20px;
+    border-top: 1px solid #eef2f6;
+    padding-top: 16px;
+}
+
+.history-toolbar {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.history-toolbar input {
+    flex: 1;
+    min-width: 130px;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 12px;
+}
+
+.history-filter-btn {
+    background: #8e44ad;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.history-filter-btn:hover {
+    background: #6c3483;
+    transform: translateY(-1px);
+}
+
+.history-toggle-btn {
+    background: #8e44ad;
+    color: white;
+    border: none;
+    padding: 6px 14px;
+    border-radius: 30px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 11px;
+    margin-left: 10px;
+}
+
+.history-toggle-btn:hover {
+    background: #6c3483;
+}
+
+.freehand-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 12px;
+    background: rgba(0,0,0,0.3);
+    padding: 4px 10px;
+    border-radius: 30px;
+    font-size: 0.7rem;
+}
+
+.status-light {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #dc2626;
+    transition: all 0.3s ease;
+}
+
+.status-light.active {
+    background: #10b981;
+    box-shadow: 0 0 8px #10b981;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+    70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+}
+
+.status-text {
+    font-weight: 500;
+}
+
+/* Mobile pull-to-refresh indicator */
+.refresh-indicator {
+    text-align: center;
+    padding: 10px;
+    font-size: 12px;
+    color: #888;
+    display: none;
+}
+
+.refresh-indicator.active {
+    display: block;
+}
 </style>
 </head>
 <body>
@@ -186,9 +948,50 @@ body.arabic .items-scroll-container { direction: rtl; }
 
 <button class="admin-btn-mobile" onclick="openAdmin()">👑 Admin Panel</button>
 <button class="admin-fab" onclick="openAdmin()">👑</button>
-<div class="sync-status" id="syncStatus">🔄 Connecting... <span id="autoRefreshIndicator" class="auto-refresh-indicator">(Auto-refresh: 60s)</span></div>
+<div class="sync-status" id="syncStatus">
+    <span id="syncIcon">🔄</span> Connecting... 
+    <span id="autoRefreshIndicator" class="auto-refresh-indicator">(Auto-refresh: 30s)</span>
+</div>
+<div class="refresh-indicator" id="refreshIndicator">↓ Pull down to refresh</div>
 
 <script>
+// ============ MOBILE OPTIMIZATIONS ============
+// Force refresh on visibility change (when coming back to tab)
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        console.log("📱 Page became visible, refreshing...");
+        manualRefresh();
+    }
+});
+
+// Network status monitoring
+window.addEventListener('online', () => {
+    console.log("📱 Network connected");
+    showToast("✅ Network connected, refreshing...");
+    manualRefresh();
+    updateSyncStatus('connected');
+});
+
+window.addEventListener('offline', () => {
+    console.log("📱 Network disconnected");
+    showToast("⚠️ Network disconnected");
+    updateSyncStatus('disconnected');
+});
+
+function updateSyncStatus(status) {
+    const syncDiv = document.getElementById('syncStatus');
+    if (status === 'connected') {
+        syncDiv.classList.remove('disconnected', 'connecting');
+        syncDiv.classList.add('connected');
+    } else if (status === 'disconnected') {
+        syncDiv.classList.remove('connected', 'connecting');
+        syncDiv.classList.add('disconnected');
+    } else if (status === 'connecting') {
+        syncDiv.classList.remove('connected', 'disconnected');
+        syncDiv.classList.add('connecting');
+    }
+}
+
 // ============ LANGUAGE TRANSLATIONS ============
 const translations = {
     en: {
@@ -274,6 +1077,7 @@ let currentItemsList = [];
 let autoRefreshInterval = null;
 let freehandModeActive = false;
 let freehandUnsubscribe = null;
+let isRefreshing = false;
 
 // ============ DEFAULT ITEMS (fallback) ============
 function getDefaultItemsForKitchen(kitchen) {
@@ -344,7 +1148,13 @@ async function verifyKitchenPasswordWithFirestore(kitchenName, enteredPassword) 
 // ============ UI FUNCTIONS ============
 function t(key) { return translations[currentLang][key] || translations['en'][key] || key; }
 function escapeHtml(str) { return str ? str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])) : ''; }
-function showToast(msg) { const toast = document.createElement("div"); toast.className = "toast"; toast.innerText = msg; document.body.appendChild(toast); setTimeout(() => toast.remove(), 2500); }
+function showToast(msg) { 
+    const toast = document.createElement("div"); 
+    toast.className = "toast"; 
+    toast.innerText = msg; 
+    document.body.appendChild(toast); 
+    setTimeout(() => toast.remove(), 2500); 
+}
 function openAdmin() { window.open("admin.html", "_blank"); }
 
 function updateFreehandStatusIndicator() {
@@ -415,22 +1225,26 @@ function getItemStep(item) {
 
 // ============ STORAGE FUNCTIONS ============
 function loadChefNames() {
-    const saved = localStorage.getItem("chefNames");
-    if(saved) { const parsed = JSON.parse(saved); kitchens.forEach(kitchen => { chefNames[kitchen] = parsed[kitchen] || ""; }); }
+    try {
+        const saved = localStorage.getItem("chefNames");
+        if(saved) { const parsed = JSON.parse(saved); kitchens.forEach(kitchen => { chefNames[kitchen] = parsed[kitchen] || ""; }); }
+    } catch(e) { console.warn("Error loading chef names:", e); }
 }
-function saveChefNames() { localStorage.setItem("chefNames", JSON.stringify(chefNames)); }
+function saveChefNames() { try { localStorage.setItem("chefNames", JSON.stringify(chefNames)); } catch(e) { console.warn("Error saving chef names:", e); } }
 function loadSavedCart() {
-    const saved = localStorage.getItem("kitchenCart");
-    if(saved) {
-        const parsed = JSON.parse(saved);
-        kitchens.forEach(kitchen => { kitchenData[kitchen] = { cart: parsed[kitchen] || [], chefName: chefNames[kitchen] }; });
-    } else {
-        kitchens.forEach(kitchen => { kitchenData[kitchen] = { cart: [], chefName: chefNames[kitchen] }; });
-    }
+    try {
+        const saved = localStorage.getItem("kitchenCart");
+        if(saved) {
+            const parsed = JSON.parse(saved);
+            kitchens.forEach(kitchen => { kitchenData[kitchen] = { cart: parsed[kitchen] || [], chefName: chefNames[kitchen] }; });
+        } else {
+            kitchens.forEach(kitchen => { kitchenData[kitchen] = { cart: [], chefName: chefNames[kitchen] }; });
+        }
+    } catch(e) { console.warn("Error loading cart:", e); }
 }
-function saveCart() { const cartToSave = {}; kitchens.forEach(kitchen => { cartToSave[kitchen] = kitchenData[kitchen].cart; }); localStorage.setItem("kitchenCart", JSON.stringify(cartToSave)); }
-function loadUnlockedKitchens() { const saved = localStorage.getItem("unlockedKitchens"); if(saved) unlockedKitchens = JSON.parse(saved); }
-function saveUnlockedKitchens() { localStorage.setItem("unlockedKitchens", JSON.stringify(unlockedKitchens)); }
+function saveCart() { try { const cartToSave = {}; kitchens.forEach(kitchen => { cartToSave[kitchen] = kitchenData[kitchen].cart; }); localStorage.setItem("kitchenCart", JSON.stringify(cartToSave)); } catch(e) { console.warn("Error saving cart:", e); } }
+function loadUnlockedKitchens() { try { const saved = localStorage.getItem("unlockedKitchens"); if(saved) unlockedKitchens = JSON.parse(saved); } catch(e) { console.warn("Error loading unlocked kitchens:", e); } }
+function saveUnlockedKitchens() { try { localStorage.setItem("unlockedKitchens", JSON.stringify(unlockedKitchens)); } catch(e) { console.warn("Error saving unlocked kitchens:", e); } }
 
 loadChefNames();
 loadSavedCart();
@@ -472,18 +1286,30 @@ async function showKitchenPasswordModal(kitchen) {
     document.getElementById("kitchenPasswordInput").focus();
 }
 
-// ============ FIREBASE REQUESTS ============
-async function loadRequestsFromFirebase() {
+// ============ FIREBASE REQUESTS with mobile retry logic ============
+async function loadRequestsFromFirebase(retryCount = 0) {
     try {
         const snapshot = await db.collection("kitchen_requests").orderBy("timestamp", "desc").get();
         allRequests = [];
         snapshot.forEach(doc => { allRequests.push({ firebaseId: doc.id, ...doc.data() }); });
         if (currentKitchen) { loadMyRequests(currentKitchen); loadOrderHistory(currentKitchen); }
-        document.getElementById("syncStatus").innerHTML = `✅ Connected • ${allRequests.length} orders`;
+        const syncDiv = document.getElementById("syncStatus");
+        syncDiv.innerHTML = `✅ Connected • ${allRequests.length} orders <span id="autoRefreshIndicator" class="auto-refresh-indicator">(Auto-refresh: 30s)</span>`;
+        syncDiv.classList.remove('disconnected', 'connecting');
+        syncDiv.classList.add('connected');
         console.log("✅ Loaded", allRequests.length, "requests");
+        return true;
     } catch (error) { 
         console.error("Error loading requests:", error);
-        document.getElementById("syncStatus").innerHTML = "⚠️ Offline mode"; 
+        if (retryCount < 3) {
+            console.log(`Retrying... (${retryCount + 1}/3)`);
+            setTimeout(() => loadRequestsFromFirebase(retryCount + 1), 2000);
+        } else {
+            const syncDiv = document.getElementById("syncStatus");
+            syncDiv.innerHTML = `⚠️ Offline - ${error.message} <span id="autoRefreshIndicator" class="auto-refresh-indicator"></span>`;
+            syncDiv.classList.remove('connected');
+            syncDiv.classList.add('disconnected');
+        }
     }
 }
 
@@ -495,7 +1321,7 @@ async function saveRequestToFirebase(request) {
         if (currentKitchen) { loadMyRequests(currentKitchen); loadOrderHistory(currentKitchen); }
     } catch (error) { 
         console.error("Error saving:", error);
-        showToast("❌ Error saving"); 
+        showToast("❌ Error saving - check network"); 
     }
 }
 
@@ -517,30 +1343,11 @@ function getOverallStatus(items) {
         }
     });
     
-    // All items are approved
-    if (approvedCount === items.length && approvedCount > 0) {
-        return "approved";
-    }
-    
-    // All items are rejected
-    if (rejectedCount === items.length && rejectedCount > 0) {
-        return "rejected";
-    }
-    
-    // Mixed approved and rejected (partial)
-    if (approvedCount > 0 && rejectedCount > 0) {
-        return "partial";
-    }
-    
-    // Some approved, some pending (partial)
-    if (approvedCount > 0 && pendingCount > 0) {
-        return "partial";
-    }
-    
-    // All items are pending
-    if (pendingCount === items.length) {
-        return "pending";
-    }
+    if (approvedCount === items.length && approvedCount > 0) return "approved";
+    if (rejectedCount === items.length && rejectedCount > 0) return "rejected";
+    if (approvedCount > 0 && rejectedCount > 0) return "partial";
+    if (approvedCount > 0 && pendingCount > 0) return "partial";
+    if (pendingCount === items.length) return "pending";
     
     return "pending";
 }
@@ -780,21 +1587,21 @@ function renderCart(kitchen) {
     if (totalValueElem) totalValueElem.innerText = totalValue.toFixed(2);
     const desktopBody = document.getElementById(`cartTableDesktop_${kitchenId}`);
     if (desktopBody) {
-        if (cart.length === 0) { desktopBody.innerHTML = `<tr><td colspan="7" style="text-align:center;">${t('noItems')}</td></tr>`; }
+        if (cart.length === 0) { desktopBody.innerHTML = `<tr><td colspan="7" style="text-align:center;">${t('noItems')}<\/td><\/tr>`; }
         else {
             desktopBody.innerHTML = "";
             cart.forEach((item, idx) => {
                 const itemTotal = (item.qty * (item.price || 0)).toFixed(2);
                 const displayName = currentLang === 'ar' && item.name_ar ? item.name_ar : item.name;
-                desktopBody.innerHTML += `<tr>
-                    <td>${item.code}</td>
-                    <td><strong>${escapeHtml(displayName)}</strong></td>
-                    <td>${item.qty.toFixed(1)}</td>
-                    <td>${item.unit}</td>
-                    <td>${(item.price || 0).toFixed(2)}</td>
-                    <td>${itemTotal}</td>
-                    <td><button class="remove-btn" onclick="removeItem('${kitchen}', ${idx})">${t('remove')}</button></td>
-                </tr>`;
+                desktopBody.innerHTML += `</table>
+                    <td>${item.code}<\/td>
+                    <td><strong>${escapeHtml(displayName)}<\/strong><\/td>
+                    <td>${item.qty.toFixed(1)}<\/td>
+                    <td>${item.unit}<\/td>
+                    <td>${(item.price || 0).toFixed(2)}<\/td>
+                    <td>${itemTotal}<\/td>
+                    <td><button class="remove-btn" onclick="removeItem('${kitchen}', ${idx})">${t('remove')}<\/button><\/td>
+                <\/tr>`;
             });
         }
     }
@@ -862,7 +1669,7 @@ function loadMyRequests(kitchen) {
                 <td><span style="color:${statusColor}; font-weight:600;">${statusDisplay}</span>${rejectionHtml}</td>
             </tr>`;
         });
-        itemsHtml += `<tr style="background:#f8f9fa; font-weight:bold;"><td colspan="7" style="text-align:right;">💰 ${t('totalValue')} (Approved only):</td><td><span class="price-total">${approvedTotalValue.toFixed(2)} ${t('egp')}</span></td></tr>`;
+        itemsHtml += `<tr style="background:#f8f9fa; font-weight:bold;"><td colspan="7" style="text-align:right;">💰 ${t('totalValue')} (Approved only):</td><td class="price-total">${approvedTotalValue.toFixed(2)} ${t('egp')}</td></tr>`;
         itemsHtml += `</tbody></table></div>`;
         container.innerHTML += `<div class="request-card"><div class="request-card-header"><span class="request-id">📄 ${req.requestId}</span><div style="display:flex; gap:10px; flex-wrap:wrap;"><span style="background:linear-gradient(135deg, #1e3c72, #2a5298); color:white; padding:6px 14px; border-radius:20px; font-size:0.75rem;">💰 ${t('totalValue')}: ${requestTotalValue.toFixed(2)} ${t('egp')}</span><span class="approved-by-text">${t('approvedBy')}: <span>${escapeHtml(adminName)}</span></span><span class="status-badge ${statusClass}">${statusText}</span></div></div><div class="request-info-row"><div class="info-item"><div class="info-label">👨‍🍳 ${t('chefLabel')}</div><div class="info-value">${escapeHtml(req.chefName)}</div></div><div class="info-item"><div class="info-label">📅 ${t('submitted')}</div><div class="info-value">${req.submittedAt}</div></div></div>${itemsHtml}</div>`;
     });
@@ -908,7 +1715,7 @@ function loadOrderHistory(kitchen) {
                 <td><span style="color:${statusColor}; font-weight:600;">${statusDisplay}</span></td>
             </tr>`;
         });
-        itemsHtml += `<tr style="background:#f8f9fa; font-weight:bold;"><td colspan="6" style="text-align:right;">💰 ${t('totalValue')} (Approved):</td><td><span class="price-total">${approvedTotalValue.toFixed(2)} ${t('egp')}</span></td></tr>`;
+        itemsHtml += `<tr style="background:#f8f9fa; font-weight:bold;"><td colspan="6" style="text-align:right;">💰 ${t('totalValue')} (Approved):</td><td class="price-total">${approvedTotalValue.toFixed(2)} ${t('egp')}</td></tr>`;
         itemsHtml += `</tbody></table></div>`;
         container.innerHTML += `<div class="request-card"><div class="request-card-header"><span class="request-id">📜 ${req.requestId}</span><div style="display:flex; gap:10px; flex-wrap:wrap;"><span style="background:linear-gradient(135deg, #1e3c72, #2a5298); color:white; padding:6px 14px; border-radius:20px; font-size:0.75rem;">💰 ${requestTotalValue.toFixed(2)} ${t('egp')}</span><span class="approved-by-text">${t('approvedBy')}: <span>${escapeHtml(adminName)}</span></span><span class="status-badge ${statusClass}">${statusText}</span></div></div><div class="request-info-row"><div class="info-item"><div class="info-label">👨‍🍳 ${t('chefLabel')}</div><div class="info-value">${escapeHtml(req.chefName)}</div></div><div class="info-item"><div class="info-label">📅 ${t('submitted')}</div><div class="info-value">${req.submittedAt}</div></div></div>${itemsHtml}</div>`;
     });
@@ -951,7 +1758,7 @@ function createKitchenPage(kitchen) {
     <div class="card"><h3>📦 ${kitchen} ${t('items')} <span style="font-size:11px;">(${t('searchByFirstChar')})</span></h3><div id="itemsListContainer_${id}"></div></div>
     <div class="card"><h3>🛒 ${t('currentRequest')} <button class="history-toggle-btn" onclick="toggleHistory('${kitchen}')">📜 ${t('viewHistory')}</button></h3>
     <div class="cart-stats"><span>📦 ${t('totalQty')}: <strong id="totalItems_${id}">0</strong></span><span>📋 ${t('totalItems')}: <strong id="lineCount_${id}">0</strong></span><span>💰 ${t('totalValue')}: <strong id="totalValue_${id}">0.00</strong> ${t('egp')}</span></div>
-    <div class="desktop-table-view"><div class="table-wrapper"><table class="cart-table"><thead><tr><th>${t('code')}</th><th>${t('item')}</th><th>${t('qty')}</th><th>${t('unit')}</th><th>${t('price')}</th><th>${t('total')}</th><th></th></tr></thead><tbody id="cartTableDesktop_${id}"></tbody></table></div></div>
+    <div class="desktop-table-view"><div class="table-wrapper"><table class="cart-table"><thead><tr><th>${t('code')}</th><th>${t('item')}</th><th>${t('qty')}</th><th>${t('unit')}</th><th>${t('price')}</th><th>${t('total')}</th><th></th></table></thead><tbody id="cartTableDesktop_${id}"></tbody></table></div></div>
     <div class="button-group"><button class="btn btn-success" onclick="submitRequest('${kitchen}')">📤 ${t('submit')}</button><button class="btn btn-warning" onclick="exportToExcel('${kitchen}')">📎 ${t('export')}</button><button class="btn btn-danger" onclick="clearCart('${kitchen}')">🗑️ ${t('clear')}</button></div></div>
     <div class="card"><h3>📜 ${t('myRequests')} <span style="font-size:11px;">(${t('showsAdminPrice')})</span></h3><div id="myRequestsDesktop_${id}"></div></div>
     <div class="card"><h3>📜 ${t('orderHistory')}</h3><div id="historySection_${id}" class="history-section" style="display:none;"><div class="history-toolbar"><input type="date" id="historyFrom_${id}" placeholder="${t('fromDate')}"><input type="date" id="historyTo_${id}" placeholder="${t('toDate')}"><button class="history-filter-btn" onclick="loadOrderHistory('${kitchen}')">🔍 ${t('filter')}</button></div><div id="orderHistoryContainer_${id}"></div></div></div></div>`;
@@ -985,13 +1792,21 @@ function loadLastSelectedKitchen() { const lastKitchen = localStorage.getItem("l
 
 function startAutoRefresh() {
     if(autoRefreshInterval) clearInterval(autoRefreshInterval);
+    // Refresh every 30 seconds for mobile (more frequent)
     autoRefreshInterval = setInterval(function() {
-        loadRequestsFromFirebase();
-        if(currentKitchen) { loadMyRequests(currentKitchen); renderCart(currentKitchen); }
-    }, 60000);
+        if (!isRefreshing) {
+            isRefreshing = true;
+            loadRequestsFromFirebase().finally(() => {
+                if(currentKitchen) { loadMyRequests(currentKitchen); renderCart(currentKitchen); }
+                isRefreshing = false;
+            });
+        }
+    }, 30000);
 }
 
 async function manualRefresh() {
+    if (isRefreshing) return;
+    isRefreshing = true;
     showToast("🔄 Refreshing...");
     await loadRequestsFromFirebase();
     if (currentKitchen) {
@@ -1001,6 +1816,8 @@ async function manualRefresh() {
             loadOrderHistory(currentKitchen);
         }
     }
+    isRefreshing = false;
+    showToast("✅ Refresh complete");
 }
 
 async function forceReloadItems() {
@@ -1024,19 +1841,25 @@ function logout() {
 
 // ============ INITIALIZATION ============
 window.addEventListener('DOMContentLoaded', () => {
-    console.log("🚀 Starting Chef Dashboard...");
+    console.log("🚀 Starting Chef Dashboard (Mobile Optimized)...");
     generatePages();
     startAutoRefresh();
     loadRequestsFromFirebase();
     loadLastSelectedKitchen();
     initFreehandModeListener();
     
+    // Real-time listener with mobile optimization
+    let listenerTimeout = null;
     db.collection("kitchen_requests").onSnapshot(() => { 
         console.log("🔄 Real-time update received");
-        loadRequestsFromFirebase(); 
+        // Debounce updates on mobile
+        if (listenerTimeout) clearTimeout(listenerTimeout);
+        listenerTimeout = setTimeout(() => {
+            loadRequestsFromFirebase();
+        }, 500);
     });
     
-    console.log("✅ Chef Dashboard ready");
+    console.log("✅ Chef Dashboard ready for mobile");
 });
 </script>
 </body>
