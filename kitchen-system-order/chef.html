@@ -6,7 +6,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-<script src="firebase-config.js"></script> 
 <title>Chef Dashboard - Kitchen Order System</title>
 
 <style>
@@ -859,44 +858,29 @@ body.arabic .items-scroll-container {
 <div class="sync-status" id="syncStatus">🔄 Connecting... <span id="autoRefreshIndicator" class="auto-refresh-indicator">(Auto-refresh: 60s)</span></div>
 
 <script>
-// ============ FIREBASE CONFIGURATION ============
-// ============ FIREBASE CONFIGURATION ============
-// Wait for firebase-config.js to load first
-// The config is already initialized in firebase-config.js
-// Just get references to the already initialized instances
+// ============ FIREBASE CONFIGURATION (HARDCODED - WORKING) ============
+const firebaseConfig = {
+    apiKey: "AIzaSyD57ErKNYwqGbLcriDYYvPUtVIw8jRncXQ",
+    authDomain: "system-order-kitchen.firebaseapp.com",
+    projectId: "system-order-kitchen",
+    storageBucket: "system-order-kitchen.firebasestorage.app",
+    messagingSenderId: "429224554052",
+    appId: "1:429224554052:web:85d32727439fe55efcd611"
+};
 
-// Small delay to ensure firebase-config.js has loaded
-let db = null;
-let auth = null;
-
-function initFirebaseReferences() {
-    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
-        db = firebase.firestore();
-        auth = firebase.auth();
-        console.log("✅ Firebase references initialized");
-        return true;
-    }
-    return false;
+// Initialize Firebase if not already initialized
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+    console.log("✅ Firebase initialized from chef.html");
 }
 
-// Try to initialize immediately, if not, wait for it
-if (!initFirebaseReferences()) {
-    console.log("Waiting for Firebase config to load...");
-    const checkInterval = setInterval(() => {
-        if (initFirebaseReferences()) {
-            clearInterval(checkInterval);
-            // Continue with initialization
-            if (typeof generatePages === 'function') {
-                generatePages();
-                startAutoRefresh();
-                loadRequestsFromFirebase();
-                loadLastSelectedKitchen();
-                initFreehandModeListener();
-                db.collection("kitchen_requests").onSnapshot(() => { loadRequestsFromFirebase(); });
-            }
-        }
-    }, 100);
-}
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+// Enable offline persistence
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.error);
+
+console.log("✅ Firebase ready - DB and Auth available");
 
 // ============ LANGUAGE TRANSLATIONS ============
 const translations = {
@@ -984,6 +968,46 @@ let currentItemsList = [];
 let autoRefreshInterval = null;
 let freehandModeActive = false;
 let freehandUnsubscribe = null;
+
+// ============ DEFAULT ITEMS (fallback when JSON files don't exist) ============
+function getDefaultItemsForKitchen(kitchen) {
+    const defaultItems = {
+        "Hot Kitchen": [
+            { code: "HK001", name: "Grilled Chicken", name_ar: "دجاج مشوي", unit: "kg", maxLimit: 50, price: 120, step: 0.5 },
+            { code: "HK002", name: "Beef Steak", name_ar: "ستيك لحم", unit: "kg", maxLimit: 30, price: 180, step: 0.5 },
+            { code: "HK003", name: "Fried Rice", name_ar: "أرز مقلي", unit: "kg", maxLimit: 40, price: 45, step: 0.5 }
+        ],
+        "Cold Kitchen": [
+            { code: "CK001", name: "Garden Salad", name_ar: "سلطة خضراء", unit: "kg", maxLimit: 20, price: 35, step: 0.5 },
+            { code: "CK002", name: "Caesar Salad", name_ar: "سلطة سيزر", unit: "kg", maxLimit: 20, price: 45, step: 0.5 }
+        ],
+        "Pastry / Bakery": [
+            { code: "PB001", name: "Croissant", name_ar: "كرواسون", unit: "pcs", maxLimit: 100, price: 8, step: 1 },
+            { code: "PB002", name: "Baguette", name_ar: "باجيت", unit: "pcs", maxLimit: 80, price: 12, step: 1 }
+        ],
+        "Butchery": [
+            { code: "BT001", name: "Beef Mince", name_ar: "لحم مفروم", unit: "kg", maxLimit: 50, price: 140, step: 0.5 },
+            { code: "BT002", name: "Chicken Cut", name_ar: "تقطيع دجاج", unit: "kg", maxLimit: 60, price: 100, step: 0.5 }
+        ],
+        "Beach House": [
+            { code: "BH001", name: "Grilled Fish", name_ar: "سمك مشوي", unit: "kg", maxLimit: 25, price: 150, step: 0.5 },
+            { code: "BH002", name: "Shrimp", name_ar: "جمبري", unit: "kg", maxLimit: 20, price: 200, step: 0.5 }
+        ],
+        "Nihon Kitchen": [
+            { code: "NK001", name: "Sushi Rice", name_ar: "أرز سوشي", unit: "kg", maxLimit: 30, price: 60, step: 0.5 },
+            { code: "NK002", name: "Nori Seaweed", name_ar: "نوري", unit: "pcs", maxLimit: 100, price: 5, step: 1 }
+        ],
+        "Staff Kitchen": [
+            { code: "SK001", name: "Staff Meal", name_ar: "وجبة موظفين", unit: "meal", maxLimit: 50, price: 25, step: 1 },
+            { code: "SK002", name: "Beverages", name_ar: "مشروبات", unit: "pcs", maxLimit: 100, price: 5, step: 1 }
+        ]
+    };
+    
+    return defaultItems[kitchen] || [
+        { code: "GEN001", name: "Test Item 1", name_ar: "عنصر اختبار", unit: "kg", maxLimit: 100, price: 50, step: 0.5 },
+        { code: "GEN002", name: "Test Item 2", name_ar: "عنصر اختبار 2", unit: "pcs", maxLimit: 100, price: 10, step: 1 }
+    ];
+}
 
 // ============ FIRESTORE PASSWORD VERIFICATION ============
 async function getKitchenPasswordFromFirestore(kitchenName) {
@@ -1161,7 +1185,11 @@ async function loadRequestsFromFirebase() {
         snapshot.forEach(doc => { allRequests.push({ firebaseId: doc.id, ...doc.data() }); });
         if (currentKitchen) { loadMyRequests(currentKitchen); loadOrderHistory(currentKitchen); }
         document.getElementById("syncStatus").innerHTML = `✅ Connected • ${allRequests.length} orders <span id="autoRefreshIndicator" class="auto-refresh-indicator">(Auto-refresh: 60s)</span>`;
-    } catch (error) { document.getElementById("syncStatus").innerHTML = "⚠️ Offline mode"; }
+        console.log("✅ Loaded", allRequests.length, "requests from Firebase");
+    } catch (error) { 
+        console.error("Error loading requests:", error);
+        document.getElementById("syncStatus").innerHTML = "⚠️ Offline mode - " + error.message; 
+    }
 }
 
 async function saveRequestToFirebase(request) {
@@ -1170,16 +1198,24 @@ async function saveRequestToFirebase(request) {
         showToast("✅ Request saved!");
         await loadRequestsFromFirebase();
         if (currentKitchen) { loadMyRequests(currentKitchen); loadOrderHistory(currentKitchen); }
-    } catch (error) { showToast("❌ Error saving"); }
+    } catch (error) { 
+        console.error("Error saving:", error);
+        showToast("❌ Error saving: " + error.message); 
+    }
 }
 
 function getOverallStatus(items) {
     if (!items || !items.length) return "pending";
-    const approved = items.filter(i => i.status === "approved").length;
-    const rejected = items.filter(i => i.status === "rejected").length;
-    if (approved === items.length) return "approved";
-    if (rejected === items.length) return "rejected";
+    let approved = 0, rejected = 0, pending = 0;
+    items.forEach(item => {
+        if (item.status === "approved") approved++;
+        else if (item.status === "rejected") rejected++;
+        else pending++;
+    });
+    if (approved === items.length && items.length > 0) return "approved";
+    if (rejected === items.length && items.length > 0) return "rejected";
     if (approved > 0 && rejected > 0) return "partial";
+    if (approved > 0 && pending > 0) return "partial";
     return "pending";
 }
 
@@ -1239,11 +1275,14 @@ async function submitRequest(kitchen) {
 async function loadItemsForKitchen(kitchen, forceRefresh = false) {
     if (kitchenItemsCache[kitchen] && !forceRefresh) return kitchenItemsCache[kitchen];
     const fileName = kitchenToFileMap[kitchen];
-    if (!fileName) return [];
+    if (!fileName) return getDefaultItemsForKitchen(kitchen);
     const url = `items/${fileName}?t=${Date.now()}`;
     try {
         const response = await fetch(url);
-        if (!response.ok) return [];
+        if (!response.ok) {
+            console.warn(`Items file not found for ${kitchen}, using defaults`);
+            return getDefaultItemsForKitchen(kitchen);
+        }
         const data = await response.json();
         let itemsArray = Array.isArray(data) ? data : (data.items || []);
         itemsArray = itemsArray.map(item => ({ 
@@ -1252,7 +1291,10 @@ async function loadItemsForKitchen(kitchen, forceRefresh = false) {
         }));
         kitchenItemsCache[kitchen] = itemsArray;
         return itemsArray;
-    } catch (error) { return []; }
+    } catch (error) { 
+        console.warn(`Error loading items for ${kitchen}:`, error);
+        return getDefaultItemsForKitchen(kitchen);
+    }
 }
 
 function getItemsForKitchen(kitchen) { return kitchenItemsCache[kitchen] || []; }
@@ -1292,6 +1334,7 @@ function addItemWithQuantity(kitchen, code, itemName, unit, maxLimit, price, ste
     const itemPrice = item.price || price || 0;
     if (existing) { existing.qty += actualQtyToAdd; showToast(`✓ Added ${actualQtyToAdd.toFixed(step === 0.5 ? 1 : 0)} ${getItemName(item)}`); }
     else { kitchenData[kitchen].cart.push({ code: item.code, name: item.name, name_ar: item.name_ar, unit: item.unit || unit, qty: actualQtyToAdd, maxLimit: item.maxLimit || maxLimit, price: itemPrice }); showToast(`✓ Added ${actualQtyToAdd.toFixed(step === 0.5 ? 1 : 0)} ${getItemName(item)}`); }
+    if (!addedItemsStatus[kitchen]) addedItemsStatus[kitchen] = {};
     addedItemsStatus[kitchen][code] = true;
     selectedQuantities[kitchen][code] = 0;
     const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
@@ -1387,18 +1430,29 @@ function renderCart(kitchen) {
     const cart = kitchenData[kitchen].cart;
     const totalQty = cart.reduce((sum, i) => sum + i.qty, 0);
     const totalValue = cart.reduce((sum, i) => sum + (i.qty * (i.price || 0)), 0);
-    document.getElementById(`totalItems_${kitchenId}`).innerText = totalQty.toFixed(1);
-    document.getElementById(`lineCount_${kitchenId}`).innerText = cart.length;
-    document.getElementById(`totalValue_${kitchenId}`).innerText = totalValue.toFixed(2);
+    const totalItemsElem = document.getElementById(`totalItems_${kitchenId}`);
+    const lineCountElem = document.getElementById(`lineCount_${kitchenId}`);
+    const totalValueElem = document.getElementById(`totalValue_${kitchenId}`);
+    if (totalItemsElem) totalItemsElem.innerText = totalQty.toFixed(1);
+    if (lineCountElem) lineCountElem.innerText = cart.length;
+    if (totalValueElem) totalValueElem.innerText = totalValue.toFixed(2);
     const desktopBody = document.getElementById(`cartTableDesktop_${kitchenId}`);
     if (desktopBody) {
-        if (cart.length === 0) { desktopBody.innerHTML = `<tr><td colspan="7" style="text-align:center;">${t('noItems')}</td></table>`; }
+        if (cart.length === 0) { desktopBody.innerHTML = `<tr><td colspan="7" style="text-align:center;">${t('noItems')}</td></tr>`; }
         else {
             desktopBody.innerHTML = "";
             cart.forEach((item, idx) => {
                 const itemTotal = (item.qty * (item.price || 0)).toFixed(2);
                 const displayName = currentLang === 'ar' && item.name_ar ? item.name_ar : item.name;
-                desktopBody.innerHTML += `<tr><td>${item.code}</td><td><strong>${escapeHtml(displayName)}</strong></td><td>${item.qty.toFixed(1)}</td><td>${item.unit}</td><td>${(item.price || 0).toFixed(2)}</td><td>${itemTotal}</td><td><button class="remove-btn" onclick="removeItem('${kitchen}', ${idx})">${t('remove')}</button></td></tr>`;
+                desktopBody.innerHTML += `<tr>
+                    <td>${item.code}</td>
+                    <td><strong>${escapeHtml(displayName)}</strong></td>
+                    <td>${item.qty.toFixed(1)}</td>
+                    <td>${item.unit}</td>
+                    <td>${(item.price || 0).toFixed(2)}</td>
+                    <td>${itemTotal}</td>
+                    <td><button class="remove-btn" onclick="removeItem('${kitchen}', ${idx})">${t('remove')}</button></td>
+                </tr>`;
             });
         }
     }
@@ -1450,7 +1504,16 @@ function loadMyRequests(kitchen) {
             if(item.status === "approved") { statusDisplay = `✅ ${t('approved')}`; statusColor = "#27ae60"; }
             else if(item.status === "rejected") { statusDisplay = `❌ ${t('rejected')}`; statusColor = "#e74c3c"; if(item.rejectionReason) { rejectionHtml = `<div class="rejection-reason">${t('reason')} ${escapeHtml(item.rejectionReason)}</div>`; } }
             else { statusDisplay = `⏳ ${t('pending')}`; statusColor = "#f39c12"; }
-            itemsHtml += `<tr><td>${item.code}</td><td><div><strong>${escapeHtml(displayName)}</strong></div></td><td>${qty.toFixed(1)}</td><td>${item.unit}</td><td>${price.toFixed(2)}</td><td>${total.toFixed(2)}</td><td>${approvedQty > 0 ? approvedQty.toFixed(1) : "0"}</td><td><span style="color:${statusColor}; font-weight:600;">${statusDisplay}</span>${rejectionHtml}</td></tr>`;
+            itemsHtml += `<tr>
+                <td>${item.code}</td>
+                <td><div><strong>${escapeHtml(displayName)}</strong></div></td>
+                <td>${qty.toFixed(1)}</td>
+                <td>${item.unit}</td>
+                <td>${price.toFixed(2)}</td>
+                <td>${total.toFixed(2)}</td>
+                <td>${approvedQty > 0 ? approvedQty.toFixed(1) : "0"}</td>
+                <td><span style="color:${statusColor}; font-weight:600;">${statusDisplay}</span>${rejectionHtml}</td>
+            </tr>`;
         });
         itemsHtml += `<tr style="background:#f8f9fa; font-weight:bold;"><td colspan="7" style="text-align:right;">💰 ${t('totalValue')} (Approved only):</td><td><span class="price-total">${approvedTotalValue.toFixed(2)} ${t('egp')}</span></td></tr>`;
         itemsHtml += `</tbody></table></div>`;
@@ -1488,7 +1551,15 @@ function loadOrderHistory(kitchen) {
             if (item.status === "approved") { statusDisplay = `✅ ${t('approved')}`; statusColor = "#27ae60"; }
             else if (item.status === "rejected") { statusDisplay = `❌ ${t('rejected')}`; statusColor = "#e74c3c"; if(item.rejectionReason) { statusDisplay += `<div class="rejection-reason">${t('reason')} ${escapeHtml(item.rejectionReason)}</div>`; } }
             else { statusDisplay = `⏳ ${t('pending')}`; statusColor = "#f39c12"; }
-            itemsHtml += `<tr><td>${item.code}</td><td><strong>${escapeHtml(displayName)}</strong></td><td>${item.originalQty.toFixed(1)}</td><td>${item.unit}</td><td>${(item.price || 0).toFixed(2)}</td><td>${approvedQty > 0 ? approvedQty.toFixed(1) : "0"}</td><td><span style="color:${statusColor}; font-weight:600;">${statusDisplay}</span></td></tr>`;
+            itemsHtml += `<tr>
+                <td>${item.code}</td>
+                <td><strong>${escapeHtml(displayName)}</strong></td>
+                <td>${item.originalQty.toFixed(1)}</td>
+                <td>${item.unit}</td>
+                <td>${(item.price || 0).toFixed(2)}</td>
+                <td>${approvedQty > 0 ? approvedQty.toFixed(1) : "0"}</td>
+                <td><span style="color:${statusColor}; font-weight:600;">${statusDisplay}</span></td>
+            </tr>`;
         });
         itemsHtml += `<tr style="background:#f8f9fa; font-weight:bold;"><td colspan="6" style="text-align:right;">💰 ${t('totalValue')} (Approved):</td><td><span class="price-total">${approvedTotalValue.toFixed(2)} ${t('egp')}</span></td></tr>`;
         itemsHtml += `</tbody></table></div>`;
@@ -1605,24 +1676,23 @@ function logout() {
 }
 
 // ============ INITIALIZATION ============
-// ============ INITIALIZATION ============
-// Only initialize if Firebase is ready, otherwise wait
-function initializeDashboard() {
-    if (db && auth) {
-        generatePages();
-        startAutoRefresh();
-        loadRequestsFromFirebase();
-        loadLastSelectedKitchen();
-        initFreehandModeListener();
-        db.collection("kitchen_requests").onSnapshot(() => { loadRequestsFromFirebase(); });
-        console.log("✅ Dashboard fully initialized");
-    } else {
-        console.log("Waiting for Firebase...");
-        setTimeout(initializeDashboard, 500);
-    }
-}
-
-initializeDashboard();
+// Start everything when page loads
+window.addEventListener('DOMContentLoaded', () => {
+    console.log("🚀 Starting Chef Dashboard...");
+    generatePages();
+    startAutoRefresh();
+    loadRequestsFromFirebase();
+    loadLastSelectedKitchen();
+    initFreehandModeListener();
+    
+    // Set up real-time listener
+    db.collection("kitchen_requests").onSnapshot(() => { 
+        console.log("🔄 Real-time update received");
+        loadRequestsFromFirebase(); 
+    });
+    
+    console.log("✅ Chef Dashboard ready");
+});
 </script>
 </body>
 </html>
