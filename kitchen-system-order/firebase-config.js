@@ -1,4 +1,3 @@
-// firebase-config.js
 const firebaseConfig = {
     apiKey: "AIzaSyD57ErKNYwqGbLcriDYYvPUtVIw8jRncXQ",
     authDomain: "system-order-kitchen.firebaseapp.com",
@@ -16,8 +15,7 @@ if (!firebase.apps.length) {
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// Enable persistence (keeps user logged in)
+// Enable persistence
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
 console.log("✅ Firebase initialized successfully");
-console.log("✅ Firestore and Auth services ready");
