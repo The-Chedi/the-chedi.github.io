@@ -9,107 +9,6 @@
 <title>Chef Dashboard - Kitchen Order System</title>
 
 <style>
-/* ============ ADDED LOGIN MODAL STYLES ============ */
-.login-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.9);
-    z-index: 20000;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    backdrop-filter: blur(5px);
-}
-
-.login-box {
-    background: white;
-    padding: 40px 30px;
-    border-radius: 30px;
-    text-align: center;
-    max-width: 350px;
-    width: 90%;
-    box-shadow: 0 25px 50px rgba(0,0,0,0.3);
-    animation: fadeInUp 0.4s ease;
-}
-
-.login-box h2 {
-    color: #1e3c72;
-    margin-bottom: 10px;
-    font-size: 1.8rem;
-}
-
-.login-box .logo-icon {
-    font-size: 3rem;
-    margin-bottom: 10px;
-}
-
-.login-box p {
-    color: #666;
-    margin-bottom: 25px;
-    font-size: 0.9rem;
-}
-
-.login-box input {
-    width: 100%;
-    padding: 14px;
-    margin-bottom: 20px;
-    border: 2px solid #e0e0e0;
-    border-radius: 50px;
-    font-size: 16px;
-    text-align: center;
-    font-weight: 600;
-    letter-spacing: 2px;
-}
-
-.login-box input:focus {
-    outline: none;
-    border-color: #3498db;
-}
-
-.login-box button {
-    background: linear-gradient(135deg, #1e3c72, #2a5298);
-    color: white;
-    border: none;
-    padding: 14px;
-    border-radius: 50px;
-    font-weight: 600;
-    cursor: pointer;
-    width: 100%;
-    font-size: 1rem;
-    transition: all 0.3s;
-}
-
-.login-box button:hover {
-    transform: scale(1.02);
-    background: linear-gradient(135deg, #2a5298, #1e3c72);
-}
-
-.login-error {
-    color: #e74c3c;
-    margin-top: 15px;
-    font-size: 0.8rem;
-}
-
-@keyframes fadeInUp {
-    from { opacity: 0; transform: translateY(30px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-/* Hide main content until logged in */
-#mainContent {
-    display: none;
-}
-
-#mainContent.visible {
-    display: block;
-}
-</style>
-
-<style>
-/* ... ALL YOUR EXISTING STYLES REMAIN EXACTLY THE SAME ... */
 * {
     margin: 0;
     padding: 0;
@@ -890,141 +789,36 @@ body.arabic .items-scroll-container {
 .history-toggle-btn:hover {
     background: #6c3483;
 }
-/* Freehand Status Indicator */
-.freehand-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-left: 12px;
-    background: rgba(0,0,0,0.3);
-    padding: 4px 10px;
-    border-radius: 30px;
-    font-size: 0.7rem;
-}
-
-.status-light {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: #dc2626;
-    transition: all 0.3s ease;
-}
-
-.status-light.active {
-    background: #10b981;
-    box-shadow: 0 0 8px #10b981;
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-    70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-}
-
-.status-text {
-    font-weight: 500;
-}
 </style>
 </head>
 <body>
 
-<!-- ============ LOGIN OVERLAY (ADDED) ============ -->
-<div id="loginOverlay" class="login-overlay">
-    <div class="login-box">
-        <div class="logo-icon">🍳</div>
-        <h2>Kitchen Order System</h2>
-        <p>Enter password to access Chef Dashboard</p>
-        <input type="password" id="loginPassword" placeholder="Enter Password" autocomplete="off">
-        <button onclick="verifyChefPassword()">Login</button>
-        <div id="loginErrorMsg" class="login-error"></div>
-    </div>
-</div>
-
-<!-- ============ MAIN CONTENT (hidden until login) ============ -->
-<div id="mainContent">
-    <div class="header">
-        <div class="header-content">
-            <div class="logo">
-                <span class="logo-icon">🍳</span>
-                <span>Kitchen Order <span>| Chef</span></span>
-                <div class="freehand-status" id="freehandStatusIndicator">
-                    <div class="status-light" id="statusLight"></div>
-                    <span class="status-text" id="statusText">Freehand: OFF</span>
-                </div>
-            </div>
-            <div class="header-buttons">
-                <button class="lang-btn" id="langToggleBtn" onclick="toggleLanguage()">🇸🇦 العربية</button>
-                <button class="refresh-btn" onclick="manualRefresh()">🔄</button>
-                <button class="hard-reload-btn" onclick="forceReloadItems()">📦 Reload</button>
-                <button class="logout-btn" onclick="logout()">🚪</button>
-            </div>
+<div class="header">
+    <div class="header-content">
+        <div class="logo">
+            <span class="logo-icon">🍳</span>
+            <span>Kitchen Order <span>| Chef</span></span>
+        </div>
+        <div class="header-buttons">
+            <button class="lang-btn" id="langToggleBtn" onclick="toggleLanguage()">🇸🇦 العربية</button>
+            <button class="refresh-btn" onclick="manualRefresh()">🔄</button>
+            <button class="hard-reload-btn" onclick="forceReloadItems()">📦 Reload</button>
+            <button class="logout-btn" onclick="logout()">🚪</button>
         </div>
     </div>
-
-    <div class="kitchen-tabs">
-        <div class="tabs-container" id="tabsContainer"></div>
-    </div>
-
-    <div id="kitchenPagesContainer"></div>
-
-    <button class="admin-btn-mobile" onclick="openAdmin()">👑 Admin Panel</button>
-    <button class="admin-fab" onclick="openAdmin()">👑</button>
-    <div class="sync-status" id="syncStatus">🔄 Connecting... <span id="autoRefreshIndicator" class="auto-refresh-indicator">(Auto-refresh: 60s)</span></div>
 </div>
 
+<div class="kitchen-tabs">
+    <div class="tabs-container" id="tabsContainer"></div>
+</div>
+
+<div id="kitchenPagesContainer"></div>
+
+<button class="admin-btn-mobile" onclick="openAdmin()">👑 Admin Panel</button>
+<button class="admin-fab" onclick="openAdmin()">👑</button>
+<div class="sync-status" id="syncStatus">🔄 Connecting... <span id="autoRefreshIndicator" class="auto-refresh-indicator">(Auto-refresh: 60s)</span></div>
+
 <script>
-// ============ AUTHENTICATION (ADDED) ============
-// Set your chef password here (change as needed)
-const CHEF_PASSWORD = "chef123";
-
-function verifyChefPassword() {
-    const inputPassword = document.getElementById("loginPassword").value;
-    const errorDiv = document.getElementById("loginErrorMsg");
-    
-    if (inputPassword === CHEF_PASSWORD) {
-        // Login successful
-        localStorage.setItem("chefAuthenticated", "true");
-        document.getElementById("loginOverlay").style.display = "none";
-        document.getElementById("mainContent").style.display = "block";
-        showToast("✅ Login successful!");
-        // Initialize dashboard after login
-        initializeDashboard();
-    } else {
-        errorDiv.innerHTML = "❌ Wrong password! Please try again.";
-        document.getElementById("loginPassword").value = "";
-    }
-}
-
-function logout() {
-    if (confirm("Logout?")) {
-        localStorage.removeItem("chefAuthenticated");
-        localStorage.removeItem("unlockedKitchens");
-        if(autoRefreshInterval) clearInterval(autoRefreshInterval);
-        unlockedKitchens = {};
-        kitchens.forEach(k => { kitchenData[k].cart = []; renderCart(k); });
-        saveCart();
-        currentKitchen = null;
-        showToast("Logged out.");
-        // Show login overlay again
-        document.getElementById("loginOverlay").style.display = "flex";
-        document.getElementById("mainContent").style.display = "none";
-        document.getElementById("loginPassword").value = "";
-    }
-}
-
-// Check if already authenticated
-function checkAuthentication() {
-    if (localStorage.getItem("chefAuthenticated") === "true") {
-        document.getElementById("loginOverlay").style.display = "none";
-        document.getElementById("mainContent").style.display = "block";
-        initializeDashboard();
-    } else {
-        document.getElementById("loginOverlay").style.display = "flex";
-        document.getElementById("mainContent").style.display = "none";
-    }
-}
-
 // ============ LANGUAGE TRANSLATIONS ============
 const translations = {
     en: {
@@ -1075,35 +869,6 @@ const translations = {
 
 let currentLang = 'en';
 
-// ============ FREEHAND MODE FUNCTIONS ============
-
-function updateFreehandUI() {
-    updateFreehandStatusIndicator();
-    if (currentKitchen) {
-        renderItemsList(currentKitchen);
-        renderCart(currentKitchen);
-    }
-    const statusMsg = freehandModeActive ? 
-        '🔓 FREEHAND MODE ACTIVE - No quantity limits!' : 
-        '🔒 Freehand mode disabled - Limits restored';
-    showToast(statusMsg);
-}
-
-function initFreehandModeListener() {
-    if (freehandUnsubscribe) freehandUnsubscribe();
-    
-    freehandUnsubscribe = db.collection("settings").doc("global_settings").onSnapshot((doc) => {
-        if (doc.exists) {
-            freehandModeActive = doc.data().freehandMode === true;
-        } else {
-            freehandModeActive = false;
-        }
-        updateFreehandUI();
-    }, (error) => {
-        console.error("Error listening to freehand mode:", error);
-    });
-}
-
 function toggleLanguage() {
     if(currentLang === 'en') {
         currentLang = 'ar';
@@ -1124,7 +889,6 @@ function toggleLanguage() {
     }
     generatePages();
     if(currentKitchen) selectKitchen(currentKitchen);
-    updateFreehandStatusIndicator();
 }
 
 function getItemName(item) {
@@ -1158,24 +922,6 @@ let selectedQuantities = {};
 let addedItemsStatus = {};
 let currentItemsList = [];
 let autoRefreshInterval = null;
-let freehandModeActive = false;
-let freehandUnsubscribe = null;
-
-function updateFreehandStatusIndicator() {
-    const statusLight = document.getElementById('statusLight');
-    const statusText = document.getElementById('statusText');
-    if (statusLight && statusText) {
-        if (freehandModeActive) {
-            statusLight.className = 'status-light active';
-            statusText.innerHTML = '🟢 Freehand: ON';
-            statusText.style.color = '#10b981';
-        } else {
-            statusLight.className = 'status-light inactive';
-            statusText.innerHTML = '⚫ Freehand: OFF';
-            statusText.style.color = '#999';
-        }
-    }
-}
 
 function startAutoRefresh() {
     if(autoRefreshInterval) clearInterval(autoRefreshInterval);
@@ -1336,9 +1082,9 @@ function loadOrderHistory(kitchen) {
             if (item.status === "approved") { statusDisplay = `✅ ${t('approved')}`; statusColor = "#27ae60"; }
             else if (item.status === "rejected") { statusDisplay = `❌ ${t('rejected')}`; statusColor = "#e74c3c"; if(item.rejectionReason) { statusDisplay += `<div class="rejection-reason">${t('reason')} ${escapeHtml(item.rejectionReason)}</div>`; } }
             else { statusDisplay = `⏳ ${t('pending')}`; statusColor = "#f39c12"; }
-            itemsHtml += `<tr><td>${item.code}</td>}<div><strong>${escapeHtml(displayName)}</strong></div></td><td>${item.originalQty.toFixed(1)}</td><td>${item.unit}</td><td>${(item.price || 0).toFixed(2)}</td><td>${approvedQty > 0 ? approvedQty.toFixed(1) : "0"}</td><td><span style="color:${statusColor}; font-weight:600;">${statusDisplay}</span></td></tr>`;
+            itemsHtml += `<tr><td>${item.code}</td><td><strong>${escapeHtml(displayName)}</strong></td><td>${item.originalQty.toFixed(1)}</td><td>${item.unit}</td><td>${(item.price || 0).toFixed(2)}</td><td>${approvedQty > 0 ? approvedQty.toFixed(1) : "0"}</td><td><span style="color:${statusColor}; font-weight:600;">${statusDisplay}</span></td></tr>`;
         });
-        itemsHtml += `<tr style="background:#f8f9fa; font-weight:bold;"><td colspan="6" style="text-align:right;">💰 ${t('totalValue')} (Approved):</td><td class="price-total">${approvedTotalValue.toFixed(2)} ${t('egp')}</td></tr>`;
+        itemsHtml += `<tr style="background:#f8f9fa; font-weight:bold;"><td colspan="6" style="text-align:right;">💰 ${t('totalValue')} (Approved):</td><td><span class="price-total">${approvedTotalValue.toFixed(2)} ${t('egp')}</span></td></tr>`;
         itemsHtml += `</tbody></table></div>`;
         container.innerHTML += `<div class="request-card"><div class="request-card-header"><span class="request-id">📜 ${req.requestId}</span><div style="display:flex; gap:10px; flex-wrap:wrap;"><span style="background:linear-gradient(135deg, #1e3c72, #2a5298); color:white; padding:6px 14px; border-radius:20px; font-size:0.75rem;">💰 ${requestTotalValue.toFixed(2)} ${t('egp')}</span><span class="approved-by-text">${t('approvedBy')}: <span>${escapeHtml(adminName)}</span></span><span class="status-badge ${statusClass}">${statusText}</span></div></div><div class="request-info-row"><div class="info-item"><div class="info-label">👨‍🍳 ${t('chefLabel')}</div><div class="info-value">${escapeHtml(req.chefName)}</div></div><div class="info-item"><div class="info-label">📅 ${t('submitted')}</div><div class="info-value">${req.submittedAt}</div></div></div>${itemsHtml}</div>`;
     });
@@ -1397,7 +1143,7 @@ function filterItemsByFirstChar(kitchen, searchChar) {
             <div class="item-main-row"><div class="item-info"><div class="item-name">${escapeHtml(displayName)}</div>
             <div class="item-code">${item.code || "N/A"}</div><div class="item-price">💰 ${itemPrice.toFixed(2)} ${t('egp')} / ${item.unit}</div></div>
             <div class="item-meta"><span class="item-unit">${item.unit || "pcs"}</span>
-            <div class="item-max" style="color:${freehandModeActive ? '#10b981' : '#e67e22'};">${t('max')} ${freehandModeActive ? '∞' : (item.maxLimit || 99)}</div><div class="item-step">Step: ${stepText}</div></div>
+            <div class="item-max">${t('max')} ${item.maxLimit || 99}</div><div class="item-step">Step: ${stepText}</div></div>
             <div class="item-actions"><div class="qty-picker">
             <button class="qty-btn" data-step="-${stepValue}" data-code="${item.code}" data-max="${item.maxLimit || 99}">−</button>
             <span class="qty-value" id="qtySpan_${kitchenId}_${safeCode}">${displayQty}</span>
@@ -1447,7 +1193,7 @@ function changeQuantity(kitchen, code, delta, maxLimit) {
     let current = selectedQuantities[kitchen][code] || 0;
     let newQty = parseFloat((current + delta).toFixed(1));
     if (newQty < 0) newQty = 0;
-    if (!freehandModeActive && newQty > maxLimit) newQty = maxLimit;
+    if (newQty > maxLimit) newQty = maxLimit;
     selectedQuantities[kitchen][code] = newQty;
     const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
     const safeCode = (code || "").replace(/[^a-zA-Z0-9]/g, '_');
@@ -1469,10 +1215,10 @@ function addItemWithQuantity(kitchen, code, itemName, unit, maxLimit, price, ste
     if (!item) return;
     const existing = kitchenData[kitchen].cart.find(i => i.code === code);
     let currentQty = existing ? existing.qty : 0;
-    let maxAllowed = freehandModeActive ? 999999 : (item.maxLimit || maxLimit);
+    let maxAllowed = item.maxLimit || maxLimit;
     let remaining = maxAllowed - currentQty;
     let actualQtyToAdd = qty;
-    if (!freehandModeActive && remaining <= 0) { showToast(`⚠️ Maximum ${maxAllowed} ${item.unit || unit} reached!`); return; }
+    if (remaining <= 0) { showToast(`⚠️ Maximum ${maxAllowed} ${item.unit || unit} reached!`); return; }
     if (qty > remaining) { actualQtyToAdd = remaining; showToast(`⚠️ Only ${remaining.toFixed(1)} remaining. Added ${remaining.toFixed(1)} instead of ${qty.toFixed(1)}`); }
     const itemPrice = item.price || price || 0;
     if (existing) { existing.qty += actualQtyToAdd; showToast(`✓ Added ${actualQtyToAdd.toFixed(step === 0.5 ? 1 : 0)} ${getItemName(item)}`); }
@@ -1506,15 +1252,7 @@ function renderCart(kitchen) {
             cart.forEach((item, idx) => {
                 const itemTotal = (item.qty * (item.price || 0)).toFixed(2);
                 const displayName = currentLang === 'ar' && item.name_ar ? item.name_ar : item.name;
-                desktopBody.innerHTML += `<tr>
-                    <td>${item.code}</td>
-                    <td><strong>${escapeHtml(displayName)}</strong></td>
-                    <td>${item.qty.toFixed(1)}</td>
-                    <td>${item.unit}</td>
-                    <td>${(item.price || 0).toFixed(2)}</td>
-                    <td>${itemTotal}</td>
-                    <td><button class="remove-btn" onclick="removeItem('${kitchen}', ${idx})">${t('remove')}</button></td>
-                </tr>`;
+                desktopBody.innerHTML += `<tr><td>${item.code}</td><td><strong>${escapeHtml(displayName)}</strong></td><td>${item.qty.toFixed(1)}</td><td>${item.unit}</td><td>${(item.price || 0).toFixed(2)}</td><td>${itemTotal}</td><td><button class="remove-btn" onclick="removeItem('${kitchen}', ${idx})">${t('remove')}</button></td></tr>`;
             });
         }
     }
@@ -1616,18 +1354,9 @@ function loadMyRequests(kitchen) {
             if(item.status === "approved") { statusDisplay = `✅ ${t('approved')}`; statusColor = "#27ae60"; }
             else if(item.status === "rejected") { statusDisplay = `❌ ${t('rejected')}`; statusColor = "#e74c3c"; if(item.rejectionReason) { rejectionHtml = `<div class="rejection-reason">${t('reason')} ${escapeHtml(item.rejectionReason)}</div>`; } }
             else { statusDisplay = `⏳ ${t('pending')}`; statusColor = "#f39c12"; }
-            itemsHtml += `<tr>
-                <td>${item.code}</td>
-                <td><div><strong>${escapeHtml(displayName)}</strong></div></td>
-                <td>${qty.toFixed(1)}</td>
-                <td>${item.unit}</td>
-                <td>${price.toFixed(2)}</td>
-                <td>${total.toFixed(2)}</td>
-                <td>${approvedQty > 0 ? approvedQty.toFixed(1) : "0"}</td>
-                <td><span style="color:${statusColor}; font-weight:600;">${statusDisplay}</span>${rejectionHtml}</td>
-            </tr>`;
+            itemsHtml += `<tr><td>${item.code}</td><td><div><strong>${escapeHtml(displayName)}</strong></div></td><td>${qty.toFixed(1)}</td><td>${item.unit}</td><td>${price.toFixed(2)}</td><td>${total.toFixed(2)}</td><td>${approvedQty > 0 ? approvedQty.toFixed(1) : "0"}</td><td><span style="color:${statusColor}; font-weight:600;">${statusDisplay}</span>${rejectionHtml}</td></tr>`;
         });
-        itemsHtml += `<tr style="background:#f8f9fa; font-weight:bold;"><td colspan="7" style="text-align:right;">💰 ${t('totalValue')} (Approved only):</td><td class="price-total">${approvedTotalValue.toFixed(2)} ${t('egp')}</td></tr>`;
+        itemsHtml += `<tr style="background:#f8f9fa; font-weight:bold;"><td colspan="7" style="text-align:right;">💰 ${t('totalValue')} (Approved only):</td><td><span class="price-total">${approvedTotalValue.toFixed(2)} ${t('egp')}</span></td></tr>`;
         itemsHtml += `</tbody></table></div>`;
         container.innerHTML += `<div class="request-card"><div class="request-card-header"><span class="request-id">📄 ${req.requestId}</span><div style="display:flex; gap:10px; flex-wrap:wrap;"><span style="background:linear-gradient(135deg, #1e3c72, #2a5298); color:white; padding:6px 14px; border-radius:20px; font-size:0.75rem;">💰 ${t('totalValue')}: ${requestTotalValue.toFixed(2)} ${t('egp')}</span><span class="approved-by-text">${t('approvedBy')}: <span>${escapeHtml(adminName)}</span></span><span class="status-badge ${statusClass}">${statusText}</span></div></div><div class="request-info-row"><div class="info-item"><div class="info-label">👨‍🍳 ${t('chefLabel')}</div><div class="info-value">${escapeHtml(req.chefName)}</div></div><div class="info-item"><div class="info-label">📅 ${t('submitted')}</div><div class="info-value">${req.submittedAt}</div></div></div>${itemsHtml}</div>`;
     });
@@ -1649,6 +1378,21 @@ function exportToExcel(kitchen) {
 function openAdmin() { window.open("admin.html", "_blank"); }
 function showToast(msg) { const toast = document.createElement("div"); toast.className = "toast"; toast.innerText = msg; document.body.appendChild(toast); setTimeout(() => toast.remove(), 2500); }
 function escapeHtml(str) { return str ? str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])) : ''; }
+
+function logout() {
+    if (confirm("Logout? All unlocked kitchens will be locked.")) {
+        if(autoRefreshInterval) clearInterval(autoRefreshInterval);
+        unlockedKitchens = {};
+        localStorage.removeItem("unlockedKitchens");
+        kitchens.forEach(k => localStorage.removeItem(`kitchen_password_${k}`));
+        kitchens.forEach(k => { kitchenData[k].cart = []; renderCart(k); });
+        saveCart();
+        currentKitchen = null;
+        sessionStorage.clear();
+        showToast("Logged out.");
+        setTimeout(() => window.location.href = "index.html", 1000);
+    }
+}
 
 async function selectKitchen(kitchen) {
     currentKitchen = kitchen;
@@ -1698,18 +1442,11 @@ function generatePages() {
 
 function loadLastSelectedKitchen() { const lastKitchen = localStorage.getItem("lastSelectedKitchen"); if (lastKitchen && unlockedKitchens[lastKitchen]) { selectKitchen(lastKitchen); } }
 
-// ============ INITIALIZE DASHBOARD AFTER LOGIN ============
-function initializeDashboard() {
-    generatePages();
-    startAutoRefresh();
-    loadRequestsFromFirebase();
-    loadLastSelectedKitchen();
-    db.collection("kitchen_requests").onSnapshot(() => { loadRequestsFromFirebase(); });
-    initFreehandModeListener();
-}
-
-// Check authentication on page load
-checkAuthentication();
+generatePages();
+startAutoRefresh();
+loadRequestsFromFirebase();
+loadLastSelectedKitchen();
+db.collection("kitchen_requests").onSnapshot(() => { loadRequestsFromFirebase(); });
 </script>
 </body>
 </html>
