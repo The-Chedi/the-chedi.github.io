@@ -659,6 +659,11 @@ body {
 </div>
 
 <script>
+// ============ FIREBASE REFERENCES ============
+// Use the already initialized instances from firebase-config.js
+const db = window.db;
+const auth = window.auth;
+
 const KITCHENS = ["Hot Kitchen", "Cold Kitchen", "Pastry / Bakery", "Butchery", "Beach House", "Nihon Kitchen", "Staff Kitchen"];
 
 let currentAdmin = "";
@@ -670,8 +675,12 @@ let allRequests = [];
 // Wait for Firebase
 function waitForFirebase() {
     return new Promise((resolve) => {
+        if (db && auth) {
+            resolve();
+            return;
+        }
         const checkInterval = setInterval(() => {
-            if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+            if (window.db && window.auth) {
                 clearInterval(checkInterval);
                 resolve();
             }
@@ -683,6 +692,8 @@ function waitForFirebase() {
 // Initialize app
 async function init() {
     await waitForFirebase();
+    
+    console.log("✅ Firebase ready in admin.html");
     
     auth.onAuthStateChanged((user) => {
         const loadingScreen = document.getElementById("loadingScreen");
@@ -708,6 +719,12 @@ async function init() {
             loginModal.style.display = "none";
             
             loadRequests();
+            
+            // Set up real-time listener
+            db.collection("kitchen_requests").onSnapshot(() => {
+                console.log("🔄 Real-time update received");
+                loadRequests();
+            });
         } else {
             loadingScreen.style.display = "none";
             mainContent.style.display = "none";
@@ -737,8 +754,18 @@ async function login() {
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
         await userCredential.user.updateProfile({ displayName: displayName });
         errorDiv.innerHTML = "";
+        showToast("✅ Login successful!");
     } catch (error) {
-        errorDiv.innerHTML = "❌ Login failed: " + error.message;
+        console.error("Login error:", error);
+        if (error.code === 'auth/user-not-found') {
+            errorDiv.innerHTML = "❌ User not found. Please check your email or contact admin.";
+        } else if (error.code === 'auth/wrong-password') {
+            errorDiv.innerHTML = "❌ Wrong password. Please try again.";
+        } else if (error.code === 'auth/invalid-email') {
+            errorDiv.innerHTML = "❌ Invalid email format.";
+        } else {
+            errorDiv.innerHTML = "❌ Login failed: " + error.message;
+        }
         loginBtn.innerHTML = "Login";
         loginBtn.disabled = false;
     }
@@ -758,9 +785,10 @@ async function loadRequests() {
         snapshot.forEach(doc => allRequests.push({ id: doc.id, ...doc.data() }));
         renderUI();
         updateStats();
+        console.log("✅ Loaded", allRequests.length, "requests");
     } catch(e) {
-        console.error(e);
-        showToast("Error loading data");
+        console.error("Error loading requests:", e);
+        showToast("Error loading data: " + e.message);
     }
 }
 
@@ -776,6 +804,7 @@ function getRequestStatus(items) {
     if (approved === items.length && approved > 0) return "approved";
     if (rejected === items.length && rejected > 0) return "rejected";
     if (approved > 0 && rejected > 0) return "accepted";
+    if (approved > 0 && pending > 0) return "accepted";
     return "pending";
 }
 
@@ -785,6 +814,7 @@ async function updateRequest(id, items) {
         showToast(`✅ Updated by ${currentAdmin}`);
         await loadRequests();
     } catch(e) {
+        console.error("Update error:", e);
         showToast("Error: " + e.message);
     }
 }
@@ -1022,7 +1052,7 @@ function renderUI() {
                 </tr>`;
             }
         });
-        itemsHtml += `</tbody>}</div>`;
+        itemsHtml += `</tbody></table></div>`;
         
         let actions = "";
         if (!isComplete) {
