@@ -1,4 +1,5 @@
-// firebase-config.js
+// firebase-config.js - SINGLE CONFIGURATION FILE
+
 const firebaseConfig = {
     apiKey: "AIzaSyD57ErKNYwqGbLcriDYYvPUtVIw8jRncXQ",
     authDomain: "system-order-kitchen.firebaseapp.com",
@@ -9,18 +10,20 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase if not already initialized
-if (!firebase.apps.length) {
+if (typeof firebase !== 'undefined' && !firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
+    console.log("✅ Firebase initialized from config file");
 }
 
+// Get Firebase instances
 const db = firebase.firestore();
 const auth = firebase.auth();
 
-// Make them available globally
+// Enable offline persistence
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.error);
+
+// Make available globally
 window.db = db;
 window.auth = auth;
 
-// Enable persistence
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-
-console.log("✅ Firebase initialized successfully");
+console.log("✅ Firebase ready - DB and Auth available");
