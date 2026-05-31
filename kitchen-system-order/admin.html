@@ -2,9 +2,11 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<!-- External Firebase config file - MUST exist: firebase-config.js -->
 <script src="firebase-config.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
 <title>Admin Dashboard - Full Quantity Control</title>
@@ -857,7 +859,11 @@ body {
 </div>
 
 <script>
-const KITCHENS = ["Hot Kitchen", "Cold Kitchen", "Pastry / Bakery", "Butchery", "Beach House", "Nihon Kitchen", "Staff Kitchen"];
+// Firebase is initialized by firebase-config.js which must define:
+// firebase.initializeApp(firebaseConfig);
+// and export db = firebase.firestore(); and auth = firebase.auth();
+// We'll use global db and auth from that script.
+// Also handle case where config fails to load.
 
 let currentAdmin = "";
 let currentAdminEmail = "";
@@ -866,22 +872,43 @@ let currentStatus = "pending";
 let allRequests = [];
 let duplicateMap = new Map();
 let authChecked = false;
+let db = null;
+let auth = null;
 
-// Function to save user name to localStorage
-function saveAdminName(name) {
-    localStorage.setItem("adminDisplayName", name);
+// Wait for Firebase to be ready from external config
+function waitForFirebase() {
+    return new Promise((resolve) => {
+        if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length) {
+            // If config already initialized, get instances
+            if (!db) db = firebase.firestore();
+            if (!auth) auth = firebase.auth();
+            resolve(true);
+            return;
+        }
+        // Otherwise wait for initialization signal from config (config might set window.dbReady)
+        const checkInterval = setInterval(() => {
+            if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length) {
+                clearInterval(checkInterval);
+                if (!db) db = firebase.firestore();
+                if (!auth) auth = firebase.auth();
+                resolve(true);
+            }
+        }, 100);
+        setTimeout(() => {
+            clearInterval(checkInterval);
+            console.error("Firebase config not loaded. Ensure firebase-config.js exists and calls firebase.initializeApp");
+            document.getElementById("loadingScreen").innerHTML = '<div style="color:red;text-align:center;">❌ Firebase config missing. Please create firebase-config.js with valid configuration.</div>';
+        }, 5000);
+    });
 }
 
-function getSavedAdminName() {
-    return localStorage.getItem("adminDisplayName") || "";
-}
+function saveAdminName(name) { localStorage.setItem("adminDisplayName", name); }
+function getSavedAdminName() { return localStorage.getItem("adminDisplayName") || ""; }
 
-// Function to hide loading screen and show appropriate content
 function hideLoadingAndShowContent(showDashboard) {
     const loadingScreen = document.getElementById("loadingScreen");
     const loginModal = document.getElementById("loginModal");
     const mainContent = document.getElementById("mainContent");
-    
     setTimeout(() => {
         loadingScreen.style.display = "none";
         if (showDashboard) {
@@ -891,123 +918,76 @@ function hideLoadingAndShowContent(showDashboard) {
             mainContent.style.display = "none";
             loginModal.style.display = "flex";
         }
-    }, 300); // Small delay for smooth transition
+    }, 300);
 }
 
-// Firebase Auth state observer - NO FLASH!
-firebase.auth().onAuthStateChanged((user) => {
-    if (user) {
-        // User is signed in - show dashboard directly without login modal flash
-        currentAdminEmail = user.email;
-        
-        // Get saved name from localStorage
-        let savedName = getSavedAdminName();
-        
-        if (savedName && savedName.trim() !== "") {
-            currentAdmin = savedName;
-        } else {
-            // If no saved name, try to get from Firebase displayName
-            if (user.displayName && user.displayName.trim() !== "") {
-                currentAdmin = user.displayName;
-                saveAdminName(currentAdmin);
+async function initializeAuthListener() {
+    await waitForFirebase();
+    auth.onAuthStateChanged((user) => {
+        if (user) {
+            currentAdminEmail = user.email;
+            let savedName = getSavedAdminName();
+            if (savedName && savedName.trim() !== "") {
+                currentAdmin = savedName;
             } else {
-                // Use email prefix
-                currentAdmin = user.email.split('@')[0];
+                if (user.displayName && user.displayName.trim() !== "") {
+                    currentAdmin = user.displayName;
+                    saveAdminName(currentAdmin);
+                } else {
+                    currentAdmin = user.email.split('@')[0];
+                }
             }
+            document.getElementById("adminNameDisplay").innerText = currentAdmin;
+            document.getElementById("adminEmailDisplay").innerText = currentAdminEmail;
+            hideLoadingAndShowContent(true);
+            loadRequests();
+        } else {
+            if (!authChecked) authChecked = true;
+            hideLoadingAndShowContent(false);
         }
-        
-        document.getElementById("adminNameDisplay").innerText = currentAdmin;
-        document.getElementById("adminEmailDisplay").innerText = currentAdminEmail;
-        
-        // Hide loading and show dashboard (no login modal flash)
-        hideLoadingAndShowContent(true);
-        
-        // Load data
-        loadRequests();
-        
-    } else {
-        // No user logged in - show login modal (but only after loading screen)
-        if (!authChecked) {
-            authChecked = true;
-        }
-        hideLoadingAndShowContent(false);
-    }
-});
+    });
+}
 
-// Login function
 async function loginWithEmail() {
     const displayName = document.getElementById("adminDisplayName").value.trim();
     const email = document.getElementById("loginEmail").value.trim();
     const password = document.getElementById("loginPassword").value;
     const errorDiv = document.getElementById("loginError");
     const loginBtn = document.getElementById("loginButton");
-    
-    if (!displayName) {
-        errorDiv.innerHTML = "❌ Please enter your name";
-        return;
-    }
-    
-    if (!email || !password) {
-        errorDiv.innerHTML = "❌ Please enter both email and password";
-        return;
-    }
-    
-    // Save the display name before login
+    if (!displayName) { errorDiv.innerHTML = "❌ Please enter your name"; return; }
+    if (!email || !password) { errorDiv.innerHTML = "❌ Please enter both email and password"; return; }
     saveAdminName(displayName);
     currentAdmin = displayName;
-    
-    // Show loading state on button
     const originalText = loginBtn.innerHTML;
     loginBtn.innerHTML = '<span class="loading-spinner"></span> Logging in...';
     loginBtn.disabled = true;
-    
     try {
-        const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
-        
-        // Update the user's profile with display name
-        await userCredential.user.updateProfile({
-            displayName: displayName
-        });
-        
-        console.log("Logged in as:", displayName, "(", userCredential.user.email, ")");
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        await userCredential.user.updateProfile({ displayName: displayName });
         errorDiv.innerHTML = "";
-        
     } catch (error) {
         console.error("Login error:", error);
         let errorMessage = "❌ Login failed: ";
         switch (error.code) {
-            case 'auth/invalid-email':
-                errorMessage += "Invalid email format";
-                break;
-            case 'auth/user-disabled':
-                errorMessage += "Account disabled";
-                break;
-            case 'auth/user-not-found':
-                errorMessage += "User not found";
-                break;
-            case 'auth/wrong-password':
-                errorMessage += "Wrong password";
-                break;
-            default:
-                errorMessage += error.message;
+            case 'auth/invalid-email': errorMessage += "Invalid email format"; break;
+            case 'auth/user-disabled': errorMessage += "Account disabled"; break;
+            case 'auth/user-not-found': errorMessage += "User not found"; break;
+            case 'auth/wrong-password': errorMessage += "Wrong password"; break;
+            default: errorMessage += error.message;
         }
         errorDiv.innerHTML = errorMessage;
         loginBtn.innerHTML = originalText;
         loginBtn.disabled = false;
-        // Remove saved name if login failed
         localStorage.removeItem("adminDisplayName");
     }
 }
 
-// Logout function
 async function logout() {
     if (confirm("Logout?")) {
         try {
-            // Show loading screen during logout
             document.getElementById("loadingScreen").style.display = "flex";
             document.getElementById("mainContent").style.display = "none";
-            
-            await firebase.auth().signOut();
+            await auth.signOut();
             showToast("Logged out successfully");
         } catch (error) {
             console.error("Logout error:", error);
@@ -1017,17 +997,9 @@ async function logout() {
     }
 }
 
-function goBackToIndex() { 
-    window.location.href = "index.html"; 
-}
-
-function openAnalytics() { 
-    window.open("analytics.html", "_blank"); 
-}
-
-function openRevenue() { 
-    window.open("revenue.html", "_blank"); 
-}
+function goBackToIndex() { window.location.href = "index.html"; }
+function openAnalytics() { window.open("analytics.html", "_blank"); }
+function openRevenue() { window.open("revenue.html", "_blank"); }
 
 async function loadRequests() {
     try {
@@ -1054,9 +1026,7 @@ function findDuplicateRequests() {
     }
     for (const [sig, requests] of signatureMap.entries()) {
         if (requests.length > 1) {
-            for (const req of requests) {
-                duplicateMap.set(req.id, { isDuplicate: true, count: requests.length, otherIds: requests.filter(r => r.id !== req.id).map(r => r.requestId) });
-            }
+            for (const req of requests) duplicateMap.set(req.id, { isDuplicate: true, count: requests.length, otherIds: requests.filter(r => r.id !== req.id).map(r => r.requestId) });
         }
     }
 }
@@ -1085,11 +1055,7 @@ async function updateRequest(id, items) {
         showToast(`✅ Updated by ${currentAdmin}`);
         await loadRequests();
         return true;
-    } catch(e) { 
-        console.error("Update error:", e);
-        showToast("Update error"); 
-        return false;
-    }
+    } catch(e) { console.error("Update error:", e); showToast("Update error"); return false; }
 }
 
 async function approveItemFlex(reqId, idx) {
@@ -1188,43 +1154,21 @@ async function acceptRequest(reqId) {
     }
 }
 
-function showResetConfirmModal() {
+function showResetConfirmModal() { /* identical to original logic */ 
     const toDelete = allRequests.filter(req => getRequestStatus(req.items) !== "pending");
     if(toDelete.length === 0) { showToast("ℹ️ No completed requests to delete"); return; }
     const modal = document.createElement('div');
     modal.className = 'confirm-modal';
-    modal.innerHTML = `
-        <div class="confirm-modal-content">
-            <h3>⚠️ PERMANENT DELETION ⚠️</h3>
-            <p>Delete <strong>${toDelete.length}</strong> completed request(s)?</p>
-            <p class="warning-text">Type <strong>DELETE</strong> to confirm:</p>
-            <input type="text" id="confirmDeleteInput" autocomplete="off">
-            <div class="confirm-buttons">
-                <button class="btn-cancel-delete" onclick="this.closest('.confirm-modal').remove()">Cancel</button>
-                <button class="btn-confirm-delete" id="confirmDeleteBtn" disabled>Delete</button>
-            </div>
-        </div>
-    `;
+    modal.innerHTML = `<div class="confirm-modal-content"><h3>⚠️ PERMANENT DELETION ⚠️</h3><p>Delete <strong>${toDelete.length}</strong> completed request(s)?</p><p class="warning-text">Type <strong>DELETE</strong> to confirm:</p><input type="text" id="confirmDeleteInput" autocomplete="off"><div class="confirm-buttons"><button class="btn-cancel-delete" onclick="this.closest('.confirm-modal').remove()">Cancel</button><button class="btn-confirm-delete" id="confirmDeleteBtn" disabled>Delete</button></div></div>`;
     document.body.appendChild(modal);
     const input = modal.querySelector('#confirmDeleteInput');
     const confirmBtn = modal.querySelector('#confirmDeleteBtn');
     input.focus();
     input.addEventListener('input', (e) => { confirmBtn.disabled = e.target.value !== 'DELETE'; });
-    confirmBtn.onclick = async () => {
-        if(input.value === 'DELETE') {
-            modal.remove();
-            let deletedCount = 0;
-            for(const req of toDelete) {
-                try { await db.collection("kitchen_requests").doc(req.id).delete(); deletedCount++; }
-                catch(e) { console.error(e); }
-            }
-            await loadRequests();
-            showToast(`✅ Deleted ${deletedCount} requests.`);
-        } else { showToast("Cancelled"); modal.remove(); }
-    };
+    confirmBtn.onclick = async () => { if(input.value === 'DELETE') { modal.remove(); let deletedCount = 0; for(const req of toDelete) { try { await db.collection("kitchen_requests").doc(req.id).delete(); deletedCount++; } catch(e) { console.error(e); } } await loadRequests(); showToast(`✅ Deleted ${deletedCount} requests.`); } else { showToast("Cancelled"); modal.remove(); } };
 }
 
-function exportExcel() {
+function exportExcel() { /* keep original logic, omitted for brevity but identical */ 
     if(!allRequests.length) { showToast("No data"); return; }
     let csv = "Request ID,Kitchen,Chef,Date,Item,Code,Requested Qty,Unit,Price/Unit (EGP),Approved Qty,Status,Action By,Total Value (EGP),Duplicate\n";
     allRequests.forEach(req => {
@@ -1250,13 +1194,7 @@ function exportExcel() {
 
 function updateStats() {
     let pending=0, approved=0, rejected=0, accepted=0;
-    allRequests.forEach(req => {
-        const s = getRequestStatus(req.items);
-        if(s === "pending") pending++;
-        else if(s === "approved") approved++;
-        else if(s === "rejected") rejected++;
-        else if(s === "accepted") accepted++;
-    });
+    allRequests.forEach(req => { const s = getRequestStatus(req.items); if(s === "pending") pending++; else if(s === "approved") approved++; else if(s === "rejected") rejected++; else if(s === "accepted") accepted++; });
     document.getElementById("pendingCount").innerText = pending;
     document.getElementById("approvedCount").innerText = approved;
     document.getElementById("rejectedCount").innerText = rejected;
@@ -1267,172 +1205,71 @@ function updateStats() {
 function setFilter(status) { currentStatus = status; renderUI(); }
 function filterKitchen(kitchen) { currentKitchen = kitchen; renderUI(); }
 
-function renderUI() {
+function renderUI() { /* full rendering logic, keep original */ 
     const kitchenDiv = document.getElementById("kitchenFilters");
+    const KITCHENS = ["Hot Kitchen", "Cold Kitchen", "Pastry / Bakery", "Butchery", "Beach House", "Nihon Kitchen", "Staff Kitchen"];
     kitchenDiv.innerHTML = `<button class="kitchen-filter-btn ${currentKitchen === 'all' ? 'active' : ''}" onclick="filterKitchen('all')">📋 All</button>`;
     KITCHENS.forEach(k => {
         let icon = k === 'Hot Kitchen' ? '🔥' : k === 'Cold Kitchen' ? '❄️' : k === 'Pastry / Bakery' ? '🍰' : k === 'Butchery' ? '🥩' : k === 'Beach House' ? '🏖️' : k === 'Nihon Kitchen' ? '🍜' : '👥';
         let name = k.replace(' Kitchen', '').replace(' / Bakery', '');
         kitchenDiv.innerHTML += `<button class="kitchen-filter-btn ${currentKitchen === k ? 'active' : ''}" onclick="filterKitchen('${k}')">${icon} ${name}</button>`;
     });
-    
     const tabsDiv = document.getElementById("statusTabs");
     const statuses = ["pending", "approved", "rejected", "accepted", "all"];
     const statusNames = ["⏳ Pending", "✅ Approved", "❌ Rejected", "🟣 Accepted", "📋 All"];
     tabsDiv.innerHTML = "";
-    statuses.forEach((s, i) => {
-        tabsDiv.innerHTML += `<button class="tab-btn ${currentStatus === s ? 'active' : ''}" onclick="setFilter('${s}')">${statusNames[i]}</button>`;
-    });
-    
+    statuses.forEach((s, i) => { tabsDiv.innerHTML += `<button class="tab-btn ${currentStatus === s ? 'active' : ''}" onclick="setFilter('${s}')">${statusNames[i]}</button>`; });
     let filtered = [...allRequests];
     if(currentKitchen !== "all") filtered = filtered.filter(r => r.section === currentKitchen);
     if(currentStatus !== "all") filtered = filtered.filter(r => getRequestStatus(r.items) === currentStatus);
-    
     const container = document.getElementById("requestsContainer");
     if(!filtered.length) { container.innerHTML = `<div class="empty-state">📭 No requests found</div>`; return; }
-    
     container.innerHTML = "";
     filtered.forEach(req => {
         const requestStatus = getRequestStatus(req.items);
         const kitchenClass = { "Hot Kitchen": "kitchen-hot", "Cold Kitchen": "kitchen-cold", "Pastry / Bakery": "kitchen-pastry", "Butchery": "kitchen-butchery", "Beach House": "kitchen-beach", "Nihon Kitchen": "kitchen-nihon", "Staff Kitchen": "kitchen-staff" }[req.section] || "kitchen-staff";
-        
         const duplicateInfo = duplicateMap.get(req.id);
         const duplicateWarning = duplicateInfo ? `<span class="duplicate-warning">⚠️ DUPLICATE (${duplicateInfo.count} identical)</span>` : '';
-        
         let requestedTotalValue = 0, approvedTotalValue = 0;
-        req.items.forEach(item => {
-            const price = item.price || 0;
-            requestedTotalValue += item.originalQty * price;
-            if(item.status === "approved") approvedTotalValue += (item.approvedQty || 0) * price;
-        });
-        
-        let hasIndividualAction = false;
-        let isCompleted = false;
-        if(requestStatus === "pending") {
-            for(const item of req.items) {
-                if(item.status === "approved" || item.status === "rejected") {
-                    hasIndividualAction = true;
-                    break;
-                }
-            }
-        } else { isCompleted = true; }
-        
+        req.items.forEach(item => { const price = item.price || 0; requestedTotalValue += item.originalQty * price; if(item.status === "approved") approvedTotalValue += (item.approvedQty || 0) * price; });
+        let hasIndividualAction = false, isCompleted = false;
+        if(requestStatus === "pending") { for(const item of req.items) { if(item.status === "approved" || item.status === "rejected") { hasIndividualAction = true; break; } } } else { isCompleted = true; }
         let itemsHtml = `<div class="table-wrapper"><table class="admin-table"><thead><tr><th>Code</th><th>Item</th><th>Requested Qty</th><th>Unit</th><th>Price/Unit</th><th>Admin Qty</th><th>Total Value</th><th>Action</th><th>Status</th></tr></thead><tbody>`;
-        
         req.items.forEach((item, idx) => {
             const price = item.price || 0;
             const approvedQty = item.status === "approved" ? (item.approvedQty || 0) : 0;
             const totalValue = approvedQty * price;
-            
             if(item.status === "approved") {
-                itemsHtml += `<tr style="background:#e8f5e9;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td class="item-price">${price.toFixed(2)}</td>
-                    <td><strong>${approvedQty.toFixed(1)}</strong></td>
-                    <td><strong style="color:#27ae60;">${totalValue.toFixed(2)}</strong></td>
-                    <td><span class="btn-approve" style="background:#27ae60;opacity:0.7;">✅ Approved</span></td>
-                    <td><span class="status-approved-cell">Approved</span><div class="admin-info-text">👤 ${escapeHtml(item.approvedBy || '?')}<br>📅 ${item.approvedAt || ''}</div></td>
-                </tr>`;
+                itemsHtml += `<tr style="background:#e8f5e9;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td class="item-price">${price.toFixed(2)}</td><td><strong>${approvedQty.toFixed(1)}</strong></td><td><strong style="color:#27ae60;">${totalValue.toFixed(2)}</strong></td><td><span class="btn-approve" style="background:#27ae60;opacity:0.7;">✅ Approved</span></td><td><span class="status-approved-cell">Approved</span><div class="admin-info-text">👤 ${escapeHtml(item.approvedBy || '?')}<br>📅 ${item.approvedAt || ''}</div></td></tr>`;
             } else if(item.status === "rejected") {
-                itemsHtml += `<tr style="background:#fee2e2;"><td>${item.code}</td>
-                    <td><div class="item-name">${escapeHtml(item.name)}</div></td>
-                    <td><span class="requested-qty">${item.originalQty}</span></td>
-                    <td>${item.unit}</td>
-                    <td class="item-price">${price.toFixed(2)}</td>
-                    <td><strong>0</strong></td>
-                    <td><strong style="color:#e74c3c;">0.00</strong></td>
-                    <td><span class="btn-reject" style="background:#e74c3c;opacity:0.7;">❌ Rejected</span></td>
-                    <td><span class="status-rejected-cell">Rejected</span><div class="admin-info-text">👤 ${escapeHtml(item.rejectedBy || '?')}<br>📅 ${item.rejectedAt || ''}<br>📝 ${escapeHtml(item.rejectionReason || '')}</div></td>
-                </tr>`;
+                itemsHtml += `<tr style="background:#fee2e2;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td class="item-price">${price.toFixed(2)}</td><td><strong>0</strong></td><td><strong style="color:#e74c3c;">0.00</strong></td><td><span class="btn-reject" style="background:#e74c3c;opacity:0.7;">❌ Rejected</span></td><td><span class="status-rejected-cell">Rejected</span><div class="admin-info-text">👤 ${escapeHtml(item.rejectedBy || '?')}<br>📅 ${item.rejectedAt || ''}<br>📝 ${escapeHtml(item.rejectionReason || '')}</div></td></tr>`;
             } else {
                 const currentVal = (item.originalQty || 0).toFixed(1);
-                itemsHtml += `<tr style="background:#fff8e7;"><td>${item.code}</td>
-                    <td><div class="item-name">${escapeHtml(item.name)}</div></td>
-                    <td><span class="requested-qty">${item.originalQty}</span></td>
-                    <td>${item.unit}</td>
-                    <td class="item-price">${price.toFixed(2)}</td>
-                    <td><input type="number" id="qty_${req.id}_${idx}" class="approval-input" value="${currentVal}" min="0" step="0.5" style="background:#fef9e6;"></td>
-                    <td><span id="totalValuePreview_${req.id}_${idx}" style="font-weight:600; color:#1e3c72;">${(item.originalQty * price).toFixed(2)}</span></td>
-                    <td class="action-buttons"><button class="btn-approve" onclick="approveItemFlex('${req.id}', ${idx})">✅ Approve</button><button class="btn-reject" onclick="rejectItem('${req.id}', ${idx})">❌ Reject</button></td>
-                    <td><span class="status-pending-cell">Pending</span><div class="admin-info-text">⚠️ Auto-approved on Accept</div></td>
-                </tr>`;
-                setTimeout(() => {
-                    const input = document.getElementById(`qty_${req.id}_${idx}`);
-                    const totalSpan = document.getElementById(`totalValuePreview_${req.id}_${idx}`);
-                    if(input && totalSpan) {
-                        const updateTotal = () => { const newQty = parseFloat(input.value) || 0; totalSpan.innerText = (newQty * price).toFixed(2); };
-                        input.addEventListener('input', updateTotal);
-                        updateTotal();
-                    }
-                }, 50);
+                itemsHtml += `<tr style="background:#fff8e7;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td class="item-price">${price.toFixed(2)}</td><td><input type="number" id="qty_${req.id}_${idx}" class="approval-input" value="${currentVal}" min="0" step="0.5" style="background:#fef9e6;"></td><td><span id="totalValuePreview_${req.id}_${idx}" style="font-weight:600; color:#1e3c72;">${(item.originalQty * price).toFixed(2)}</span></td><td class="action-buttons"><button class="btn-approve" onclick="approveItemFlex('${req.id}', ${idx})">✅ Approve</button><button class="btn-reject" onclick="rejectItem('${req.id}', ${idx})">❌ Reject</button></td><td><span class="status-pending-cell">Pending</span><div class="admin-info-text">⚠️ Auto-approved on Accept</div></td></tr>`;
+                setTimeout(() => { const inputEl = document.getElementById(`qty_${req.id}_${idx}`); const totalSpan = document.getElementById(`totalValuePreview_${req.id}_${idx}`); if(inputEl && totalSpan) { const updateTotal = () => { const newQty = parseFloat(inputEl.value) || 0; totalSpan.innerText = (newQty * price).toFixed(2); }; inputEl.addEventListener('input', updateTotal); updateTotal(); } }, 50);
             }
         });
         itemsHtml += `</tbody></table></div>`;
-        
         let actions = "";
-        if(!isCompleted) {
-            actions = `<div class="request-actions">
-                <button class="btn-approve-all" onclick="approveAllFlex('${req.id}')" ${hasIndividualAction ? 'disabled' : ''}>✅ Approve All</button>
-                <button class="btn-reject-all" onclick="rejectAll('${req.id}')" ${hasIndividualAction ? 'disabled' : ''}>❌ Reject All</button>
-                <button class="btn-accept" onclick="acceptRequest('${req.id}')" ${!hasIndividualAction ? 'disabled' : ''}>🟣 Accept</button>
-            </div>`;
-        } else {
-            actions = `<div class="request-actions"><button class="btn-accept" style="background:#6c757d; cursor:default;" disabled>✅ Request Completed</button></div>`;
-        }
-        
+        if(!isCompleted) actions = `<div class="request-actions"><button class="btn-approve-all" onclick="approveAllFlex('${req.id}')" ${hasIndividualAction ? 'disabled' : ''}>✅ Approve All</button><button class="btn-reject-all" onclick="rejectAll('${req.id}')" ${hasIndividualAction ? 'disabled' : ''}>❌ Reject All</button><button class="btn-accept" onclick="acceptRequest('${req.id}')" ${!hasIndividualAction ? 'disabled' : ''}>🟣 Accept</button></div>`;
+        else actions = `<div class="request-actions"><button class="btn-accept" style="background:#6c757d; cursor:default;" disabled>✅ Request Completed</button></div>`;
         let statusText = "", statusClass = "";
-        if(requestStatus === "pending") { statusText = "Pending"; statusClass = "status-pending"; }
-        else if(requestStatus === "approved") { statusText = "Fully Approved"; statusClass = "status-approved"; }
-        else if(requestStatus === "rejected") { statusText = "Rejected"; statusClass = "status-rejected"; }
-        else { statusText = "Accepted"; statusClass = "status-accepted"; }
-        
-        container.innerHTML += `<div class="request-card">
-            <div class="request-header">
-                <div><span class="request-id">📄 ${req.requestId}</span>${duplicateWarning}<span class="kitchen-badge ${kitchenClass}" style="margin-left:10px;">${req.section}</span></div>
-                <div class="request-total-badge">
-                    <span>💰 Requested: ${requestedTotalValue.toFixed(2)} EGP</span>
-                    <span>✅ Approved: ${approvedTotalValue.toFixed(2)} EGP</span>
-                </div>
-                <span class="status-badge ${statusClass}">${statusText}</span>
-            </div>
-            <div class="request-info">
-                <div class="info-item"><div class="info-label">👨‍🍳 CHEF</div><div class="info-value">${escapeHtml(req.chefName)}</div></div>
-                <div class="info-item"><div class="info-label">📅 SUBMITTED</div><div class="info-value">${req.submittedAt}</div></div>
-                <div class="info-item"><div class="info-label">🆔 FIREBASE ID</div><div class="info-value firebase-id" onclick="copyDocId('${req.id}')">📋 ${req.id}</div></div>
-            </div>
-            ${itemsHtml}
-            ${actions}
-        </div>`;
+        if(requestStatus === "pending") { statusText = "Pending"; statusClass = "status-pending"; } else if(requestStatus === "approved") { statusText = "Fully Approved"; statusClass = "status-approved"; } else if(requestStatus === "rejected") { statusText = "Rejected"; statusClass = "status-rejected"; } else { statusText = "Accepted"; statusClass = "status-accepted"; }
+        container.innerHTML += `<div class="request-card"><div class="request-header"><div><span class="request-id">📄 ${req.requestId}</span>${duplicateWarning}<span class="kitchen-badge ${kitchenClass}" style="margin-left:10px;">${req.section}</span></div><div class="request-total-badge"><span>💰 Requested: ${requestedTotalValue.toFixed(2)} EGP</span><span>✅ Approved: ${approvedTotalValue.toFixed(2)} EGP</span></div><span class="status-badge ${statusClass}">${statusText}</span></div><div class="request-info"><div class="info-item"><div class="info-label">👨‍🍳 CHEF</div><div class="info-value">${escapeHtml(req.chefName)}</div></div><div class="info-item"><div class="info-label">📅 SUBMITTED</div><div class="info-value">${req.submittedAt}</div></div><div class="info-item"><div class="info-label">🆔 FIREBASE ID</div><div class="info-value firebase-id" onclick="copyDocId('${req.id}')">📋 ${req.id}</div></div></div>${itemsHtml}${actions}</div>`;
     });
     updateStats();
 }
 
-function copyDocId(docId) { 
-    navigator.clipboard.writeText(docId).then(() => showToast("📋 ID Copied")).catch(() => showToast("❌ Copy Failed")); 
-}
+function copyDocId(docId) { navigator.clipboard.writeText(docId).then(() => showToast("📋 ID Copied")).catch(() => showToast("❌ Copy Failed")); }
+function escapeHtml(str) { return str?.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])) || ''; }
+function showToast(msg) { const t = document.createElement("div"); t.className = "toast"; t.innerText = msg; document.body.appendChild(t); setTimeout(() => t.remove(), 2500); }
 
-function escapeHtml(str) { 
-    return str?.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])) || ''; 
-}
-
-function showToast(msg) { 
-    const t = document.createElement("div"); 
-    t.className = "toast"; 
-    t.innerText = msg; 
-    document.body.appendChild(t); 
-    setTimeout(() => t.remove(), 2500); 
-}
-
-// Enable Enter key to login
 document.addEventListener('DOMContentLoaded', () => {
+    waitForFirebase().then(() => initializeAuthListener());
     const nameInput = document.getElementById('adminDisplayName');
     const emailInput = document.getElementById('loginEmail');
     const passwordInput = document.getElementById('loginPassword');
-    
-    const handleEnter = (e) => {
-        if (e.key === 'Enter') {
-            loginWithEmail();
-        }
-    };
-    
+    const handleEnter = (e) => { if (e.key === 'Enter') loginWithEmail(); };
     if (nameInput) nameInput.addEventListener('keypress', handleEnter);
     if (emailInput) emailInput.addEventListener('keypress', handleEnter);
     if (passwordInput) passwordInput.addEventListener('keypress', handleEnter);
