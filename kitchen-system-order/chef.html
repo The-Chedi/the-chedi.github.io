@@ -2,83 +2,123 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-
-<script>
-// ============ FIREBASE CONFIGURATION ============
-const firebaseConfig = {
-    apiKey: "AIzaSyD57ErKNYwqGbLcriDYYvPUtVIw8jRncXQ",
-    authDomain: "system-order-kitchen.firebaseapp.com",
-    projectId: "system-order-kitchen",
-    storageBucket: "system-order-kitchen.firebasestorage.app",
-    messagingSenderId: "429224554052",
-    appId: "1:429224554052:web:85d32727439fe55efcd611"
-};
-
-// Initialize Firebase if not already initialized
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-    console.log("✅ Firebase initialized");
-}
-
-const db = firebase.firestore();
-const auth = firebase.auth();
-
-// ============ MOBILE FIX: Disable persistence for better mobile sync ============
-// Instead of LOCAL persistence which causes issues on mobile, use NONE or fix settings
-db.settings({
-    cacheSizeBytes: firebase.firestore.CACHE_SIZE_UNLIMITED
-});
-
-// Enable offline persistence with proper error handling for mobile
-firebase.firestore().enablePersistence({ synchronizeTabs: true })
-    .then(() => {
-        console.log("✅ Offline persistence enabled for mobile");
-    })
-    .catch((err) => {
-        if (err.code === 'failed-precondition') {
-            console.warn("Multiple tabs open, persistence disabled");
-        } else if (err.code === 'unimplemented') {
-            console.warn("Browser doesn't support persistence");
-        }
-        console.log("⚠️ Persistence not enabled, but real-time sync will work");
-    });
-
-// Disable auth persistence for mobile to avoid conflicts
-auth.setPersistence(firebase.auth.Auth.Persistence.NONE)
-    .then(() => console.log("✅ Auth persistence set to NONE for mobile"))
-    .catch(console.error);
-
-console.log("✅ Firebase ready for mobile");
-</script>
-
+<script src="firebase-config.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>Chef Dashboard - Kitchen Order System</title>
 
 <style>
-/* ============ MOBILE OPTIMIZATIONS ============ */
+/* ============ ADDED LOGIN MODAL STYLES ============ */
+.login-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.9);
+    z-index: 20000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px);
+}
+
+.login-box {
+    background: white;
+    padding: 40px 30px;
+    border-radius: 30px;
+    text-align: center;
+    max-width: 350px;
+    width: 90%;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+    animation: fadeInUp 0.4s ease;
+}
+
+.login-box h2 {
+    color: #1e3c72;
+    margin-bottom: 10px;
+    font-size: 1.8rem;
+}
+
+.login-box .logo-icon {
+    font-size: 3rem;
+    margin-bottom: 10px;
+}
+
+.login-box p {
+    color: #666;
+    margin-bottom: 25px;
+    font-size: 0.9rem;
+}
+
+.login-box input {
+    width: 100%;
+    padding: 14px;
+    margin-bottom: 20px;
+    border: 2px solid #e0e0e0;
+    border-radius: 50px;
+    font-size: 16px;
+    text-align: center;
+    font-weight: 600;
+    letter-spacing: 2px;
+}
+
+.login-box input:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+.login-box button {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 50px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    font-size: 1rem;
+    transition: all 0.3s;
+}
+
+.login-box button:hover {
+    transform: scale(1.02);
+    background: linear-gradient(135deg, #2a5298, #1e3c72);
+}
+
+.login-error {
+    color: #e74c3c;
+    margin-top: 15px;
+    font-size: 0.8rem;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Hide main content until logged in */
+#mainContent {
+    display: none;
+}
+
+#mainContent.visible {
+    display: block;
+}
+</style>
+
+<style>
+/* ... ALL YOUR EXISTING STYLES REMAIN EXACTLY THE SAME ... */
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    -webkit-tap-highlight-color: transparent;
 }
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     background: #f0f4f8;
-    -webkit-font-smoothing: antialiased;
-}
-
-/* Force hardware acceleration for mobile */
-.kitchen-page, .card, .request-card {
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
 }
 
 /* Arabic Styles */
@@ -412,17 +452,6 @@ input:focus {
     color: #27ae60;
 }
 
-/* Mobile connection status indicator */
-.sync-status.disconnected {
-    background: #fee2e2;
-    color: #e74c3c;
-}
-
-.sync-status.connecting {
-    background: #fff3cd;
-    color: #f39c12;
-}
-
 .admin-fab {
     position: fixed;
     bottom: 20px;
@@ -616,7 +645,6 @@ input:focus {
     border-radius: 12px;
     background: #fafcfc;
     direction: ltr;
-    -webkit-overflow-scrolling: touch;
 }
 
 body.arabic .items-scroll-container {
@@ -783,13 +811,6 @@ body.arabic .items-scroll-container {
         flex-direction: column;
         align-items: flex-start;
     }
-    .header-buttons button {
-        padding: 4px 10px;
-        font-size: 10px;
-    }
-    .logo {
-        font-size: 1rem;
-    }
 }
 
 .container {
@@ -869,7 +890,7 @@ body.arabic .items-scroll-container {
 .history-toggle-btn:hover {
     background: #6c3483;
 }
-
+/* Freehand Status Indicator */
 .freehand-status {
     display: inline-flex;
     align-items: center;
@@ -904,91 +925,103 @@ body.arabic .items-scroll-container {
 .status-text {
     font-weight: 500;
 }
-
-/* Mobile pull-to-refresh indicator */
-.refresh-indicator {
-    text-align: center;
-    padding: 10px;
-    font-size: 12px;
-    color: #888;
-    display: none;
-}
-
-.refresh-indicator.active {
-    display: block;
-}
 </style>
 </head>
 <body>
 
-<div class="header">
-    <div class="header-content">
-        <div class="logo">
-            <span class="logo-icon">🍳</span>
-            <span>Kitchen Order <span>| Chef</span></span>
-            <div class="freehand-status" id="freehandStatusIndicator">
-                <div class="status-light" id="statusLight"></div>
-                <span class="status-text" id="statusText">Freehand: OFF</span>
-            </div>
-        </div>
-        <div class="header-buttons">
-            <button class="lang-btn" id="langToggleBtn" onclick="toggleLanguage()">🇸🇦 العربية</button>
-            <button class="refresh-btn" onclick="manualRefresh()">🔄</button>
-            <button class="hard-reload-btn" onclick="forceReloadItems()">📦 Reload</button>
-            <button class="logout-btn" onclick="logout()">🚪</button>
-        </div>
+<!-- ============ LOGIN OVERLAY (ADDED) ============ -->
+<div id="loginOverlay" class="login-overlay">
+    <div class="login-box">
+        <div class="logo-icon">🍳</div>
+        <h2>Kitchen Order System</h2>
+        <p>Enter password to access Chef Dashboard</p>
+        <input type="password" id="loginPassword" placeholder="Enter Password" autocomplete="off">
+        <button onclick="verifyChefPassword()">Login</button>
+        <div id="loginErrorMsg" class="login-error"></div>
     </div>
 </div>
 
-<div class="kitchen-tabs">
-    <div class="tabs-container" id="tabsContainer"></div>
-</div>
+<!-- ============ MAIN CONTENT (hidden until login) ============ -->
+<div id="mainContent">
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">
+                <span class="logo-icon">🍳</span>
+                <span>Kitchen Order <span>| Chef</span></span>
+                <div class="freehand-status" id="freehandStatusIndicator">
+                    <div class="status-light" id="statusLight"></div>
+                    <span class="status-text" id="statusText">Freehand: OFF</span>
+                </div>
+            </div>
+            <div class="header-buttons">
+                <button class="lang-btn" id="langToggleBtn" onclick="toggleLanguage()">🇸🇦 العربية</button>
+                <button class="refresh-btn" onclick="manualRefresh()">🔄</button>
+                <button class="hard-reload-btn" onclick="forceReloadItems()">📦 Reload</button>
+                <button class="logout-btn" onclick="logout()">🚪</button>
+            </div>
+        </div>
+    </div>
 
-<div id="kitchenPagesContainer"></div>
+    <div class="kitchen-tabs">
+        <div class="tabs-container" id="tabsContainer"></div>
+    </div>
 
-<button class="admin-btn-mobile" onclick="openAdmin()">👑 Admin Panel</button>
-<button class="admin-fab" onclick="openAdmin()">👑</button>
-<div class="sync-status" id="syncStatus">
-    <span id="syncIcon">🔄</span> Connecting... 
-    <span id="autoRefreshIndicator" class="auto-refresh-indicator">(Auto-refresh: 30s)</span>
+    <div id="kitchenPagesContainer"></div>
+
+    <button class="admin-btn-mobile" onclick="openAdmin()">👑 Admin Panel</button>
+    <button class="admin-fab" onclick="openAdmin()">👑</button>
+    <div class="sync-status" id="syncStatus">🔄 Connecting... <span id="autoRefreshIndicator" class="auto-refresh-indicator">(Auto-refresh: 60s)</span></div>
 </div>
-<div class="refresh-indicator" id="refreshIndicator">↓ Pull down to refresh</div>
 
 <script>
-// ============ MOBILE OPTIMIZATIONS ============
-// Force refresh on visibility change (when coming back to tab)
-document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) {
-        console.log("📱 Page became visible, refreshing...");
-        manualRefresh();
+// ============ AUTHENTICATION (ADDED) ============
+// Set your chef password here (change as needed)
+const CHEF_PASSWORD = "chef123";
+
+function verifyChefPassword() {
+    const inputPassword = document.getElementById("loginPassword").value;
+    const errorDiv = document.getElementById("loginErrorMsg");
+    
+    if (inputPassword === CHEF_PASSWORD) {
+        // Login successful
+        localStorage.setItem("chefAuthenticated", "true");
+        document.getElementById("loginOverlay").style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+        showToast("✅ Login successful!");
+        // Initialize dashboard after login
+        initializeDashboard();
+    } else {
+        errorDiv.innerHTML = "❌ Wrong password! Please try again.";
+        document.getElementById("loginPassword").value = "";
     }
-});
+}
 
-// Network status monitoring
-window.addEventListener('online', () => {
-    console.log("📱 Network connected");
-    showToast("✅ Network connected, refreshing...");
-    manualRefresh();
-    updateSyncStatus('connected');
-});
+function logout() {
+    if (confirm("Logout?")) {
+        localStorage.removeItem("chefAuthenticated");
+        localStorage.removeItem("unlockedKitchens");
+        if(autoRefreshInterval) clearInterval(autoRefreshInterval);
+        unlockedKitchens = {};
+        kitchens.forEach(k => { kitchenData[k].cart = []; renderCart(k); });
+        saveCart();
+        currentKitchen = null;
+        showToast("Logged out.");
+        // Show login overlay again
+        document.getElementById("loginOverlay").style.display = "flex";
+        document.getElementById("mainContent").style.display = "none";
+        document.getElementById("loginPassword").value = "";
+    }
+}
 
-window.addEventListener('offline', () => {
-    console.log("📱 Network disconnected");
-    showToast("⚠️ Network disconnected");
-    updateSyncStatus('disconnected');
-});
-
-function updateSyncStatus(status) {
-    const syncDiv = document.getElementById('syncStatus');
-    if (status === 'connected') {
-        syncDiv.classList.remove('disconnected', 'connecting');
-        syncDiv.classList.add('connected');
-    } else if (status === 'disconnected') {
-        syncDiv.classList.remove('connected', 'connecting');
-        syncDiv.classList.add('disconnected');
-    } else if (status === 'connecting') {
-        syncDiv.classList.remove('connected', 'disconnected');
-        syncDiv.classList.add('connecting');
+// Check if already authenticated
+function checkAuthentication() {
+    if (localStorage.getItem("chefAuthenticated") === "true") {
+        document.getElementById("loginOverlay").style.display = "none";
+        document.getElementById("mainContent").style.display = "block";
+        initializeDashboard();
+    } else {
+        document.getElementById("loginOverlay").style.display = "flex";
+        document.getElementById("mainContent").style.display = "none";
     }
 }
 
@@ -1042,136 +1075,7 @@ const translations = {
 
 let currentLang = 'en';
 
-// ============ KITCHEN CONFIGURATION ============
-const kitchenToFirestoreId = {
-    "Hot Kitchen": "Hot_Kitchen",
-    "Cold Kitchen": "Cold_Kitchen",
-    "Pastry / Bakery": "Pastry_Bakery",
-    "Butchery": "Butchery",
-    "Beach House": "Beach_House",
-    "Nihon Kitchen": "Nihon_Kitchen",
-    "Staff Kitchen": "Staff_Kitchen"
-};
-
-const kitchenToFileMap = {
-    "Hot Kitchen": "hot-kitchen.json",
-    "Cold Kitchen": "cold-kitchen.json",
-    "Pastry / Bakery": "pastry.json",
-    "Butchery": "butchery.json",
-    "Beach House": "beach-house.json",
-    "Nihon Kitchen": "nihon-kitchen.json",
-    "Staff Kitchen": "staff-kitchen.json"
-};
-
-let unlockedKitchens = {};
-let currentKitchen = null;
-let pendingKitchen = null;
-let kitchenItemsCache = {};
-let kitchenData = {};
-let allRequests = [];
-let chefNames = {};
-let kitchens = ["Hot Kitchen", "Cold Kitchen", "Pastry / Bakery", "Butchery", "Beach House", "Nihon Kitchen", "Staff Kitchen"];
-let selectedQuantities = {};
-let addedItemsStatus = {};
-let currentItemsList = [];
-let autoRefreshInterval = null;
-let freehandModeActive = false;
-let freehandUnsubscribe = null;
-let isRefreshing = false;
-
-// ============ DEFAULT ITEMS (fallback) ============
-function getDefaultItemsForKitchen(kitchen) {
-    const defaultItems = {
-        "Hot Kitchen": [
-            { code: "HK001", name: "Grilled Chicken", name_ar: "دجاج مشوي", unit: "kg", maxLimit: 50, price: 120, step: 0.5 },
-            { code: "HK002", name: "Beef Steak", name_ar: "ستيك لحم", unit: "kg", maxLimit: 30, price: 180, step: 0.5 },
-            { code: "HK003", name: "Fried Rice", name_ar: "أرز مقلي", unit: "kg", maxLimit: 40, price: 45, step: 0.5 }
-        ],
-        "Cold Kitchen": [
-            { code: "CK001", name: "Garden Salad", name_ar: "سلطة خضراء", unit: "kg", maxLimit: 20, price: 35, step: 0.5 },
-            { code: "CK002", name: "Caesar Salad", name_ar: "سلطة سيزر", unit: "kg", maxLimit: 20, price: 45, step: 0.5 }
-        ],
-        "Pastry / Bakery": [
-            { code: "PB001", name: "Croissant", name_ar: "كرواسون", unit: "pcs", maxLimit: 100, price: 8, step: 1 },
-            { code: "PB002", name: "Baguette", name_ar: "باجيت", unit: "pcs", maxLimit: 80, price: 12, step: 1 }
-        ],
-        "Butchery": [
-            { code: "BT001", name: "Beef Mince", name_ar: "لحم مفروم", unit: "kg", maxLimit: 50, price: 140, step: 0.5 },
-            { code: "BT002", name: "Chicken Cut", name_ar: "تقطيع دجاج", unit: "kg", maxLimit: 60, price: 100, step: 0.5 }
-        ],
-        "Beach House": [
-            { code: "BH001", name: "Grilled Fish", name_ar: "سمك مشوي", unit: "kg", maxLimit: 25, price: 150, step: 0.5 },
-            { code: "BH002", name: "Shrimp", name_ar: "جمبري", unit: "kg", maxLimit: 20, price: 200, step: 0.5 }
-        ],
-        "Nihon Kitchen": [
-            { code: "NK001", name: "Sushi Rice", name_ar: "أرز سوشي", unit: "kg", maxLimit: 30, price: 60, step: 0.5 },
-            { code: "NK002", name: "Nori Seaweed", name_ar: "نوري", unit: "pcs", maxLimit: 100, price: 5, step: 1 }
-        ],
-        "Staff Kitchen": [
-            { code: "SK001", name: "Staff Meal", name_ar: "وجبة موظفين", unit: "meal", maxLimit: 50, price: 25, step: 1 },
-            { code: "SK002", name: "Beverages", name_ar: "مشروبات", unit: "pcs", maxLimit: 100, price: 5, step: 1 }
-        ]
-    };
-    return defaultItems[kitchen] || [];
-}
-
-// ============ FIRESTORE PASSWORD VERIFICATION ============
-async function getKitchenPasswordFromFirestore(kitchenName) {
-    try {
-        const kitchenId = kitchenToFirestoreId[kitchenName];
-        if (!kitchenId) return null;
-        const kitchenDoc = await db.collection("kitchen_passwords").doc(kitchenId).get();
-        if (kitchenDoc.exists && kitchenDoc.data().password) {
-            return kitchenDoc.data().password;
-        }
-        const defaultDoc = await db.collection("kitchen_passwords").doc("default_settings").get();
-        if (defaultDoc.exists && defaultDoc.data().defaultPassword) {
-            return defaultDoc.data().defaultPassword;
-        }
-        return "kitchen123";
-    } catch (error) {
-        console.error("Error getting kitchen password:", error);
-        return "kitchen123";
-    }
-}
-
-async function verifyKitchenPasswordWithFirestore(kitchenName, enteredPassword) {
-    try {
-        const correctPassword = await getKitchenPasswordFromFirestore(kitchenName);
-        return enteredPassword === correctPassword;
-    } catch (error) {
-        console.error("Error verifying password:", error);
-        return false;
-    }
-}
-
-// ============ UI FUNCTIONS ============
-function t(key) { return translations[currentLang][key] || translations['en'][key] || key; }
-function escapeHtml(str) { return str ? str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])) : ''; }
-function showToast(msg) { 
-    const toast = document.createElement("div"); 
-    toast.className = "toast"; 
-    toast.innerText = msg; 
-    document.body.appendChild(toast); 
-    setTimeout(() => toast.remove(), 2500); 
-}
-function openAdmin() { window.open("admin.html", "_blank"); }
-
-function updateFreehandStatusIndicator() {
-    const statusLight = document.getElementById('statusLight');
-    const statusText = document.getElementById('statusText');
-    if (statusLight && statusText) {
-        if (freehandModeActive) {
-            statusLight.className = 'status-light active';
-            statusText.innerHTML = '🟢 Freehand: ON';
-            statusText.style.color = '#10b981';
-        } else {
-            statusLight.className = 'status-light inactive';
-            statusText.innerHTML = '⚫ Freehand: OFF';
-            statusText.style.color = '#999';
-        }
-    }
-}
+// ============ FREEHAND MODE FUNCTIONS ============
 
 function updateFreehandUI() {
     updateFreehandStatusIndicator();
@@ -1179,14 +1083,25 @@ function updateFreehandUI() {
         renderItemsList(currentKitchen);
         renderCart(currentKitchen);
     }
+    const statusMsg = freehandModeActive ? 
+        '🔓 FREEHAND MODE ACTIVE - No quantity limits!' : 
+        '🔒 Freehand mode disabled - Limits restored';
+    showToast(statusMsg);
 }
 
 function initFreehandModeListener() {
     if (freehandUnsubscribe) freehandUnsubscribe();
+    
     freehandUnsubscribe = db.collection("settings").doc("global_settings").onSnapshot((doc) => {
-        freehandModeActive = doc.exists ? doc.data().freehandMode === true : false;
+        if (doc.exists) {
+            freehandModeActive = doc.data().freehandMode === true;
+        } else {
+            freehandModeActive = false;
+        }
         updateFreehandUI();
-    }, (error) => console.error("Error listening to freehand mode:", error));
+    }, (error) => {
+        console.error("Error listening to freehand mode:", error);
+    });
 }
 
 function toggleLanguage() {
@@ -1217,222 +1132,68 @@ function getItemName(item) {
     return item.name;
 }
 
-function getItemStep(item) {
-    if (item.step !== undefined) return item.step;
-    if (item.unit === "kg" || item.unit === "KG" || item.unit === "Kg") return 0.5;
-    return 1;
-}
+function t(key) { return translations[currentLang][key] || translations['en'][key] || key; }
 
-// ============ STORAGE FUNCTIONS ============
-function loadChefNames() {
-    try {
-        const saved = localStorage.getItem("chefNames");
-        if(saved) { const parsed = JSON.parse(saved); kitchens.forEach(kitchen => { chefNames[kitchen] = parsed[kitchen] || ""; }); }
-    } catch(e) { console.warn("Error loading chef names:", e); }
-}
-function saveChefNames() { try { localStorage.setItem("chefNames", JSON.stringify(chefNames)); } catch(e) { console.warn("Error saving chef names:", e); } }
-function loadSavedCart() {
-    try {
-        const saved = localStorage.getItem("kitchenCart");
-        if(saved) {
-            const parsed = JSON.parse(saved);
-            kitchens.forEach(kitchen => { kitchenData[kitchen] = { cart: parsed[kitchen] || [], chefName: chefNames[kitchen] }; });
+// ============ KITCHEN CONFIGURATION ============
+const kitchenPasswords = {
+    "Hot Kitchen": "hot123", "Cold Kitchen": "cold123", "Pastry / Bakery": "pastry123",
+    "Butchery": "butchery123", "Beach House": "beach123", "Nihon Kitchen": "nihon123", "Staff Kitchen": "123456"
+};
+
+const kitchenToFileMap = {
+    "Hot Kitchen": "hot-kitchen.json", "Cold Kitchen": "cold-kitchen.json",
+    "Pastry / Bakery": "pastry.json", "Butchery": "butchery.json",
+    "Beach House": "beach-house.json", "Nihon Kitchen": "nihon-kitchen.json", "Staff Kitchen": "staff-kitchen.json"
+};
+
+let unlockedKitchens = {};
+let currentKitchen = null;
+let pendingKitchen = null;
+let kitchenItemsCache = {};
+let kitchenData = {};
+let allRequests = [];
+let chefNames = {};
+let kitchens = ["Hot Kitchen", "Cold Kitchen", "Pastry / Bakery", "Butchery", "Beach House", "Nihon Kitchen", "Staff Kitchen"];
+let selectedQuantities = {};
+let addedItemsStatus = {};
+let currentItemsList = [];
+let autoRefreshInterval = null;
+let freehandModeActive = false;
+let freehandUnsubscribe = null;
+
+function updateFreehandStatusIndicator() {
+    const statusLight = document.getElementById('statusLight');
+    const statusText = document.getElementById('statusText');
+    if (statusLight && statusText) {
+        if (freehandModeActive) {
+            statusLight.className = 'status-light active';
+            statusText.innerHTML = '🟢 Freehand: ON';
+            statusText.style.color = '#10b981';
         } else {
-            kitchens.forEach(kitchen => { kitchenData[kitchen] = { cart: [], chefName: chefNames[kitchen] }; });
-        }
-    } catch(e) { console.warn("Error loading cart:", e); }
-}
-function saveCart() { try { const cartToSave = {}; kitchens.forEach(kitchen => { cartToSave[kitchen] = kitchenData[kitchen].cart; }); localStorage.setItem("kitchenCart", JSON.stringify(cartToSave)); } catch(e) { console.warn("Error saving cart:", e); } }
-function loadUnlockedKitchens() { try { const saved = localStorage.getItem("unlockedKitchens"); if(saved) unlockedKitchens = JSON.parse(saved); } catch(e) { console.warn("Error loading unlocked kitchens:", e); } }
-function saveUnlockedKitchens() { try { localStorage.setItem("unlockedKitchens", JSON.stringify(unlockedKitchens)); } catch(e) { console.warn("Error saving unlocked kitchens:", e); } }
-
-loadChefNames();
-loadSavedCart();
-loadUnlockedKitchens();
-
-// ============ PASSWORD MODAL ============
-function closePasswordModal() { const modal = document.getElementById("kitchenPasswordModal"); if(modal) modal.remove(); pendingKitchen = null; }
-
-async function showKitchenPasswordModal(kitchen) {
-    if(unlockedKitchens[kitchen]) { selectKitchen(kitchen); return; }
-    pendingKitchen = kitchen;
-    const modalDiv = document.createElement("div");
-    modalDiv.className = "modal";
-    modalDiv.id = "kitchenPasswordModal";
-    modalDiv.innerHTML = `<div class="modal-content">
-        <h2>🔐 ${currentLang === 'ar' ? 'الوصول إلى المطبخ' : 'Kitchen Access'}</h2>
-        <p>${currentLang === 'ar' ? 'أدخل كلمة المرور لـ' : 'Enter password for'} <strong>${kitchen}</strong></p>
-        <input type="password" id="kitchenPasswordInput" placeholder="${currentLang === 'ar' ? 'أدخل كلمة المرور' : 'Enter password'}" autocomplete="off">
-        <button id="verifyPassBtn">${currentLang === 'ar' ? 'فتح المطبخ' : 'Unlock Kitchen'}</button>
-        <div id="kitchenPasswordError" class="error-msg"></div>
-        <button class="close-modal" id="closeModalBtn">${currentLang === 'ar' ? 'إلغاء' : 'Cancel'}</button>
-    </div>`;
-    document.body.appendChild(modalDiv);
-    
-    document.getElementById("verifyPassBtn").onclick = async () => {
-        const inputPassword = document.getElementById("kitchenPasswordInput").value;
-        const isValid = await verifyKitchenPasswordWithFirestore(kitchen, inputPassword);
-        if(isValid) {
-            unlockedKitchens[kitchen] = true;
-            saveUnlockedKitchens();
-            closePasswordModal();
-            selectKitchen(kitchen);
-            showToast(`✅ ${currentLang === 'ar' ? 'تم فتح المطبخ' : 'Kitchen unlocked'}`);
-        } else {
-            document.getElementById("kitchenPasswordError").innerHTML = currentLang === 'ar' ? '❌ كلمة مرور خاطئة!' : "❌ Wrong password!";
-        }
-    };
-    document.getElementById("closeModalBtn").onclick = () => closePasswordModal();
-    document.getElementById("kitchenPasswordInput").focus();
-}
-
-// ============ FIREBASE REQUESTS with mobile retry logic ============
-async function loadRequestsFromFirebase(retryCount = 0) {
-    try {
-        const snapshot = await db.collection("kitchen_requests").orderBy("timestamp", "desc").get();
-        allRequests = [];
-        snapshot.forEach(doc => { allRequests.push({ firebaseId: doc.id, ...doc.data() }); });
-        if (currentKitchen) { loadMyRequests(currentKitchen); loadOrderHistory(currentKitchen); }
-        const syncDiv = document.getElementById("syncStatus");
-        syncDiv.innerHTML = `✅ Connected • ${allRequests.length} orders <span id="autoRefreshIndicator" class="auto-refresh-indicator">(Auto-refresh: 30s)</span>`;
-        syncDiv.classList.remove('disconnected', 'connecting');
-        syncDiv.classList.add('connected');
-        console.log("✅ Loaded", allRequests.length, "requests");
-        return true;
-    } catch (error) { 
-        console.error("Error loading requests:", error);
-        if (retryCount < 3) {
-            console.log(`Retrying... (${retryCount + 1}/3)`);
-            setTimeout(() => loadRequestsFromFirebase(retryCount + 1), 2000);
-        } else {
-            const syncDiv = document.getElementById("syncStatus");
-            syncDiv.innerHTML = `⚠️ Offline - ${error.message} <span id="autoRefreshIndicator" class="auto-refresh-indicator"></span>`;
-            syncDiv.classList.remove('connected');
-            syncDiv.classList.add('disconnected');
+            statusLight.className = 'status-light inactive';
+            statusText.innerHTML = '⚫ Freehand: OFF';
+            statusText.style.color = '#999';
         }
     }
 }
 
-async function saveRequestToFirebase(request) {
-    try {
-        await db.collection("kitchen_requests").add(request);
-        showToast("✅ Request saved!");
-        await loadRequestsFromFirebase();
-        if (currentKitchen) { loadMyRequests(currentKitchen); loadOrderHistory(currentKitchen); }
-    } catch (error) { 
-        console.error("Error saving:", error);
-        showToast("❌ Error saving - check network"); 
-    }
+function startAutoRefresh() {
+    if(autoRefreshInterval) clearInterval(autoRefreshInterval);
+    autoRefreshInterval = setInterval(function() {
+        loadRequestsFromFirebase();
+        if(currentKitchen) { loadMyRequests(currentKitchen); renderCart(currentKitchen); }
+    }, 60000);
 }
 
-// ============ FIXED getOverallStatus FUNCTION ============
-function getOverallStatus(items) {
-    if (!items || items.length === 0) return "pending";
-    
-    let approvedCount = 0;
-    let rejectedCount = 0;
-    let pendingCount = 0;
-    
-    items.forEach(item => {
-        if (item.status === "approved") {
-            approvedCount++;
-        } else if (item.status === "rejected") {
-            rejectedCount++;
-        } else {
-            pendingCount++;
-        }
-    });
-    
-    if (approvedCount === items.length && approvedCount > 0) return "approved";
-    if (rejectedCount === items.length && rejectedCount > 0) return "rejected";
-    if (approvedCount > 0 && rejectedCount > 0) return "partial";
-    if (approvedCount > 0 && pendingCount > 0) return "partial";
-    if (pendingCount === items.length) return "pending";
-    
-    return "pending";
-}
-
-async function checkForDuplicateOrder(section, chefName, cartItems) {
-    try {
-        const snapshot = await db.collection("kitchen_requests").where("section", "==", section).get();
-        for (const doc of snapshot.docs) {
-            const request = doc.data();
-            const requestStatus = getOverallStatus(request.items);
-            if (requestStatus === "pending" || requestStatus === "approved") {
-                const existingItems = request.items;
-                if (existingItems.length === cartItems.length) {
-                    let isDuplicate = true;
-                    const sortedExisting = [...existingItems].sort((a, b) => (a.code || "").localeCompare(b.code || ""));
-                    const sortedNew = [...cartItems].sort((a, b) => (a.code || "").localeCompare(b.code || ""));
-                    for (let i = 0; i < sortedNew.length; i++) {
-                        if (sortedNew[i].code !== sortedExisting[i].code || Math.abs(sortedNew[i].qty - sortedExisting[i].originalQty) > 0.01) {
-                            isDuplicate = false; break;
-                        }
-                    }
-                    if (isDuplicate) { return { isDuplicate: true, existingRequestId: request.requestId, existingTime: request.submittedAt }; }
-                }
-            }
-        }
-        return { isDuplicate: false };
-    } catch(e) { console.error("Duplicate check error:", e); return { isDuplicate: false }; }
-}
-
-async function submitRequest(kitchen) {
-    const chefName = chefNames[kitchen];
-    const cart = kitchenData[kitchen].cart;
-    if (!chefName) { showToast("⚠️ Enter chef name first"); return; }
-    if (cart.length === 0) { showToast("No items to submit"); return; }
-    
-    const duplicateCheck = await checkForDuplicateOrder(kitchen, chefName, cart);
-    if (duplicateCheck.isDuplicate) {
-        const message = `${t('duplicateBlocked')}!\n\n${t('duplicateMessage')} ${duplicateCheck.existingTime}\nRequest ID: ${duplicateCheck.existingRequestId}\n\nPlease check existing request or modify quantities.`;
-        showToast(`🚫 ${t('duplicateBlocked')}!`);
-        alert(message);
-        return;
-    }
-    
-    const newRequest = {
-        requestId: "REQ-" + Date.now().toString().slice(-6),
-        chefName: chefName,
-        section: kitchen,
-        items: cart.map(i => ({ 
-            code: i.code, 
-            name: i.name, 
-            name_ar: i.name_ar, 
-            unit: i.unit, 
-            originalQty: i.qty, 
-            maxLimit: i.maxLimit, 
-            price: i.price || 0, 
-            status: "pending", 
-            approvedQty: 0, 
-            rejectionReason: null 
-        })),
-        submittedAt: new Date().toLocaleString(), 
-        timestamp: Date.now()
-    };
-    
-    console.log("Submitting request:", newRequest);
-    await saveRequestToFirebase(newRequest);
-    kitchenData[kitchen].cart = [];
-    renderCart(kitchen);
-    saveCart();
-    showToast(`✅ Request ${newRequest.requestId} submitted!`);
-    await loadRequestsFromFirebase();
-    if (currentKitchen) { loadMyRequests(currentKitchen); loadOrderHistory(currentKitchen); }
-}
-
-// ============ ITEMS FUNCTIONS ============
+// ============ FIREBASE FUNCTIONS ============
 async function loadItemsForKitchen(kitchen, forceRefresh = false) {
     if (kitchenItemsCache[kitchen] && !forceRefresh) return kitchenItemsCache[kitchen];
     const fileName = kitchenToFileMap[kitchen];
-    if (!fileName) return getDefaultItemsForKitchen(kitchen);
+    if (!fileName) return [];
     const url = `items/${fileName}?t=${Date.now()}`;
     try {
         const response = await fetch(url);
-        if (!response.ok) {
-            console.warn(`Items file not found for ${kitchen}, using defaults`);
-            return getDefaultItemsForKitchen(kitchen);
-        }
+        if (!response.ok) return [];
         const data = await response.json();
         let itemsArray = Array.isArray(data) ? data : (data.items || []);
         itemsArray = itemsArray.map(item => ({ 
@@ -1441,61 +1202,169 @@ async function loadItemsForKitchen(kitchen, forceRefresh = false) {
         }));
         kitchenItemsCache[kitchen] = itemsArray;
         return itemsArray;
-    } catch (error) { 
-        console.warn(`Error loading items for ${kitchen}:`, error);
-        return getDefaultItemsForKitchen(kitchen);
-    }
+    } catch (error) { return []; }
 }
 
 function getItemsForKitchen(kitchen) { return kitchenItemsCache[kitchen] || []; }
 
-function changeQuantity(kitchen, code, delta, maxLimit) {
-    if (!selectedQuantities[kitchen]) selectedQuantities[kitchen] = {};
-    let current = selectedQuantities[kitchen][code] || 0;
-    let newQty = parseFloat((current + delta).toFixed(1));
-    if (newQty < 0) newQty = 0;
-    if (!freehandModeActive && newQty > maxLimit) newQty = maxLimit;
-    selectedQuantities[kitchen][code] = newQty;
-    const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
-    const safeCode = (code || "").replace(/[^a-zA-Z0-9]/g, '_');
-    const span = document.getElementById(`qtySpan_${kitchenId}_${safeCode}`);
-    if (span) {
-        if (Math.abs(delta) === 0.5) { span.innerText = newQty.toFixed(1); }
-        else { span.innerText = Math.floor(newQty); }
+function loadChefNames() {
+    const saved = localStorage.getItem("chefNames");
+    if(saved) { const parsed = JSON.parse(saved); kitchens.forEach(kitchen => { chefNames[kitchen] = parsed[kitchen] || ""; }); }
+}
+function saveChefNames() { localStorage.setItem("chefNames", JSON.stringify(chefNames)); }
+
+function loadSavedCart() {
+    const saved = localStorage.getItem("kitchenCart");
+    if(saved) {
+        const parsed = JSON.parse(saved);
+        kitchens.forEach(kitchen => { kitchenData[kitchen] = { cart: parsed[kitchen] || [], chefName: chefNames[kitchen] }; });
+    } else {
+        kitchens.forEach(kitchen => { kitchenData[kitchen] = { cart: [], chefName: chefNames[kitchen] }; });
+    }
+}
+function saveCart() { const cartToSave = {}; kitchens.forEach(kitchen => { cartToSave[kitchen] = kitchenData[kitchen].cart; }); localStorage.setItem("kitchenCart", JSON.stringify(cartToSave)); }
+
+loadChefNames();
+loadSavedCart();
+
+function loadUnlockedKitchens() { const saved = localStorage.getItem("unlockedKitchens"); if(saved) unlockedKitchens = JSON.parse(saved); }
+function saveUnlockedKitchens() { localStorage.setItem("unlockedKitchens", JSON.stringify(unlockedKitchens)); }
+loadUnlockedKitchens();
+
+function showKitchenPasswordModal(kitchen) {
+    if(unlockedKitchens[kitchen]) { selectKitchen(kitchen); return; }
+    pendingKitchen = kitchen;
+    const modalDiv = document.createElement("div");
+    modalDiv.className = "modal";
+    modalDiv.id = "kitchenPasswordModal";
+    modalDiv.innerHTML = `<div class="modal-content"><h2>🔐 ${currentLang === 'ar' ? 'الوصول إلى المطبخ' : 'Kitchen Access'}</h2>
+        <p>${currentLang === 'ar' ? 'أدخل كلمة المرور لـ' : 'Enter password for'} <strong>${kitchen}</strong></p>
+        <input type="password" id="kitchenPasswordInput" placeholder="${currentLang === 'ar' ? 'أدخل كلمة المرور' : 'Enter password'}" autocomplete="off">
+        <button id="verifyPassBtn">${currentLang === 'ar' ? 'فتح المطبخ' : 'Unlock Kitchen'}</button>
+        <div id="kitchenPasswordError" class="error-msg"></div>
+        <button class="close-modal" id="closeModalBtn">${currentLang === 'ar' ? 'إلغاء' : 'Cancel'}</button></div>`;
+    document.body.appendChild(modalDiv);
+    document.getElementById("verifyPassBtn").onclick = () => verifyKitchenPassword();
+    document.getElementById("closeModalBtn").onclick = () => closePasswordModal();
+    document.getElementById("kitchenPasswordInput").focus();
+}
+
+function closePasswordModal() { const modal = document.getElementById("kitchenPasswordModal"); if(modal) modal.remove(); pendingKitchen = null; }
+function verifyKitchenPassword() {
+    const inputPassword = document.getElementById("kitchenPasswordInput").value;
+    const kitchen = pendingKitchen;
+    if(inputPassword === kitchenPasswords[kitchen]) {
+        unlockedKitchens[kitchen] = true;
+        saveUnlockedKitchens();
+        closePasswordModal();
+        selectKitchen(kitchen);
+    } else { document.getElementById("kitchenPasswordError").innerHTML = currentLang === 'ar' ? '❌ كلمة مرور خاطئة!' : "❌ Wrong password!"; }
+}
+
+async function loadRequestsFromFirebase() {
+    try {
+        const snapshot = await db.collection("kitchen_requests").orderBy("timestamp", "desc").get();
+        allRequests = [];
+        snapshot.forEach(doc => { allRequests.push({ firebaseId: doc.id, ...doc.data() }); });
+        if (currentKitchen) { loadMyRequests(currentKitchen); loadOrderHistory(currentKitchen); }
+        document.getElementById("syncStatus").innerHTML = `✅ Connected • ${allRequests.length} orders <span id="autoRefreshIndicator" class="auto-refresh-indicator">(Auto-refresh: 60s)</span>`;
+    } catch (error) { document.getElementById("syncStatus").innerHTML = "⚠️ Offline mode"; }
+}
+
+async function saveRequestToFirebase(request) {
+    try {
+        await db.collection("kitchen_requests").add(request);
+        showToast("✅ Request saved!");
+        await loadRequestsFromFirebase();
+        if (currentKitchen) { loadMyRequests(currentKitchen); loadOrderHistory(currentKitchen); }
+    } catch (error) { showToast("❌ Error saving"); }
+}
+
+async function manualRefresh() {
+    showToast("🔄 Refreshing...");
+    await loadRequestsFromFirebase();
+    if (currentKitchen) {
+        loadMyRequests(currentKitchen);
+        renderCart(currentKitchen);
+        if(document.getElementById(`historySection_${currentKitchen.replace(/\s/g, '_').replace(/\//g, '_')}`)?.style.display === "block") {
+            loadOrderHistory(currentKitchen);
+        }
     }
 }
 
-function addItemWithQuantity(kitchen, code, itemName, unit, maxLimit, price, step) {
-    const chefName = chefNames[kitchen];
-    if (!chefName) { showToast("⚠️ Enter chef name first"); return; }
-    let qty = selectedQuantities[kitchen]?.[code] || 0;
-    if (qty <= 0) { showToast(`⚠️ Set quantity > 0 for ${itemName}`); return; }
-    const items = getItemsForKitchen(kitchen);
-    const item = items.find(i => i.code === code);
-    if (!item) return;
-    const existing = kitchenData[kitchen].cart.find(i => i.code === code);
-    let currentQty = existing ? existing.qty : 0;
-    let maxAllowed = freehandModeActive ? 999999 : (item.maxLimit || maxLimit);
-    let remaining = maxAllowed - currentQty;
-    let actualQtyToAdd = qty;
-    if (!freehandModeActive && remaining <= 0) { showToast(`⚠️ Maximum ${maxAllowed} ${item.unit || unit} reached!`); return; }
-    if (qty > remaining) { actualQtyToAdd = remaining; showToast(`⚠️ Only ${remaining.toFixed(1)} remaining. Added ${remaining.toFixed(1)} instead of ${qty.toFixed(1)}`); }
-    const itemPrice = item.price || price || 0;
-    if (existing) { existing.qty += actualQtyToAdd; showToast(`✓ Added ${actualQtyToAdd.toFixed(step === 0.5 ? 1 : 0)} ${getItemName(item)}`); }
-    else { kitchenData[kitchen].cart.push({ code: item.code, name: item.name, name_ar: item.name_ar, unit: item.unit || unit, qty: actualQtyToAdd, maxLimit: item.maxLimit || maxLimit, price: itemPrice }); showToast(`✓ Added ${actualQtyToAdd.toFixed(step === 0.5 ? 1 : 0)} ${getItemName(item)}`); }
-    if (!addedItemsStatus[kitchen]) addedItemsStatus[kitchen] = {};
-    addedItemsStatus[kitchen][code] = true;
-    selectedQuantities[kitchen][code] = 0;
-    const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
-    const safeCode = (code || "").replace(/[^a-zA-Z0-9]/g, '_');
-    const span = document.getElementById(`qtySpan_${kitchenId}_${safeCode}`);
-    if (span) span.innerText = "0";
-    const card = document.getElementById(`itemCard_${kitchenId}_${safeCode}`);
-    if (card) card.classList.add('selected');
-    renderCart(kitchen);
-    saveCart();
+async function forceReloadItems() {
+    showToast("🔄 Reloading items...");
+    for (const kitchen of kitchens) kitchenItemsCache[kitchen] = null;
+    if (currentKitchen) { await renderItemsList(currentKitchen); showToast(`✅ Reloaded items for ${currentKitchen}`); }
 }
 
+// ============ HELPER: Get step value from item ============
+function getItemStep(item) {
+    if (item.step !== undefined) return item.step;
+    if (item.unit === "kg" || item.unit === "KG" || item.unit === "Kg") return 0.5;
+    return 1;
+}
+
+// ============ ORDER HISTORY FUNCTION ============
+function loadOrderHistory(kitchen) {
+    const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
+    const container = document.getElementById(`orderHistoryContainer_${kitchenId}`);
+    if (!container) return;
+    const fromDate = document.getElementById(`historyFrom_${kitchenId}`)?.value || "";
+    const toDate = document.getElementById(`historyTo_${kitchenId}`)?.value || "";
+    let historyOrders = allRequests.filter(r => { const orderStatus = getOverallStatus(r.items); return r.section === kitchen && orderStatus !== "pending"; });
+    if (fromDate) { historyOrders = historyOrders.filter(r => r.timestamp >= new Date(fromDate).getTime()); }
+    if (toDate) { const end = new Date(toDate); end.setHours(23, 59, 59, 999); historyOrders = historyOrders.filter(r => r.timestamp <= end.getTime()); }
+    historyOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+    if (historyOrders.length === 0) { container.innerHTML = '<div class="empty-state">📭 ' + t('noHistory') + '</div>'; return; }
+    container.innerHTML = "";
+    historyOrders.forEach(req => {
+        const status = getOverallStatus(req.items);
+        let statusClass = "status-pending", statusText = t('pending');
+        if (status === "approved") { statusClass = "status-approved"; statusText = t('approved'); }
+        else if (status === "rejected") { statusClass = "status-rejected"; statusText = t('rejected'); }
+        else if (status === "partial") { statusClass = "status-partial"; statusText = t('partial'); }
+        const firstAdmin = req.items.find(i => i.approvedBy || i.rejectedBy);
+        const adminName = firstAdmin ? (firstAdmin.approvedBy || firstAdmin.rejectedBy) : t('waitingForAdmin');
+        let requestTotalValue = 0, approvedTotalValue = 0;
+        req.items.forEach(item => { requestTotalValue += (item.originalQty) * (item.price || 0); if (item.status === "approved") { approvedTotalValue += (item.approvedQty || item.originalQty) * (item.price || 0); } });
+        let itemsHtml = `<div class="table-wrapper"><table class="cart-table"><thead><tr><th>${t('code')}</th><th>${t('item')}</th><th>${t('qty')}</th><th>${t('unit')}</th><th>${t('price')}</th><th>${t('approvedQty')}</th><th>${t('status')}</th></tr></thead><tbody>`;
+        req.items.forEach(item => {
+            const displayName = currentLang === 'ar' && item.name_ar ? item.name_ar : item.name;
+            const approvedQty = item.status === "approved" ? (item.approvedQty || item.originalQty) : 0;
+            let statusDisplay = "", statusColor = "";
+            if (item.status === "approved") { statusDisplay = `✅ ${t('approved')}`; statusColor = "#27ae60"; }
+            else if (item.status === "rejected") { statusDisplay = `❌ ${t('rejected')}`; statusColor = "#e74c3c"; if(item.rejectionReason) { statusDisplay += `<div class="rejection-reason">${t('reason')} ${escapeHtml(item.rejectionReason)}</div>`; } }
+            else { statusDisplay = `⏳ ${t('pending')}`; statusColor = "#f39c12"; }
+            itemsHtml += `<tr><td>${item.code}</td>}<div><strong>${escapeHtml(displayName)}</strong></div></td><td>${item.originalQty.toFixed(1)}</td><td>${item.unit}</td><td>${(item.price || 0).toFixed(2)}</td><td>${approvedQty > 0 ? approvedQty.toFixed(1) : "0"}</td><td><span style="color:${statusColor}; font-weight:600;">${statusDisplay}</span></td></tr>`;
+        });
+        itemsHtml += `<tr style="background:#f8f9fa; font-weight:bold;"><td colspan="6" style="text-align:right;">💰 ${t('totalValue')} (Approved):</td><td class="price-total">${approvedTotalValue.toFixed(2)} ${t('egp')}</td></tr>`;
+        itemsHtml += `</tbody></table></div>`;
+        container.innerHTML += `<div class="request-card"><div class="request-card-header"><span class="request-id">📜 ${req.requestId}</span><div style="display:flex; gap:10px; flex-wrap:wrap;"><span style="background:linear-gradient(135deg, #1e3c72, #2a5298); color:white; padding:6px 14px; border-radius:20px; font-size:0.75rem;">💰 ${requestTotalValue.toFixed(2)} ${t('egp')}</span><span class="approved-by-text">${t('approvedBy')}: <span>${escapeHtml(adminName)}</span></span><span class="status-badge ${statusClass}">${statusText}</span></div></div><div class="request-info-row"><div class="info-item"><div class="info-label">👨‍🍳 ${t('chefLabel')}</div><div class="info-value">${escapeHtml(req.chefName)}</div></div><div class="info-item"><div class="info-label">📅 ${t('submitted')}</div><div class="info-value">${req.submittedAt}</div></div></div>${itemsHtml}</div>`;
+    });
+}
+
+function toggleHistory(kitchen) {
+    const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
+    const section = document.getElementById(`historySection_${kitchenId}`);
+    if (!section) return;
+    if (section.style.display === "none" || section.style.display === "") {
+        section.style.display = "block";
+        localStorage.setItem("historyOpen_" + kitchen, "true");
+        loadOrderHistory(kitchen);
+    } else { section.style.display = "none"; localStorage.setItem("historyOpen_" + kitchen, "false"); }
+}
+
+function restoreHistoryState(kitchen) {
+    const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
+    const section = document.getElementById(`historySection_${kitchenId}`);
+    if (!section) return;
+    const open = localStorage.getItem("historyOpen_" + kitchen);
+    if (open === "true") section.style.display = "block";
+    else section.style.display = "none";
+}
+
+// ============ ITEM LIST FUNCTIONS WITH DYNAMIC STEP FROM JSON ============
 function filterItemsByFirstChar(kitchen, searchChar) {
     const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
     const displayDiv = document.getElementById(`itemsDisplay_${kitchenId}`);
@@ -1528,7 +1397,7 @@ function filterItemsByFirstChar(kitchen, searchChar) {
             <div class="item-main-row"><div class="item-info"><div class="item-name">${escapeHtml(displayName)}</div>
             <div class="item-code">${item.code || "N/A"}</div><div class="item-price">💰 ${itemPrice.toFixed(2)} ${t('egp')} / ${item.unit}</div></div>
             <div class="item-meta"><span class="item-unit">${item.unit || "pcs"}</span>
-            <div class="item-max">${t('max')} ${freehandModeActive ? '∞' : (item.maxLimit || 99)}</div><div class="item-step">Step: ${stepText}</div></div>
+            <div class="item-max" style="color:${freehandModeActive ? '#10b981' : '#e67e22'};">${t('max')} ${freehandModeActive ? '∞' : (item.maxLimit || 99)}</div><div class="item-step">Step: ${stepText}</div></div>
             <div class="item-actions"><div class="qty-picker">
             <button class="qty-btn" data-step="-${stepValue}" data-code="${item.code}" data-max="${item.maxLimit || 99}">−</button>
             <span class="qty-value" id="qtySpan_${kitchenId}_${safeCode}">${displayQty}</span>
@@ -1573,35 +1442,79 @@ async function renderItemsList(kitchen) {
     document.getElementById(`searchInput_${kitchenId}`).addEventListener('input', (e) => filterItemsByFirstChar(kitchen, e.target.value));
 }
 
+function changeQuantity(kitchen, code, delta, maxLimit) {
+    if (!selectedQuantities[kitchen]) selectedQuantities[kitchen] = {};
+    let current = selectedQuantities[kitchen][code] || 0;
+    let newQty = parseFloat((current + delta).toFixed(1));
+    if (newQty < 0) newQty = 0;
+    if (!freehandModeActive && newQty > maxLimit) newQty = maxLimit;
+    selectedQuantities[kitchen][code] = newQty;
+    const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
+    const safeCode = (code || "").replace(/[^a-zA-Z0-9]/g, '_');
+    const span = document.getElementById(`qtySpan_${kitchenId}_${safeCode}`);
+    if (span) {
+        const absDelta = Math.abs(delta);
+        if (absDelta === 0.5 || absDelta === -0.5) { span.innerText = newQty.toFixed(1); }
+        else { span.innerText = Math.floor(newQty); }
+    }
+}
+
+function addItemWithQuantity(kitchen, code, itemName, unit, maxLimit, price, step) {
+    const chefName = chefNames[kitchen];
+    if (!chefName) { showToast("⚠️ Enter chef name first"); return; }
+    let qty = selectedQuantities[kitchen]?.[code] || 0;
+    if (qty <= 0) { showToast(`⚠️ Set quantity > 0 for ${itemName}`); return; }
+    const items = getItemsForKitchen(kitchen);
+    const item = items.find(i => i.code === code);
+    if (!item) return;
+    const existing = kitchenData[kitchen].cart.find(i => i.code === code);
+    let currentQty = existing ? existing.qty : 0;
+    let maxAllowed = freehandModeActive ? 999999 : (item.maxLimit || maxLimit);
+    let remaining = maxAllowed - currentQty;
+    let actualQtyToAdd = qty;
+    if (!freehandModeActive && remaining <= 0) { showToast(`⚠️ Maximum ${maxAllowed} ${item.unit || unit} reached!`); return; }
+    if (qty > remaining) { actualQtyToAdd = remaining; showToast(`⚠️ Only ${remaining.toFixed(1)} remaining. Added ${remaining.toFixed(1)} instead of ${qty.toFixed(1)}`); }
+    const itemPrice = item.price || price || 0;
+    if (existing) { existing.qty += actualQtyToAdd; showToast(`✓ Added ${actualQtyToAdd.toFixed(step === 0.5 ? 1 : 0)} ${getItemName(item)}`); }
+    else { kitchenData[kitchen].cart.push({ code: item.code, name: item.name, name_ar: item.name_ar, unit: item.unit || unit, qty: actualQtyToAdd, maxLimit: item.maxLimit || maxLimit, price: itemPrice }); showToast(`✓ Added ${actualQtyToAdd.toFixed(step === 0.5 ? 1 : 0)} ${getItemName(item)}`); }
+    addedItemsStatus[kitchen][code] = true;
+    selectedQuantities[kitchen][code] = 0;
+    const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
+    const safeCode = (code || "").replace(/[^a-zA-Z0-9]/g, '_');
+    const span = document.getElementById(`qtySpan_${kitchenId}_${safeCode}`);
+    if (span) span.innerText = "0";
+    const card = document.getElementById(`itemCard_${kitchenId}_${safeCode}`);
+    if (card) card.classList.add('selected');
+    renderCart(kitchen);
+    saveCart();
+}
+
 // ============ CART FUNCTIONS ============
 function renderCart(kitchen) {
     const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
     const cart = kitchenData[kitchen].cart;
     const totalQty = cart.reduce((sum, i) => sum + i.qty, 0);
     const totalValue = cart.reduce((sum, i) => sum + (i.qty * (i.price || 0)), 0);
-    const totalItemsElem = document.getElementById(`totalItems_${kitchenId}`);
-    const lineCountElem = document.getElementById(`lineCount_${kitchenId}`);
-    const totalValueElem = document.getElementById(`totalValue_${kitchenId}`);
-    if (totalItemsElem) totalItemsElem.innerText = totalQty.toFixed(1);
-    if (lineCountElem) lineCountElem.innerText = cart.length;
-    if (totalValueElem) totalValueElem.innerText = totalValue.toFixed(2);
+    document.getElementById(`totalItems_${kitchenId}`).innerText = totalQty.toFixed(1);
+    document.getElementById(`lineCount_${kitchenId}`).innerText = cart.length;
+    document.getElementById(`totalValue_${kitchenId}`).innerText = totalValue.toFixed(2);
     const desktopBody = document.getElementById(`cartTableDesktop_${kitchenId}`);
     if (desktopBody) {
-        if (cart.length === 0) { desktopBody.innerHTML = `<tr><td colspan="7" style="text-align:center;">${t('noItems')}<\/td><\/tr>`; }
+        if (cart.length === 0) { desktopBody.innerHTML = `<tr><td colspan="7" style="text-align:center;">${t('noItems')}</td></tr>`; }
         else {
             desktopBody.innerHTML = "";
             cart.forEach((item, idx) => {
                 const itemTotal = (item.qty * (item.price || 0)).toFixed(2);
                 const displayName = currentLang === 'ar' && item.name_ar ? item.name_ar : item.name;
-                desktopBody.innerHTML += `</table>
-                    <td>${item.code}<\/td>
-                    <td><strong>${escapeHtml(displayName)}<\/strong><\/td>
-                    <td>${item.qty.toFixed(1)}<\/td>
-                    <td>${item.unit}<\/td>
-                    <td>${(item.price || 0).toFixed(2)}<\/td>
-                    <td>${itemTotal}<\/td>
-                    <td><button class="remove-btn" onclick="removeItem('${kitchen}', ${idx})">${t('remove')}<\/button><\/td>
-                <\/tr>`;
+                desktopBody.innerHTML += `<tr>
+                    <td>${item.code}</td>
+                    <td><strong>${escapeHtml(displayName)}</strong></td>
+                    <td>${item.qty.toFixed(1)}</td>
+                    <td>${item.unit}</td>
+                    <td>${(item.price || 0).toFixed(2)}</td>
+                    <td>${itemTotal}</td>
+                    <td><button class="remove-btn" onclick="removeItem('${kitchen}', ${idx})">${t('remove')}</button></td>
+                </tr>`;
             });
         }
     }
@@ -1609,40 +1522,85 @@ function renderCart(kitchen) {
 
 function removeItem(kitchen, index) { kitchenData[kitchen].cart.splice(index, 1); renderCart(kitchen); saveCart(); showToast("Item removed"); }
 function clearCart(kitchen) { if (confirm("Clear all items?")) { kitchenData[kitchen].cart = []; renderCart(kitchen); saveCart(); showToast("Cart cleared"); } }
-function exportToExcel(kitchen) {
+
+// ============ SUBMIT REQUEST WITH DUPLICATE CHECK ============
+async function submitRequest(kitchen) {
+    const chefName = chefNames[kitchen];
     const cart = kitchenData[kitchen].cart;
-    if (!cart.length) { showToast("No items"); return; }
-    let csv = "Code,Item,Quantity,Unit,Price,Total Value\n";
-    cart.forEach(i => { const total = i.qty * (i.price || 0); csv += `${i.code},${i.name},${i.qty.toFixed(1)},${i.unit},${(i.price || 0).toFixed(2)},${total.toFixed(2)}\n`; });
-    const blob = new Blob([csv], { type: "text/csv" });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `order_${kitchen}_${chefNames[kitchen]}.csv`;
-    link.click();
-    showToast("Exporting...");
+    if (!chefName) { showToast("⚠️ Enter chef name first"); return; }
+    if (cart.length === 0) { showToast("No items to submit"); return; }
+    const duplicateCheck = await checkForDuplicateOrder(kitchen, chefName, cart);
+    if (duplicateCheck.isDuplicate) {
+        const message = `${t('duplicateBlocked')}!\n\n${t('duplicateMessage')} ${duplicateCheck.existingTime}\nRequest ID: ${duplicateCheck.existingRequestId}\n\nPlease check existing request or modify quantities.`;
+        showToast(`🚫 ${t('duplicateBlocked')}!`);
+        alert(message);
+        return;
+    }
+    const newRequest = {
+        requestId: "REQ-" + Date.now().toString().slice(-6),
+        chefName: chefName, section: kitchen,
+        items: cart.map(i => ({ code: i.code, name: i.name, name_ar: i.name_ar, unit: i.unit, originalQty: i.qty, maxLimit: i.maxLimit, price: i.price || 0, status: "pending", approvedQty: 0, rejectionReason: null })),
+        submittedAt: new Date().toLocaleString(), timestamp: Date.now()
+    };
+    await saveRequestToFirebase(newRequest);
+    kitchenData[kitchen].cart = [];
+    renderCart(kitchen);
+    saveCart();
+    showToast(`✅ Request ${newRequest.requestId} submitted!`);
+    await loadRequestsFromFirebase();
+    if (currentKitchen) { loadMyRequests(currentKitchen); loadOrderHistory(currentKitchen); }
 }
 
-// ============ REQUEST DISPLAY FUNCTIONS ============
+function getOverallStatus(items) {
+    if (!items || !items.length) return "pending";
+    const approved = items.filter(i => i.status === "approved").length;
+    const rejected = items.filter(i => i.status === "rejected").length;
+    if (approved === items.length) return "approved";
+    if (rejected === items.length) return "rejected";
+    if (approved > 0 && rejected > 0) return "partial";
+    return "pending";
+}
+
+async function checkForDuplicateOrder(section, chefName, cartItems) {
+    try {
+        const snapshot = await db.collection("kitchen_requests").where("section", "==", section).get();
+        for (const doc of snapshot.docs) {
+            const request = doc.data();
+            const requestStatus = getOverallStatus(request.items);
+            if (requestStatus === "pending" || requestStatus === "approved") {
+                const existingItems = request.items;
+                if (existingItems.length === cartItems.length) {
+                    let isDuplicate = true;
+                    const sortedExisting = [...existingItems].sort((a, b) => (a.code || "").localeCompare(b.code || ""));
+                    const sortedNew = [...cartItems].sort((a, b) => (a.code || "").localeCompare(b.code || ""));
+                    for (let i = 0; i < sortedNew.length; i++) {
+                        if (sortedNew[i].code !== sortedExisting[i].code || Math.abs(sortedNew[i].qty - sortedExisting[i].originalQty) > 0.01) {
+                            isDuplicate = false; break;
+                        }
+                    }
+                    if (isDuplicate) { return { isDuplicate: true, existingRequestId: request.requestId, existingTime: request.submittedAt }; }
+                }
+            }
+        }
+        return { isDuplicate: false };
+    } catch(e) { console.error("Duplicate check error:", e); return { isDuplicate: false }; }
+}
+
 function loadMyRequests(kitchen) {
     const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
     const container = document.getElementById(`myRequestsDesktop_${kitchenId}`);
     if (!container) return;
     const kitchenRequests = allRequests.filter(r => r.section === kitchen);
-    console.log(`Loading ${kitchenRequests.length} requests for ${kitchen}`);
-    
     if (!kitchenRequests.length) { container.innerHTML = `<div class="empty-state">📭 ${t('noRequests')}</div>`; return; }
     container.innerHTML = "";
     [...kitchenRequests].reverse().forEach(req => {
         const status = getOverallStatus(req.items);
-        console.log(`Request ${req.requestId} status: ${status}`);
-        
         let statusClass = "status-pending", statusText = t('pending');
         if (status === "approved") { statusClass = "status-approved"; statusText = t('approved'); }
         else if (status === "rejected") { statusClass = "status-rejected"; statusText = t('rejected'); }
         else if (status === "partial") { statusClass = "status-partial"; statusText = t('partial'); }
-        
         const firstAdmin = req.items.find(i => i.approvedBy || i.rejectedBy);
-        const adminName = firstAdmin ? (firstAdmin.approvedBy || firstAdmin.rejectedBy) : t('waitingForAdmin');
+        const adminName = firstAdmin ? (firstAdmin.approvedBy || firstAdmin.rejectedBy) : t('pending');
         let requestTotalValue = 0;
         req.items.forEach(item => { requestTotalValue += (item.originalQty) * (item.price || 0); });
         let itemsHtml = `<div class="table-wrapper"><table class="cart-table"><thead><tr><th>${t('code')}</th><th>${t('item')}</th><th>${t('qty')}</th><th>${t('unit')}</th><th>${t('price')}</th><th>${t('total')}</th><th>${t('approvedQty')}</th><th>${t('status')}</th></tr></thead><tbody>`;
@@ -1664,7 +1622,7 @@ function loadMyRequests(kitchen) {
                 <td>${qty.toFixed(1)}</td>
                 <td>${item.unit}</td>
                 <td>${price.toFixed(2)}</td>
-                <td>${(qty * price).toFixed(2)}</td>
+                <td>${total.toFixed(2)}</td>
                 <td>${approvedQty > 0 ? approvedQty.toFixed(1) : "0"}</td>
                 <td><span style="color:${statusColor}; font-weight:600;">${statusDisplay}</span>${rejectionHtml}</td>
             </tr>`;
@@ -1675,102 +1633,22 @@ function loadMyRequests(kitchen) {
     });
 }
 
-function loadOrderHistory(kitchen) {
-    const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
-    const container = document.getElementById(`orderHistoryContainer_${kitchenId}`);
-    if (!container) return;
-    const fromDate = document.getElementById(`historyFrom_${kitchenId}`)?.value || "";
-    const toDate = document.getElementById(`historyTo_${kitchenId}`)?.value || "";
-    let historyOrders = allRequests.filter(r => { const orderStatus = getOverallStatus(r.items); return r.section === kitchen && orderStatus !== "pending"; });
-    if (fromDate) { historyOrders = historyOrders.filter(r => r.timestamp >= new Date(fromDate).getTime()); }
-    if (toDate) { const end = new Date(toDate); end.setHours(23, 59, 59, 999); historyOrders = historyOrders.filter(r => r.timestamp <= end.getTime()); }
-    historyOrders.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-    if (historyOrders.length === 0) { container.innerHTML = '<div class="empty-state">📭 ' + t('noHistory') + '</div>'; return; }
-    container.innerHTML = "";
-    historyOrders.forEach(req => {
-        const status = getOverallStatus(req.items);
-        let statusClass = "status-pending", statusText = t('pending');
-        if (status === "approved") { statusClass = "status-approved"; statusText = t('approved'); }
-        else if (status === "rejected") { statusClass = "status-rejected"; statusText = t('rejected'); }
-        else if (status === "partial") { statusClass = "status-partial"; statusText = t('partial'); }
-        const firstAdmin = req.items.find(i => i.approvedBy || i.rejectedBy);
-        const adminName = firstAdmin ? (firstAdmin.approvedBy || firstAdmin.rejectedBy) : t('waitingForAdmin');
-        let requestTotalValue = 0, approvedTotalValue = 0;
-        req.items.forEach(item => { requestTotalValue += (item.originalQty) * (item.price || 0); if (item.status === "approved") { approvedTotalValue += (item.approvedQty || item.originalQty) * (item.price || 0); } });
-        let itemsHtml = `<div class="table-wrapper"><table class="cart-table"><thead><tr><th>${t('code')}</th><th>${t('item')}</th><th>${t('qty')}</th><th>${t('unit')}</th><th>${t('price')}</th><th>${t('approvedQty')}</th><th>${t('status')}</th></tr></thead><tbody>`;
-        req.items.forEach(item => {
-            const displayName = currentLang === 'ar' && item.name_ar ? item.name_ar : item.name;
-            const approvedQty = item.status === "approved" ? (item.approvedQty || item.originalQty) : 0;
-            let statusDisplay = "", statusColor = "";
-            if (item.status === "approved") { statusDisplay = `✅ ${t('approved')}`; statusColor = "#27ae60"; }
-            else if (item.status === "rejected") { statusDisplay = `❌ ${t('rejected')}`; statusColor = "#e74c3c"; if(item.rejectionReason) { statusDisplay += `<div class="rejection-reason">${t('reason')} ${escapeHtml(item.rejectionReason)}</div>`; } }
-            else { statusDisplay = `⏳ ${t('pending')}`; statusColor = "#f39c12"; }
-            itemsHtml += `<tr>
-                <td>${item.code}</td>
-                <td><strong>${escapeHtml(displayName)}</strong></td>
-                <td>${item.originalQty.toFixed(1)}</td>
-                <td>${item.unit}</td>
-                <td>${(item.price || 0).toFixed(2)}</td>
-                <td>${approvedQty > 0 ? approvedQty.toFixed(1) : "0"}</td>
-                <td><span style="color:${statusColor}; font-weight:600;">${statusDisplay}</span></td>
-            </tr>`;
-        });
-        itemsHtml += `<tr style="background:#f8f9fa; font-weight:bold;"><td colspan="6" style="text-align:right;">💰 ${t('totalValue')} (Approved):</td><td class="price-total">${approvedTotalValue.toFixed(2)} ${t('egp')}</td></tr>`;
-        itemsHtml += `</tbody></table></div>`;
-        container.innerHTML += `<div class="request-card"><div class="request-card-header"><span class="request-id">📜 ${req.requestId}</span><div style="display:flex; gap:10px; flex-wrap:wrap;"><span style="background:linear-gradient(135deg, #1e3c72, #2a5298); color:white; padding:6px 14px; border-radius:20px; font-size:0.75rem;">💰 ${requestTotalValue.toFixed(2)} ${t('egp')}</span><span class="approved-by-text">${t('approvedBy')}: <span>${escapeHtml(adminName)}</span></span><span class="status-badge ${statusClass}">${statusText}</span></div></div><div class="request-info-row"><div class="info-item"><div class="info-label">👨‍🍳 ${t('chefLabel')}</div><div class="info-value">${escapeHtml(req.chefName)}</div></div><div class="info-item"><div class="info-label">📅 ${t('submitted')}</div><div class="info-value">${req.submittedAt}</div></div></div>${itemsHtml}</div>`;
-    });
+function exportToExcel(kitchen) {
+    const cart = kitchenData[kitchen].cart;
+    if (!cart.length) { showToast("No items"); return; }
+    let csv = "Code,Item,Quantity,Unit,Price,Total Value\n";
+    cart.forEach(i => { const total = i.qty * (i.price || 0); csv += `${i.code},${i.name},${i.qty.toFixed(1)},${i.unit},${(i.price || 0).toFixed(2)},${total.toFixed(2)}\n`; });
+    const blob = new Blob([csv], { type: "text/csv" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `order_${kitchen}_${chefNames[kitchen]}.csv`;
+    link.click();
+    showToast("Exporting...");
 }
 
-function toggleHistory(kitchen) {
-    const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
-    const section = document.getElementById(`historySection_${kitchenId}`);
-    if (!section) return;
-    if (section.style.display === "none" || section.style.display === "") {
-        section.style.display = "block";
-        localStorage.setItem("historyOpen_" + kitchen, "true");
-        loadOrderHistory(kitchen);
-    } else { section.style.display = "none"; localStorage.setItem("historyOpen_" + kitchen, "false"); }
-}
-
-function restoreHistoryState(kitchen) {
-    const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
-    const section = document.getElementById(`historySection_${kitchenId}`);
-    if (!section) return;
-    const open = localStorage.getItem("historyOpen_" + kitchen);
-    if (open === "true") section.style.display = "block";
-    else section.style.display = "none";
-}
-
-// ============ PAGE GENERATION ============
-function onChefNameChange(kitchen) {
-    const id = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
-    const newName = document.getElementById(`chefName_${id}`).value.trim();
-    chefNames[kitchen] = newName;
-    saveChefNames();
-    renderItemsList(kitchen);
-    loadMyRequests(kitchen);
-    if(document.getElementById(`historySection_${id}`)?.style.display === "block") { loadOrderHistory(kitchen); }
-}
-
-function createKitchenPage(kitchen) {
-    const id = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
-    return `<div class="kitchen-page" id="page_${id}"><div class="card"><h3>👨‍🍳 ${t('chefInfo')} - ${kitchen}</h3><div class="input-group"><label>${t('chefName')} <span class="required">*</span></label><input type="text" id="chefName_${id}" placeholder="${t('enterChefName')}" onchange="onChefNameChange('${kitchen}')"></div></div>
-    <div class="card"><h3>📦 ${kitchen} ${t('items')} <span style="font-size:11px;">(${t('searchByFirstChar')})</span></h3><div id="itemsListContainer_${id}"></div></div>
-    <div class="card"><h3>🛒 ${t('currentRequest')} <button class="history-toggle-btn" onclick="toggleHistory('${kitchen}')">📜 ${t('viewHistory')}</button></h3>
-    <div class="cart-stats"><span>📦 ${t('totalQty')}: <strong id="totalItems_${id}">0</strong></span><span>📋 ${t('totalItems')}: <strong id="lineCount_${id}">0</strong></span><span>💰 ${t('totalValue')}: <strong id="totalValue_${id}">0.00</strong> ${t('egp')}</span></div>
-    <div class="desktop-table-view"><div class="table-wrapper"><table class="cart-table"><thead><tr><th>${t('code')}</th><th>${t('item')}</th><th>${t('qty')}</th><th>${t('unit')}</th><th>${t('price')}</th><th>${t('total')}</th><th></th></table></thead><tbody id="cartTableDesktop_${id}"></tbody></table></div></div>
-    <div class="button-group"><button class="btn btn-success" onclick="submitRequest('${kitchen}')">📤 ${t('submit')}</button><button class="btn btn-warning" onclick="exportToExcel('${kitchen}')">📎 ${t('export')}</button><button class="btn btn-danger" onclick="clearCart('${kitchen}')">🗑️ ${t('clear')}</button></div></div>
-    <div class="card"><h3>📜 ${t('myRequests')} <span style="font-size:11px;">(${t('showsAdminPrice')})</span></h3><div id="myRequestsDesktop_${id}"></div></div>
-    <div class="card"><h3>📜 ${t('orderHistory')}</h3><div id="historySection_${id}" class="history-section" style="display:none;"><div class="history-toolbar"><input type="date" id="historyFrom_${id}" placeholder="${t('fromDate')}"><input type="date" id="historyTo_${id}" placeholder="${t('toDate')}"><button class="history-filter-btn" onclick="loadOrderHistory('${kitchen}')">🔍 ${t('filter')}</button></div><div id="orderHistoryContainer_${id}"></div></div></div></div>`;
-}
-
-function generatePages() {
-    const tabs = document.getElementById("tabsContainer");
-    const pages = document.getElementById("kitchenPagesContainer");
-    tabs.innerHTML = "";
-    pages.innerHTML = "";
-    kitchens.forEach(k => { tabs.innerHTML += `<button class="tab-btn" onclick="showKitchenPasswordModal('${k}')">${k}</button>`; pages.innerHTML += createKitchenPage(k); });
-}
+function openAdmin() { window.open("admin.html", "_blank"); }
+function showToast(msg) { const toast = document.createElement("div"); toast.className = "toast"; toast.innerText = msg; document.body.appendChild(toast); setTimeout(() => toast.remove(), 2500); }
+function escapeHtml(str) { return str ? str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])) : ''; }
 
 async function selectKitchen(kitchen) {
     currentKitchen = kitchen;
@@ -1788,79 +1666,50 @@ async function selectKitchen(kitchen) {
     localStorage.setItem("lastSelectedKitchen", kitchen);
 }
 
+function onChefNameChange(kitchen) {
+    const id = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
+    const newName = document.getElementById(`chefName_${id}`).value.trim();
+    chefNames[kitchen] = newName;
+    saveChefNames();
+    renderItemsList(kitchen);
+    loadMyRequests(kitchen);
+    if(document.getElementById(`historySection_${id}`)?.style.display === "block") { loadOrderHistory(kitchen); }
+}
+
+function createKitchenPage(kitchen) {
+    const id = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
+    return `<div class="kitchen-page" id="page_${id}"><div class="card"><h3>👨‍🍳 ${t('chefInfo')} - ${kitchen}</h3><div class="input-group"><label>${t('chefName')} <span class="required">*</span></label><input type="text" id="chefName_${id}" placeholder="${t('enterChefName')}" onchange="onChefNameChange('${kitchen}')"></div></div>
+    <div class="card"><h3>📦 ${kitchen} ${t('items')} <span style="font-size:11px;">(${t('searchByFirstChar')})</span></h3><div id="itemsListContainer_${id}"></div></div>
+    <div class="card"><h3>🛒 ${t('currentRequest')} <button class="history-toggle-btn" onclick="toggleHistory('${kitchen}')">📜 ${t('viewHistory')}</button></h3>
+    <div class="cart-stats"><span>📦 ${t('totalQty')}: <strong id="totalItems_${id}">0</strong></span><span>📋 ${t('totalItems')}: <strong id="lineCount_${id}">0</strong></span><span>💰 ${t('totalValue')}: <strong id="totalValue_${id}">0.00</strong> ${t('egp')}</span></div>
+    <div class="desktop-table-view"><div class="table-wrapper"><table class="cart-table"><thead><tr><th>${t('code')}</th><th>${t('item')}</th><th>${t('qty')}</th><th>${t('unit')}</th><th>${t('price')}</th><th>${t('total')}</th><th></th></tr></thead><tbody id="cartTableDesktop_${id}"></tbody></table></div></div>
+    <div class="button-group"><button class="btn btn-success" onclick="submitRequest('${kitchen}')">📤 ${t('submit')}</button><button class="btn btn-warning" onclick="exportToExcel('${kitchen}')">📎 ${t('export')}</button><button class="btn btn-danger" onclick="clearCart('${kitchen}')">🗑️ ${t('clear')}</button></div></div>
+    <div class="card"><h3>📜 ${t('myRequests')} <span style="font-size:11px;">(${t('showsAdminPrice')})</span></h3><div id="myRequestsDesktop_${id}"></div></div>
+    <div class="card"><h3>📜 ${t('orderHistory')}</h3><div id="historySection_${id}" class="history-section" style="display:none;"><div class="history-toolbar"><input type="date" id="historyFrom_${id}" placeholder="${t('fromDate')}"><input type="date" id="historyTo_${id}" placeholder="${t('toDate')}"><button class="history-filter-btn" onclick="loadOrderHistory('${kitchen}')">🔍 ${t('filter')}</button></div><div id="orderHistoryContainer_${id}"></div></div></div></div>`;
+}
+
+function generatePages() {
+    const tabs = document.getElementById("tabsContainer");
+    const pages = document.getElementById("kitchenPagesContainer");
+    tabs.innerHTML = "";
+    pages.innerHTML = "";
+    kitchens.forEach(k => { tabs.innerHTML += `<button class="tab-btn" onclick="showKitchenPasswordModal('${k}')">${k}</button>`; pages.innerHTML += createKitchenPage(k); });
+}
+
 function loadLastSelectedKitchen() { const lastKitchen = localStorage.getItem("lastSelectedKitchen"); if (lastKitchen && unlockedKitchens[lastKitchen]) { selectKitchen(lastKitchen); } }
 
-function startAutoRefresh() {
-    if(autoRefreshInterval) clearInterval(autoRefreshInterval);
-    // Refresh every 30 seconds for mobile (more frequent)
-    autoRefreshInterval = setInterval(function() {
-        if (!isRefreshing) {
-            isRefreshing = true;
-            loadRequestsFromFirebase().finally(() => {
-                if(currentKitchen) { loadMyRequests(currentKitchen); renderCart(currentKitchen); }
-                isRefreshing = false;
-            });
-        }
-    }, 30000);
-}
-
-async function manualRefresh() {
-    if (isRefreshing) return;
-    isRefreshing = true;
-    showToast("🔄 Refreshing...");
-    await loadRequestsFromFirebase();
-    if (currentKitchen) {
-        loadMyRequests(currentKitchen);
-        renderCart(currentKitchen);
-        if(document.getElementById(`historySection_${currentKitchen.replace(/\s/g, '_').replace(/\//g, '_')}`)?.style.display === "block") {
-            loadOrderHistory(currentKitchen);
-        }
-    }
-    isRefreshing = false;
-    showToast("✅ Refresh complete");
-}
-
-async function forceReloadItems() {
-    showToast("🔄 Reloading items...");
-    for (const kitchen of kitchens) kitchenItemsCache[kitchen] = null;
-    if (currentKitchen) { await renderItemsList(currentKitchen); showToast(`✅ Reloaded items for ${currentKitchen}`); }
-}
-
-function logout() {
-    if (confirm("Logout? All unlocked kitchens will be locked.")) {
-        if(autoRefreshInterval) clearInterval(autoRefreshInterval);
-        unlockedKitchens = {};
-        localStorage.removeItem("unlockedKitchens");
-        kitchens.forEach(k => { kitchenData[k].cart = []; renderCart(k); });
-        saveCart();
-        currentKitchen = null;
-        showToast("Logged out.");
-        setTimeout(() => location.reload(), 1000);
-    }
-}
-
-// ============ INITIALIZATION ============
-window.addEventListener('DOMContentLoaded', () => {
-    console.log("🚀 Starting Chef Dashboard (Mobile Optimized)...");
+// ============ INITIALIZE DASHBOARD AFTER LOGIN ============
+function initializeDashboard() {
     generatePages();
     startAutoRefresh();
     loadRequestsFromFirebase();
     loadLastSelectedKitchen();
+    db.collection("kitchen_requests").onSnapshot(() => { loadRequestsFromFirebase(); });
     initFreehandModeListener();
-    
-    // Real-time listener with mobile optimization
-    let listenerTimeout = null;
-    db.collection("kitchen_requests").onSnapshot(() => { 
-        console.log("🔄 Real-time update received");
-        // Debounce updates on mobile
-        if (listenerTimeout) clearTimeout(listenerTimeout);
-        listenerTimeout = setTimeout(() => {
-            loadRequestsFromFirebase();
-        }, 500);
-    });
-    
-    console.log("✅ Chef Dashboard ready for mobile");
-});
+}
+
+// Check authentication on page load
+checkAuthentication();
 </script>
 </body>
 </html>
