@@ -9,12 +9,12 @@ const firebaseConfig = {
     appId: "1:429224554052:web:85d32727439fe55efcd611"
 };
 
-// Initialize Firebase if not already initialized
-if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+// Initialize Firebase
+if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
-    console.log("✅ Firebase initialized from config file");
 }
-
+const db = firebase.firestore();
+console.log("✅ Firebase initialized successfully");
 // Get Firebase instances
 const db = firebase.firestore();
 const auth = firebase.auth();
