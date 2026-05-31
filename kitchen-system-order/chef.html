@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<script src="firebase-config.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
@@ -859,28 +860,27 @@ body.arabic .items-scroll-container {
 
 <script>
 // ============ FIREBASE CONFIGURATION (HARDCODED - WORKING) ============
-const firebaseConfig = {
-    apiKey: "AIzaSyD57ErKNYwqGbLcriDYYvPUtVIw8jRncXQ",
-    authDomain: "system-order-kitchen.firebaseapp.com",
-    projectId: "system-order-kitchen",
-    storageBucket: "system-order-kitchen.firebasestorage.app",
-    messagingSenderId: "429224554052",
-    appId: "1:429224554052:web:85d32727439fe55efcd611"
-};
+// ============ FIREBASE REFERENCES ============
+// Use the already initialized instances from firebase-config.js
+const db = window.db;
+const auth = window.auth;
 
-// Initialize Firebase if not already initialized
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-    console.log("✅ Firebase initialized from chef.html");
+// Wait for Firebase to be ready if needed
+function waitForFirebase() {
+    return new Promise((resolve) => {
+        if (db && auth) {
+            resolve();
+            return;
+        }
+        const checkInterval = setInterval(() => {
+            if (window.db && window.auth) {
+                clearInterval(checkInterval);
+                resolve();
+            }
+        }, 100);
+        setTimeout(() => clearInterval(checkInterval), 5000);
+    });
 }
-
-const db = firebase.firestore();
-const auth = firebase.auth();
-
-// Enable offline persistence
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.error);
-
-console.log("✅ Firebase ready - DB and Auth available");
 
 // ============ LANGUAGE TRANSLATIONS ============
 const translations = {
