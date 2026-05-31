@@ -2,828 +2,159 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+
+<script>
+// ============ FIREBASE CONFIGURATION ============
+const firebaseConfig = {
+    apiKey: "AIzaSyD57ErKNYwqGbLcriDYYvPUtVIw8jRncXQ",
+    authDomain: "system-order-kitchen.firebaseapp.com",
+    projectId: "system-order-kitchen",
+    storageBucket: "system-order-kitchen.firebasestorage.app",
+    messagingSenderId: "429224554052",
+    appId: "1:429224554052:web:85d32727439fe55efcd611"
+};
+
+// Initialize Firebase if not already initialized
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+    console.log("✅ Firebase initialized from chef.html");
+}
+
+const db = firebase.firestore();
+const auth = firebase.auth();
+
+// Enable offline persistence
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.error);
+
+console.log("✅ Firebase ready - DB and Auth available");
+</script>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
 <title>Chef Dashboard - Kitchen Order System</title>
 
 <style>
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-}
-
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #f0f4f8;
-}
-
+/* ... your existing CSS (keeping it compact) ... */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f0f4f8; }
 /* Arabic Styles */
-body.arabic {
-    font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
-    direction: rtl;
-}
-
-body.arabic .header-content,
-body.arabic .request-header,
-body.arabic .request-info,
-body.arabic .button-group,
-body.arabic .request-card-header,
-body.arabic .request-info-row {
-    direction: rtl;
-}
-
-body.arabic .card h3 {
-    border-right: 4px solid #3498db;
-    border-left: none;
-    padding-right: 10px;
-    padding-left: 0;
-}
-
-body.arabic .info-label {
-    text-align: right;
-}
-
-body.arabic .cart-table th,
-body.arabic .cart-table td {
-    text-align: right;
-}
-
-body.arabic .item-meta {
-    text-align: left;
-}
-
-body.arabic .qty-picker {
-    direction: ltr;
-}
-
-.header {
-    background: linear-gradient(135deg, #1e3c72, #2a5298);
-    color: white;
-    padding: 12px 16px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-}
-
-.header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    max-width: 1400px;
-    margin: 0 auto;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.logo {
-    font-size: 1.2rem;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.logo-icon {
-    font-size: 1.5rem;
-}
-
-.logo span {
-    color: #ffd700;
-}
-
-.header-buttons {
-    display: flex;
-    gap: 8px;
-}
-
-.refresh-btn, .logout-btn, .hard-reload-btn, .lang-btn {
-    background: rgba(255,255,255,0.2);
-    border: none;
-    padding: 6px 12px;
-    border-radius: 25px;
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 12px;
-    transition: all 0.3s;
-}
-
-.refresh-btn:hover, .logout-btn:hover, .hard-reload-btn:hover, .lang-btn:hover {
-    background: rgba(255,255,255,0.3);
-    transform: scale(1.02);
-}
-
-.hard-reload-btn {
-    background: rgba(230, 126, 34, 0.8);
-}
-
-.lang-btn {
-    background: rgba(0,0,0,0.3);
-}
-
-.kitchen-tabs {
-    background: white;
-    padding: 0 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    position: sticky;
-    top: 60px;
-    z-index: 99;
-    overflow-x: auto;
-    white-space: nowrap;
-    -webkit-overflow-scrolling: touch;
-}
-
-.tabs-container {
-    max-width: 1400px;
-    margin: 0 auto;
-    display: inline-flex;
-    gap: 6px;
-    padding: 10px 0;
-}
-
-.tab-btn {
-    padding: 8px 14px;
-    background: #f0f2f5;
-    border: none;
-    border-radius: 30px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.3s;
-    font-size: 12px;
-    white-space: nowrap;
-}
-
-.tab-btn:hover {
-    background: #e0e0e0;
-    transform: translateY(-2px);
-}
-
-.tab-btn.active {
-    background: linear-gradient(135deg, #1e3c72, #2a5298);
-    color: white;
-}
-
-.kitchen-page {
-    display: none;
-}
-
-.kitchen-page.active-page {
-    display: block;
-}
-
-.card {
-    background: white;
-    border-radius: 16px;
-    padding: 18px;
-    margin-bottom: 16px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-}
-
-.card h3 {
-    font-size: 1rem;
-    margin-bottom: 14px;
-    color: #1e3c72;
-    border-left: 4px solid #3498db;
-    padding-left: 10px;
-}
-
-.input-group {
-    margin-bottom: 12px;
-}
-
-.input-group label {
-    display: block;
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: #555;
-    margin-bottom: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-.required {
-    color: #e74c3c;
-    margin-left: 4px;
-}
-
-input {
-    width: 100%;
-    padding: 10px 12px;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    font-size: 14px;
-    background: white;
-}
-
-input:focus {
-    outline: none;
-    border-color: #3498db;
-}
-
-.btn {
-    padding: 10px 16px;
-    border: none;
-    border-radius: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-size: 13px;
-}
-
-.btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-}
-
+body.arabic { font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif; direction: rtl; }
+body.arabic .header-content, body.arabic .request-header, body.arabic .request-info, body.arabic .button-group, body.arabic .request-card-header, body.arabic .request-info-row { direction: rtl; }
+body.arabic .card h3 { border-right: 4px solid #3498db; border-left: none; padding-right: 10px; padding-left: 0; }
+body.arabic .info-label { text-align: right; }
+body.arabic .cart-table th, body.arabic .cart-table td { text-align: right; }
+body.arabic .item-meta { text-align: left; }
+body.arabic .qty-picker { direction: ltr; }
+.header { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; padding: 12px 16px; position: sticky; top: 0; z-index: 100; }
+.header-content { display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin: 0 auto; flex-wrap: wrap; gap: 10px; }
+.logo { font-size: 1.2rem; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+.logo-icon { font-size: 1.5rem; }
+.logo span { color: #ffd700; }
+.header-buttons { display: flex; gap: 8px; }
+.refresh-btn, .logout-btn, .hard-reload-btn, .lang-btn { background: rgba(255,255,255,0.2); border: none; padding: 6px 12px; border-radius: 25px; color: white; font-weight: 600; cursor: pointer; font-size: 12px; transition: all 0.3s; }
+.refresh-btn:hover, .logout-btn:hover, .hard-reload-btn:hover, .lang-btn:hover { background: rgba(255,255,255,0.3); transform: scale(1.02); }
+.hard-reload-btn { background: rgba(230, 126, 34, 0.8); }
+.lang-btn { background: rgba(0,0,0,0.3); }
+.kitchen-tabs { background: white; padding: 0 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); position: sticky; top: 60px; z-index: 99; overflow-x: auto; white-space: nowrap; -webkit-overflow-scrolling: touch; }
+.tabs-container { max-width: 1400px; margin: 0 auto; display: inline-flex; gap: 6px; padding: 10px 0; }
+.tab-btn { padding: 8px 14px; background: #f0f2f5; border: none; border-radius: 30px; font-weight: 600; cursor: pointer; transition: all 0.3s; font-size: 12px; white-space: nowrap; }
+.tab-btn:hover { background: #e0e0e0; transform: translateY(-2px); }
+.tab-btn.active { background: linear-gradient(135deg, #1e3c72, #2a5298); color: white; }
+.kitchen-page { display: none; }
+.kitchen-page.active-page { display: block; }
+.card { background: white; border-radius: 16px; padding: 18px; margin-bottom: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); }
+.card h3 { font-size: 1rem; margin-bottom: 14px; color: #1e3c72; border-left: 4px solid #3498db; padding-left: 10px; }
+.input-group { margin-bottom: 12px; }
+.input-group label { display: block; font-size: 0.7rem; font-weight: 600; color: #555; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.required { color: #e74c3c; margin-left: 4px; }
+input { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 14px; background: white; }
+input:focus { outline: none; border-color: #3498db; }
+.btn { padding: 10px 16px; border: none; border-radius: 10px; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 13px; }
+.btn:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 .btn-primary { background: #3498db; color: white; }
 .btn-success { background: #27ae60; color: white; }
 .btn-danger { background: #e74c3c; color: white; }
 .btn-warning { background: #f39c12; color: white; }
-
-.button-group {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 16px;
-}
-
-.button-group .btn {
-    width: 100%;
-}
-
-.table-wrapper {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-}
-
-.cart-table {
-    min-width: 750px;
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.cart-table th, .cart-table td {
-    padding: 12px 10px;
-    text-align: left;
-    border-bottom: 1px solid #eee;
-    font-size: 12px;
-}
-
-.cart-table th {
-    background: #f8f9fa;
-    font-weight: 600;
-    color: #555;
-}
-
-.remove-btn {
-    background: #fee2e2;
-    border: none;
-    padding: 5px 12px;
-    border-radius: 20px;
-    color: #e74c3c;
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 11px;
-}
-
-.status-badge {
-    display: inline-block;
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 600;
-}
-
+.button-group { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.button-group .btn { width: 100%; }
+.table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.cart-table { min-width: 750px; width: 100%; border-collapse: collapse; }
+.cart-table th, .cart-table td { padding: 12px 10px; text-align: left; border-bottom: 1px solid #eee; font-size: 12px; }
+.cart-table th { background: #f8f9fa; font-weight: 600; color: #555; }
+.remove-btn { background: #fee2e2; border: none; padding: 5px 12px; border-radius: 20px; color: #e74c3c; font-weight: 600; cursor: pointer; font-size: 11px; }
+.status-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 11px; font-weight: 600; }
 .status-pending { background: #f39c12; color: white; }
 .status-approved { background: #27ae60; color: white; }
 .status-rejected { background: #e74c3c; color: white; }
 .status-partial { background: #8e44ad; color: white; }
-
-.cart-stats {
-    background: #e8f4fd;
-    padding: 10px 12px;
-    border-radius: 10px;
-    margin-bottom: 12px;
-    display: flex;
-    justify-content: space-between;
-    font-weight: 500;
-    font-size: 12px;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.empty-state {
-    text-align: center;
-    padding: 30px;
-    color: #999;
-    font-size: 13px;
-}
-
-.toast {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: #333;
-    color: white;
-    padding: 10px 20px;
-    border-radius: 30px;
-    font-size: 12px;
-    z-index: 1000;
-    animation: slideUp 0.3s ease;
-}
-
-@keyframes slideUp {
-    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
-    to { opacity: 1; transform: translateX(-50%) translateY(0); }
-}
-
-.sync-status {
-    font-size: 10px;
-    text-align: center;
-    margin-top: 10px;
-    padding: 5px 10px;
-    border-radius: 10px;
-    background: #e8f5e9;
-    color: #27ae60;
-}
-
-.admin-fab {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
-    border: none;
-    width: 50px;
-    height: 50px;
-    border-radius: 50%;
-    font-size: 1.3rem;
-    font-weight: bold;
-    cursor: pointer;
-    z-index: 99;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-}
-
-.admin-btn-mobile {
-    display: block;
-    width: 100%;
-    background: linear-gradient(135deg, #667eea, #764ba2);
-    color: white;
-    border: none;
-    padding: 12px;
-    border-radius: 30px;
-    font-weight: bold;
-    margin-top: 16px;
-    cursor: pointer;
-    font-size: 14px;
-}
-
-.request-card {
-    background: white;
-    border-radius: 16px;
-    margin-bottom: 16px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
-    overflow: hidden;
-}
-
-.request-card-header {
-    background: #f8f9fa;
-    padding: 14px 18px;
-    border-bottom: 1px solid #eef2f6;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.request-id {
-    font-weight: bold;
-    font-size: 1rem;
-    color: #1e3c72;
-    font-family: monospace;
-}
-
-.approved-by-text {
-    background: #e8f4fd;
-    padding: 6px 14px;
-    border-radius: 20px;
-    font-size: 0.75rem;
-    font-weight: 600;
-    color: #1e3c72;
-}
-
-.approved-by-text span {
-    color: #e94560;
-}
-
-.request-info-row {
-    display: flex;
-    gap: 20px;
-    padding: 12px 18px;
-    background: white;
-    border-bottom: 1px solid #eef2f6;
-    flex-wrap: wrap;
-}
-
-.info-item {
-    display: flex;
-    flex-direction: column;
-}
-
-.info-label {
-    font-size: 0.65rem;
-    color: #94a3b8;
-    text-transform: uppercase;
-}
-
-.info-value {
-    font-weight: 600;
-    font-size: 0.85rem;
-    color: #1e293b;
-    margin-top: 3px;
-}
-
-.modal {
-    display: flex;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.85);
-    z-index: 10000;
-    justify-content: center;
-    align-items: center;
-    padding: 20px;
-}
-
-.modal-content {
-    background: white;
-    padding: 35px 30px;
-    border-radius: 28px;
-    text-align: center;
-    max-width: 380px;
-    width: 90%;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
-}
-
-.modal-content h2 {
-    margin-bottom: 15px;
-    color: #1e3c72;
-    font-size: 1.6rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-}
-
-.modal-content p {
-    color: #666;
-    margin-bottom: 25px;
-    font-size: 0.9rem;
-}
-
-.modal-content input {
-    width: 100%;
-    padding: 14px;
-    margin-bottom: 20px;
-    border: 2px solid #e0e0e0;
-    border-radius: 50px;
-    font-size: 16px;
-    text-align: center;
-}
-
-.modal-content input:focus {
-    outline: none;
-    border-color: #3498db;
-}
-
-.modal-content button {
-    background: #3498db;
-    color: white;
-    border: none;
-    padding: 14px;
-    border-radius: 50px;
-    font-weight: 600;
-    cursor: pointer;
-    width: 100%;
-    font-size: 1rem;
-    transition: all 0.3s;
-    margin-bottom: 10px;
-}
-
-.modal-content button:hover {
-    background: #2980b9;
-    transform: scale(1.02);
-}
-
-.error-msg {
-    color: #e74c3c;
-    margin-top: 10px;
-    font-size: 0.85rem;
-}
-
-.close-modal {
-    background: #95a5a6 !important;
-    margin-top: 5px;
-}
-
-.close-modal:hover {
-    background: #7f8c8d !important;
-}
-
-.items-scroll-container {
-    max-height: 500px;
-    overflow-y: auto;
-    border: 1px solid #eef2f6;
-    border-radius: 12px;
-    background: #fafcfc;
-    direction: ltr;
-}
-
-body.arabic .items-scroll-container {
-    direction: rtl;
-}
-
-.items-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
-    padding: 12px;
-}
-
-.item-card {
-    background: white;
-    border-radius: 12px;
-    padding: 12px;
-    border: 1px solid #e9ecef;
-}
-
-.item-card.selected {
-    background: #d4edda;
-    border-color: #27ae60;
-}
-
-.item-main-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-}
-
-.item-info {
-    flex: 2;
-    min-width: 150px;
-}
-
-.item-name {
-    font-weight: 600;
-    font-size: 0.85rem;
-    color: #2c3e50;
-}
-
-.item-code {
-    font-size: 0.65rem;
-    color: #7f8c8d;
-    font-family: monospace;
-    margin-top: 3px;
-}
-
-.item-price {
-    font-size: 0.7rem;
-    color: #e67e22;
-    margin-top: 2px;
-}
-
-.item-meta {
-    text-align: right;
-    min-width: 90px;
-}
-
-.item-unit {
-    background: #ecf0f1;
-    padding: 3px 8px;
-    border-radius: 20px;
-    font-size: 0.65rem;
-    font-weight: 500;
-    display: inline-block;
-}
-
-.item-max {
-    font-size: 0.65rem;
-    color: #e67e22;
-    margin-top: 4px;
-}
-
-.item-step {
-    font-size: 0.6rem;
-    color: #888;
-    margin-top: 2px;
-}
-
-.item-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    flex-wrap: wrap;
-}
-
-.qty-picker {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: #f1f5f9;
-    padding: 5px 10px;
-    border-radius: 40px;
-}
-
-.qty-btn {
-    width: 36px;
-    height: 36px;
-    border-radius: 30px;
-    border: none;
-    background: white;
-    font-weight: bold;
-    font-size: 1.3rem;
-    cursor: pointer;
-    color: #3498db;
-}
-
-.qty-value {
-    min-width: 50px;
-    text-align: center;
-    font-weight: 700;
-    font-size: 1rem;
-    font-family: monospace;
-}
-
-.add-item-btn {
-    background: #27ae60;
-    color: white;
-    border: none;
-    padding: 8px 18px;
-    border-radius: 30px;
-    font-weight: 600;
-    font-size: 0.75rem;
-    cursor: pointer;
-}
-
-.scroll-info {
-    text-align: center;
-    font-size: 11px;
-    color: #5a6e8a;
-    padding: 8px;
-    background: #f1f5f9;
-    border-radius: 0 0 12px 12px;
-}
-
-@media (min-width: 769px) {
-    .button-group {
-        flex-direction: row;
-    }
-    .button-group .btn {
-        width: auto;
-    }
-    .admin-btn-mobile {
-        display: none;
-    }
-    .admin-fab {
-        display: block;
-    }
-}
-
-@media (max-width: 768px) {
-    .cart-table th, .cart-table td {
-        padding: 8px 6px;
-        font-size: 11px;
-    }
-    .cart-stats {
-        font-size: 10px;
-    }
-    .request-card-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
-}
-
-.container {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 20px;
-}
-
-.price-total {
-    font-weight: bold;
-    color: #1e3c72;
-}
-
-.rejection-reason {
-    font-size: 0.6rem;
-    color: #e74c3c;
-    margin-top: 2px;
-}
-
-.auto-refresh-indicator {
-    font-size: 9px;
-    color: #888;
-    margin-left: 8px;
-}
-
-.history-section {
-    margin-top: 20px;
-    border-top: 1px solid #eef2f6;
-    padding-top: 16px;
-}
-
-.history-toolbar {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-    align-items: center;
-    margin-bottom: 16px;
-}
-
-.history-toolbar input {
-    flex: 1;
-    min-width: 130px;
-    padding: 8px 12px;
-    border: 1px solid #ddd;
-    border-radius: 10px;
-    font-size: 12px;
-}
-
-.history-filter-btn {
-    background: #8e44ad;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 10px;
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 12px;
-}
-
-.history-filter-btn:hover {
-    background: #6c3483;
-    transform: translateY(-1px);
-}
-
-.history-toggle-btn {
-    background: #8e44ad;
-    color: white;
-    border: none;
-    padding: 6px 14px;
-    border-radius: 30px;
-    font-weight: 600;
-    cursor: pointer;
-    font-size: 11px;
-    margin-left: 10px;
-}
-
-.history-toggle-btn:hover {
-    background: #6c3483;
-}
-
-.freehand-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    margin-left: 12px;
-    background: rgba(0,0,0,0.3);
-    padding: 4px 10px;
-    border-radius: 30px;
-    font-size: 0.7rem;
-}
-
-.status-light {
-    width: 12px;
-    height: 12px;
-    border-radius: 50%;
-    background: #dc2626;
-    transition: all 0.3s ease;
-}
-
-.status-light.active {
-    background: #10b981;
-    box-shadow: 0 0 8px #10b981;
-    animation: pulse 1.5s infinite;
-}
-
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-    70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-}
-
-.status-text {
-    font-weight: 500;
-}
+.cart-stats { background: #e8f4fd; padding: 10px 12px; border-radius: 10px; margin-bottom: 12px; display: flex; justify-content: space-between; font-weight: 500; font-size: 12px; flex-wrap: wrap; gap: 10px; }
+.empty-state { text-align: center; padding: 30px; color: #999; font-size: 13px; }
+.toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 30px; font-size: 12px; z-index: 1000; animation: slideUp 0.3s ease; }
+@keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+.sync-status { font-size: 10px; text-align: center; margin-top: 10px; padding: 5px 10px; border-radius: 10px; background: #e8f5e9; color: #27ae60; }
+.admin-fab { position: fixed; bottom: 20px; right: 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 1.3rem; font-weight: bold; cursor: pointer; z-index: 99; box-shadow: 0 4px 12px rgba(0,0,0,0.2); }
+.admin-btn-mobile { display: block; width: 100%; background: linear-gradient(135deg, #667eea, #764ba2); color: white; border: none; padding: 12px; border-radius: 30px; font-weight: bold; margin-top: 16px; cursor: pointer; font-size: 14px; }
+.request-card { background: white; border-radius: 16px; margin-bottom: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.06); overflow: hidden; }
+.request-card-header { background: #f8f9fa; padding: 14px 18px; border-bottom: 1px solid #eef2f6; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.request-id { font-weight: bold; font-size: 1rem; color: #1e3c72; font-family: monospace; }
+.approved-by-text { background: #e8f4fd; padding: 6px 14px; border-radius: 20px; font-size: 0.75rem; font-weight: 600; color: #1e3c72; }
+.approved-by-text span { color: #e94560; }
+.request-info-row { display: flex; gap: 20px; padding: 12px 18px; background: white; border-bottom: 1px solid #eef2f6; flex-wrap: wrap; }
+.info-item { display: flex; flex-direction: column; }
+.info-label { font-size: 0.65rem; color: #94a3b8; text-transform: uppercase; }
+.info-value { font-weight: 600; font-size: 0.85rem; color: #1e293b; margin-top: 3px; }
+.modal { display: flex; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10000; justify-content: center; align-items: center; padding: 20px; }
+.modal-content { background: white; padding: 35px 30px; border-radius: 28px; text-align: center; max-width: 380px; width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.3); }
+.modal-content h2 { margin-bottom: 15px; color: #1e3c72; font-size: 1.6rem; display: flex; align-items: center; justify-content: center; gap: 10px; }
+.modal-content p { color: #666; margin-bottom: 25px; font-size: 0.9rem; }
+.modal-content input { width: 100%; padding: 14px; margin-bottom: 20px; border: 2px solid #e0e0e0; border-radius: 50px; font-size: 16px; text-align: center; }
+.modal-content input:focus { outline: none; border-color: #3498db; }
+.modal-content button { background: #3498db; color: white; border: none; padding: 14px; border-radius: 50px; font-weight: 600; cursor: pointer; width: 100%; font-size: 1rem; transition: all 0.3s; margin-bottom: 10px; }
+.modal-content button:hover { background: #2980b9; transform: scale(1.02); }
+.error-msg { color: #e74c3c; margin-top: 10px; font-size: 0.85rem; }
+.close-modal { background: #95a5a6 !important; margin-top: 5px; }
+.close-modal:hover { background: #7f8c8d !important; }
+.items-scroll-container { max-height: 500px; overflow-y: auto; border: 1px solid #eef2f6; border-radius: 12px; background: #fafcfc; direction: ltr; }
+body.arabic .items-scroll-container { direction: rtl; }
+.items-grid { display: flex; flex-direction: column; gap: 8px; padding: 12px; }
+.item-card { background: white; border-radius: 12px; padding: 12px; border: 1px solid #e9ecef; }
+.item-card.selected { background: #d4edda; border-color: #27ae60; }
+.item-main-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+.item-info { flex: 2; min-width: 150px; }
+.item-name { font-weight: 600; font-size: 0.85rem; color: #2c3e50; }
+.item-code { font-size: 0.65rem; color: #7f8c8d; font-family: monospace; margin-top: 3px; }
+.item-price { font-size: 0.7rem; color: #e67e22; margin-top: 2px; }
+.item-meta { text-align: right; min-width: 90px; }
+.item-unit { background: #ecf0f1; padding: 3px 8px; border-radius: 20px; font-size: 0.65rem; font-weight: 500; display: inline-block; }
+.item-max { font-size: 0.65rem; color: #e67e22; margin-top: 4px; }
+.item-step { font-size: 0.6rem; color: #888; margin-top: 2px; }
+.item-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.qty-picker { display: flex; align-items: center; gap: 8px; background: #f1f5f9; padding: 5px 10px; border-radius: 40px; }
+.qty-btn { width: 36px; height: 36px; border-radius: 30px; border: none; background: white; font-weight: bold; font-size: 1.3rem; cursor: pointer; color: #3498db; }
+.qty-value { min-width: 50px; text-align: center; font-weight: 700; font-size: 1rem; font-family: monospace; }
+.add-item-btn { background: #27ae60; color: white; border: none; padding: 8px 18px; border-radius: 30px; font-weight: 600; font-size: 0.75rem; cursor: pointer; }
+.scroll-info { text-align: center; font-size: 11px; color: #5a6e8a; padding: 8px; background: #f1f5f9; border-radius: 0 0 12px 12px; }
+@media (min-width: 769px) { .button-group { flex-direction: row; } .button-group .btn { width: auto; } .admin-btn-mobile { display: none; } .admin-fab { display: block; } }
+@media (max-width: 768px) { .cart-table th, .cart-table td { padding: 8px 6px; font-size: 11px; } .cart-stats { font-size: 10px; } .request-card-header { flex-direction: column; align-items: flex-start; } }
+.container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+.price-total { font-weight: bold; color: #1e3c72; }
+.rejection-reason { font-size: 0.6rem; color: #e74c3c; margin-top: 2px; }
+.auto-refresh-indicator { font-size: 9px; color: #888; margin-left: 8px; }
+.history-section { margin-top: 20px; border-top: 1px solid #eef2f6; padding-top: 16px; }
+.history-toolbar { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+.history-toolbar input { flex: 1; min-width: 130px; padding: 8px 12px; border: 1px solid #ddd; border-radius: 10px; font-size: 12px; }
+.history-filter-btn { background: #8e44ad; color: white; border: none; padding: 8px 16px; border-radius: 10px; font-weight: 600; cursor: pointer; font-size: 12px; }
+.history-filter-btn:hover { background: #6c3483; transform: translateY(-1px); }
+.history-toggle-btn { background: #8e44ad; color: white; border: none; padding: 6px 14px; border-radius: 30px; font-weight: 600; cursor: pointer; font-size: 11px; margin-left: 10px; }
+.history-toggle-btn:hover { background: #6c3483; }
+.freehand-status { display: inline-flex; align-items: center; gap: 6px; margin-left: 12px; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 30px; font-size: 0.7rem; }
+.status-light { width: 12px; height: 12px; border-radius: 50%; background: #dc2626; transition: all 0.3s ease; }
+.status-light.active { background: #10b981; box-shadow: 0 0 8px #10b981; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
+.status-text { font-weight: 500; }
 </style>
 </head>
 <body>
@@ -858,30 +189,6 @@ body.arabic .items-scroll-container {
 <div class="sync-status" id="syncStatus">🔄 Connecting... <span id="autoRefreshIndicator" class="auto-refresh-indicator">(Auto-refresh: 60s)</span></div>
 
 <script>
-// ============ FIREBASE CONFIGURATION (HARDCODED - WORKING) ============
-const firebaseConfig = {
-    apiKey: "AIzaSyD57ErKNYwqGbLcriDYYvPUtVIw8jRncXQ",
-    authDomain: "system-order-kitchen.firebaseapp.com",
-    projectId: "system-order-kitchen",
-    storageBucket: "system-order-kitchen.firebasestorage.app",
-    messagingSenderId: "429224554052",
-    appId: "1:429224554052:web:85d32727439fe55efcd611"
-};
-
-// Initialize Firebase if not already initialized
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-    console.log("✅ Firebase initialized from chef.html");
-}
-
-const db = firebase.firestore();
-const auth = firebase.auth();
-
-// Enable offline persistence
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL).catch(console.error);
-
-console.log("✅ Firebase ready - DB and Auth available");
-
 // ============ LANGUAGE TRANSLATIONS ============
 const translations = {
     en: {
@@ -933,7 +240,6 @@ const translations = {
 let currentLang = 'en';
 
 // ============ KITCHEN CONFIGURATION ============
-// Map kitchen display names to Firestore document IDs
 const kitchenToFirestoreId = {
     "Hot Kitchen": "Hot_Kitchen",
     "Cold Kitchen": "Cold_Kitchen",
@@ -969,7 +275,7 @@ let autoRefreshInterval = null;
 let freehandModeActive = false;
 let freehandUnsubscribe = null;
 
-// ============ DEFAULT ITEMS (fallback when JSON files don't exist) ============
+// ============ DEFAULT ITEMS (fallback) ============
 function getDefaultItemsForKitchen(kitchen) {
     const defaultItems = {
         "Hot Kitchen": [
@@ -1002,11 +308,7 @@ function getDefaultItemsForKitchen(kitchen) {
             { code: "SK002", name: "Beverages", name_ar: "مشروبات", unit: "pcs", maxLimit: 100, price: 5, step: 1 }
         ]
     };
-    
-    return defaultItems[kitchen] || [
-        { code: "GEN001", name: "Test Item 1", name_ar: "عنصر اختبار", unit: "kg", maxLimit: 100, price: 50, step: 0.5 },
-        { code: "GEN002", name: "Test Item 2", name_ar: "عنصر اختبار 2", unit: "pcs", maxLimit: 100, price: 10, step: 1 }
-    ];
+    return defaultItems[kitchen] || [];
 }
 
 // ============ FIRESTORE PASSWORD VERIFICATION ============
@@ -1014,17 +316,14 @@ async function getKitchenPasswordFromFirestore(kitchenName) {
     try {
         const kitchenId = kitchenToFirestoreId[kitchenName];
         if (!kitchenId) return null;
-        
         const kitchenDoc = await db.collection("kitchen_passwords").doc(kitchenId).get();
         if (kitchenDoc.exists && kitchenDoc.data().password) {
             return kitchenDoc.data().password;
         }
-        
         const defaultDoc = await db.collection("kitchen_passwords").doc("default_settings").get();
         if (defaultDoc.exists && defaultDoc.data().defaultPassword) {
             return defaultDoc.data().defaultPassword;
         }
-        
         return "kitchen123";
     } catch (error) {
         console.error("Error getting kitchen password:", error);
@@ -1119,9 +418,7 @@ function loadChefNames() {
     const saved = localStorage.getItem("chefNames");
     if(saved) { const parsed = JSON.parse(saved); kitchens.forEach(kitchen => { chefNames[kitchen] = parsed[kitchen] || ""; }); }
 }
-
 function saveChefNames() { localStorage.setItem("chefNames", JSON.stringify(chefNames)); }
-
 function loadSavedCart() {
     const saved = localStorage.getItem("kitchenCart");
     if(saved) {
@@ -1131,9 +428,7 @@ function loadSavedCart() {
         kitchens.forEach(kitchen => { kitchenData[kitchen] = { cart: [], chefName: chefNames[kitchen] }; });
     }
 }
-
 function saveCart() { const cartToSave = {}; kitchens.forEach(kitchen => { cartToSave[kitchen] = kitchenData[kitchen].cart; }); localStorage.setItem("kitchenCart", JSON.stringify(cartToSave)); }
-
 function loadUnlockedKitchens() { const saved = localStorage.getItem("unlockedKitchens"); if(saved) unlockedKitchens = JSON.parse(saved); }
 function saveUnlockedKitchens() { localStorage.setItem("unlockedKitchens", JSON.stringify(unlockedKitchens)); }
 
@@ -1184,11 +479,11 @@ async function loadRequestsFromFirebase() {
         allRequests = [];
         snapshot.forEach(doc => { allRequests.push({ firebaseId: doc.id, ...doc.data() }); });
         if (currentKitchen) { loadMyRequests(currentKitchen); loadOrderHistory(currentKitchen); }
-        document.getElementById("syncStatus").innerHTML = `✅ Connected • ${allRequests.length} orders <span id="autoRefreshIndicator" class="auto-refresh-indicator">(Auto-refresh: 60s)</span>`;
-        console.log("✅ Loaded", allRequests.length, "requests from Firebase");
+        document.getElementById("syncStatus").innerHTML = `✅ Connected • ${allRequests.length} orders`;
+        console.log("✅ Loaded", allRequests.length, "requests");
     } catch (error) { 
         console.error("Error loading requests:", error);
-        document.getElementById("syncStatus").innerHTML = "⚠️ Offline mode - " + error.message; 
+        document.getElementById("syncStatus").innerHTML = "⚠️ Offline mode"; 
     }
 }
 
@@ -1200,22 +495,53 @@ async function saveRequestToFirebase(request) {
         if (currentKitchen) { loadMyRequests(currentKitchen); loadOrderHistory(currentKitchen); }
     } catch (error) { 
         console.error("Error saving:", error);
-        showToast("❌ Error saving: " + error.message); 
+        showToast("❌ Error saving"); 
     }
 }
 
+// ============ FIXED getOverallStatus FUNCTION ============
 function getOverallStatus(items) {
-    if (!items || !items.length) return "pending";
-    let approved = 0, rejected = 0, pending = 0;
+    if (!items || items.length === 0) return "pending";
+    
+    let approvedCount = 0;
+    let rejectedCount = 0;
+    let pendingCount = 0;
+    
     items.forEach(item => {
-        if (item.status === "approved") approved++;
-        else if (item.status === "rejected") rejected++;
-        else pending++;
+        if (item.status === "approved") {
+            approvedCount++;
+        } else if (item.status === "rejected") {
+            rejectedCount++;
+        } else {
+            pendingCount++;
+        }
     });
-    if (approved === items.length && items.length > 0) return "approved";
-    if (rejected === items.length && items.length > 0) return "rejected";
-    if (approved > 0 && rejected > 0) return "partial";
-    if (approved > 0 && pending > 0) return "partial";
+    
+    // All items are approved
+    if (approvedCount === items.length && approvedCount > 0) {
+        return "approved";
+    }
+    
+    // All items are rejected
+    if (rejectedCount === items.length && rejectedCount > 0) {
+        return "rejected";
+    }
+    
+    // Mixed approved and rejected (partial)
+    if (approvedCount > 0 && rejectedCount > 0) {
+        return "partial";
+    }
+    
+    // Some approved, some pending (partial)
+    if (approvedCount > 0 && pendingCount > 0) {
+        return "partial";
+    }
+    
+    // All items are pending
+    if (pendingCount === items.length) {
+        return "pending";
+    }
+    
     return "pending";
 }
 
@@ -1249,6 +575,7 @@ async function submitRequest(kitchen) {
     const cart = kitchenData[kitchen].cart;
     if (!chefName) { showToast("⚠️ Enter chef name first"); return; }
     if (cart.length === 0) { showToast("No items to submit"); return; }
+    
     const duplicateCheck = await checkForDuplicateOrder(kitchen, chefName, cart);
     if (duplicateCheck.isDuplicate) {
         const message = `${t('duplicateBlocked')}!\n\n${t('duplicateMessage')} ${duplicateCheck.existingTime}\nRequest ID: ${duplicateCheck.existingRequestId}\n\nPlease check existing request or modify quantities.`;
@@ -1256,12 +583,28 @@ async function submitRequest(kitchen) {
         alert(message);
         return;
     }
+    
     const newRequest = {
         requestId: "REQ-" + Date.now().toString().slice(-6),
-        chefName: chefName, section: kitchen,
-        items: cart.map(i => ({ code: i.code, name: i.name, name_ar: i.name_ar, unit: i.unit, originalQty: i.qty, maxLimit: i.maxLimit, price: i.price || 0, status: "pending", approvedQty: 0, rejectionReason: null })),
-        submittedAt: new Date().toLocaleString(), timestamp: Date.now()
+        chefName: chefName,
+        section: kitchen,
+        items: cart.map(i => ({ 
+            code: i.code, 
+            name: i.name, 
+            name_ar: i.name_ar, 
+            unit: i.unit, 
+            originalQty: i.qty, 
+            maxLimit: i.maxLimit, 
+            price: i.price || 0, 
+            status: "pending", 
+            approvedQty: 0, 
+            rejectionReason: null 
+        })),
+        submittedAt: new Date().toLocaleString(), 
+        timestamp: Date.now()
     };
+    
+    console.log("Submitting request:", newRequest);
     await saveRequestToFirebase(newRequest);
     kitchenData[kitchen].cart = [];
     renderCart(kitchen);
@@ -1310,8 +653,7 @@ function changeQuantity(kitchen, code, delta, maxLimit) {
     const safeCode = (code || "").replace(/[^a-zA-Z0-9]/g, '_');
     const span = document.getElementById(`qtySpan_${kitchenId}_${safeCode}`);
     if (span) {
-        const absDelta = Math.abs(delta);
-        if (absDelta === 0.5 || absDelta === -0.5) { span.innerText = newQty.toFixed(1); }
+        if (Math.abs(delta) === 0.5) { span.innerText = newQty.toFixed(1); }
         else { span.innerText = Math.floor(newQty); }
     }
 }
@@ -1379,7 +721,7 @@ function filterItemsByFirstChar(kitchen, searchChar) {
             <div class="item-main-row"><div class="item-info"><div class="item-name">${escapeHtml(displayName)}</div>
             <div class="item-code">${item.code || "N/A"}</div><div class="item-price">💰 ${itemPrice.toFixed(2)} ${t('egp')} / ${item.unit}</div></div>
             <div class="item-meta"><span class="item-unit">${item.unit || "pcs"}</span>
-            <div class="item-max" style="color:${freehandModeActive ? '#10b981' : '#e67e22'};">${t('max')} ${freehandModeActive ? '∞' : (item.maxLimit || 99)}</div><div class="item-step">Step: ${stepText}</div></div>
+            <div class="item-max">${t('max')} ${freehandModeActive ? '∞' : (item.maxLimit || 99)}</div><div class="item-step">Step: ${stepText}</div></div>
             <div class="item-actions"><div class="qty-picker">
             <button class="qty-btn" data-step="-${stepValue}" data-code="${item.code}" data-max="${item.maxLimit || 99}">−</button>
             <span class="qty-value" id="qtySpan_${kitchenId}_${safeCode}">${displayQty}</span>
@@ -1479,14 +821,19 @@ function loadMyRequests(kitchen) {
     const container = document.getElementById(`myRequestsDesktop_${kitchenId}`);
     if (!container) return;
     const kitchenRequests = allRequests.filter(r => r.section === kitchen);
+    console.log(`Loading ${kitchenRequests.length} requests for ${kitchen}`);
+    
     if (!kitchenRequests.length) { container.innerHTML = `<div class="empty-state">📭 ${t('noRequests')}</div>`; return; }
     container.innerHTML = "";
     [...kitchenRequests].reverse().forEach(req => {
         const status = getOverallStatus(req.items);
+        console.log(`Request ${req.requestId} status: ${status}`);
+        
         let statusClass = "status-pending", statusText = t('pending');
         if (status === "approved") { statusClass = "status-approved"; statusText = t('approved'); }
         else if (status === "rejected") { statusClass = "status-rejected"; statusText = t('rejected'); }
         else if (status === "partial") { statusClass = "status-partial"; statusText = t('partial'); }
+        
         const firstAdmin = req.items.find(i => i.approvedBy || i.rejectedBy);
         const adminName = firstAdmin ? (firstAdmin.approvedBy || firstAdmin.rejectedBy) : t('waitingForAdmin');
         let requestTotalValue = 0;
@@ -1510,7 +857,7 @@ function loadMyRequests(kitchen) {
                 <td>${qty.toFixed(1)}</td>
                 <td>${item.unit}</td>
                 <td>${price.toFixed(2)}</td>
-                <td>${total.toFixed(2)}</td>
+                <td>${(qty * price).toFixed(2)}</td>
                 <td>${approvedQty > 0 ? approvedQty.toFixed(1) : "0"}</td>
                 <td><span style="color:${statusColor}; font-weight:600;">${statusDisplay}</span>${rejectionHtml}</td>
             </tr>`;
@@ -1676,7 +1023,6 @@ function logout() {
 }
 
 // ============ INITIALIZATION ============
-// Start everything when page loads
 window.addEventListener('DOMContentLoaded', () => {
     console.log("🚀 Starting Chef Dashboard...");
     generatePages();
@@ -1685,7 +1031,6 @@ window.addEventListener('DOMContentLoaded', () => {
     loadLastSelectedKitchen();
     initFreehandModeListener();
     
-    // Set up real-time listener
     db.collection("kitchen_requests").onSnapshot(() => { 
         console.log("🔄 Real-time update received");
         loadRequestsFromFirebase(); 
