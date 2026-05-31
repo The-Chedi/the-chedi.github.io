@@ -8,11 +8,19 @@ const firebaseConfig = {
     appId: "1:429224554052:web:85d32727439fe55efcd611"
 };
 
-// Initialize Firebase
+// Initialize Firebase if not already initialized
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 
 const db = firebase.firestore();
+const auth = firebase.auth();
+
+// Make them available globally
+window.db = db;
+window.auth = auth;
+
+// Enable persistence
+auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
 console.log("✅ Firebase initialized successfully");
