@@ -2,14 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<!-- Firebase SDKs -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+<title>Admin Dashboard - Full Quantity Control</title>
+
+<!-- Firebase SDKs - MUST load in this order -->
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-<!-- External Firebase config file -->
+
+<!-- Your external Firebase config - MUST be after SDKs -->
 <script src="firebase-config.js"></script>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-<title>Admin Dashboard - Full Quantity Control</title>
 
 <style>
 * {
@@ -159,6 +161,7 @@ body {
     margin-bottom: 20px;
     flex-wrap: wrap;
 }
+
 .info-item {
     display: flex;
     flex-direction: column;
@@ -200,7 +203,7 @@ body {
 
 .firebase-id:active {
     transform: scale(0.98);
-}   
+}
 
 .tab-btn {
     padding: 8px 20px;
@@ -302,18 +305,6 @@ body {
     flex-wrap: wrap;
 }
 
-.info-label {
-    font-size: 0.6rem;
-    color: #999;
-    text-transform: uppercase;
-}
-
-.info-value {
-    font-weight: 600;
-    font-size: 0.85rem;
-    margin-top: 3px;
-}
-
 .table-wrapper {
     overflow-x: auto;
     padding: 0 18px 18px 18px;
@@ -345,19 +336,6 @@ body {
 .item-name {
     font-weight: 600;
     color: #2c3e50;
-}
-
-.item-code {
-    font-size: 0.65rem;
-    color: #999;
-    font-family: monospace;
-    margin-top: 3px;
-}
-
-.item-price {
-    font-size: 0.7rem;
-    color: #e67e22;
-    font-weight: 500;
 }
 
 .requested-qty {
@@ -794,7 +772,7 @@ body {
 
 <div id="loadingScreen" class="loading-screen">
     <div class="loading-spinner-large"></div>
-    <div class="loading-text">Loading dashboard...</div>
+    <div class="loading-text">Initializing Dashboard...</div>
 </div>
 
 <div id="loginModal" class="modal">
@@ -802,7 +780,7 @@ body {
         <h2>🔐 Admin Login</h2>
         <h3>Sign in with Firebase</h3>
         <div class="form-group">
-            <input type="text" id="adminDisplayName" placeholder="Your Full Name (e.g., Marco, Chef Ahmed, etc.)" autocomplete="name">
+            <input type="text" id="adminDisplayName" placeholder="Your Full Name" autocomplete="name">
         </div>
         <div class="form-group">
             <input type="email" id="loginEmail" placeholder="Email address" autocomplete="email">
@@ -812,7 +790,7 @@ body {
         </div>
         <button id="loginButton" onclick="loginWithEmail()">Login</button>
         <div id="loginError" class="error-msg"></div>
-        <button class="btn-secondary" onclick="goBackToIndex()">← Back to Home</button>
+        <button class="btn-secondary" onclick="window.location.href='index.html'">← Back to Home</button>
     </div>
 </div>
 
@@ -831,10 +809,10 @@ body {
             </div>
             <div class="header-buttons">
                 <button class="btn-header btn-analytics" onclick="openAnalytics()">📊 Analytics</button>
-                <button class="btn-header" onclick="exportExcel()">📎 Export</button>
+                <button class="btn-header" onclick="exportToCSV()">📎 Export</button>
                 <button class="btn-header" onclick="window.print()">🖨️ Print</button>
                 <button class="btn-header" onclick="openRevenue()">💰 Revenue</button>
-                <button class="btn-header btn-danger" onclick="showResetConfirmModal()">🗑️ Reset</button>
+                <button class="btn-header btn-danger" onclick="resetCompletedRequests()">🗑️ Reset</button>
             </div>
         </div>
     </div>
@@ -855,112 +833,100 @@ body {
 </div>
 
 <script>
-// Global variables
-const KITCHENS = ["Hot Kitchen", "Cold Kitchen", "Pastry / Bakery", "Butchery", "Beach House", "Nihon Kitchen", "Staff Kitchen"];
+// Wait for Firebase to be ready from external config
+let db = null;
+let auth = null;
 let currentAdmin = "";
 let currentAdminEmail = "";
 let currentKitchen = "all";
 let currentStatus = "pending";
 let allRequests = [];
-let duplicateMap = new Map();
-let db = null;
-let auth = null;
 
-// Wait for Firebase to be fully initialized from external config
+// Function to check if Firebase is initialized
 function waitForFirebase() {
-    return new Promise((resolve, reject) => {
-        // Check if firebase is already initialized
-        if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
-            db = firebase.firestore();
-            auth = firebase.auth();
-            console.log("Firebase already initialized");
-            resolve();
-            return;
-        }
-        
-        // Wait for firebase to be available
-        let attempts = 0;
-        const maxAttempts = 50; // 5 seconds max
-        const interval = setInterval(() => {
-            attempts++;
-            if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
-                clearInterval(interval);
+    return new Promise((resolve) => {
+        const checkInterval = setInterval(() => {
+            // Check if firebase is available AND initialized
+            if (typeof firebase !== 'undefined' && 
+                firebase.apps && 
+                firebase.apps.length > 0 &&
+                typeof firebase.firestore === 'function') {
+                
+                clearInterval(checkInterval);
                 db = firebase.firestore();
                 auth = firebase.auth();
-                console.log("Firebase initialized after", attempts, "attempts");
+                console.log("✅ Firebase ready!");
                 resolve();
-            } else if (attempts >= maxAttempts) {
-                clearInterval(interval);
-                reject(new Error("Firebase failed to load. Check firebase-config.js"));
             }
         }, 100);
+        
+        // Timeout after 10 seconds
+        setTimeout(() => {
+            clearInterval(checkInterval);
+            console.error("Firebase initialization timeout");
+            document.getElementById("loadingScreen").innerHTML = `
+                <div style="color:red; text-align:center; padding:20px;">
+                    <h3>❌ Firebase Configuration Error</h3>
+                    <p>Could not load firebase-config.js</p>
+                    <p>Make sure the file exists in the same directory.</p>
+                    <button onclick="location.reload()" style="margin-top:20px; padding:10px 20px;">Retry</button>
+                </div>
+            `;
+        }, 10000);
     });
 }
 
-function saveAdminName(name) { localStorage.setItem("adminDisplayName", name); }
-function getSavedAdminName() { return localStorage.getItem("adminDisplayName") || ""; }
-
-function hideLoadingAndShowContent(showDashboard) {
-    const loadingScreen = document.getElementById("loadingScreen");
-    const loginModal = document.getElementById("loginModal");
-    const mainContent = document.getElementById("mainContent");
+// Initialize the app
+async function initApp() {
+    await waitForFirebase();
     
-    loadingScreen.style.display = "none";
-    if (showDashboard) {
-        mainContent.style.display = "block";
-        loginModal.style.display = "none";
-    } else {
-        mainContent.style.display = "none";
-        loginModal.style.display = "flex";
-    }
-}
-
-// Initialize auth listener after Firebase is ready
-async function initializeAuth() {
+    // Set auth persistence
     try {
-        await waitForFirebase();
-        
-        // Set auth persistence
         await auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-        
-        // Listen to auth state
-        auth.onAuthStateChanged((user) => {
-            console.log("Auth state changed:", user ? "Logged in" : "Logged out");
-            
-            if (user) {
-                currentAdminEmail = user.email;
-                let savedName = getSavedAdminName();
-                
-                if (savedName && savedName.trim() !== "") {
-                    currentAdmin = savedName;
-                } else {
-                    if (user.displayName && user.displayName.trim() !== "") {
-                        currentAdmin = user.displayName;
-                        saveAdminName(currentAdmin);
-                    } else {
-                        currentAdmin = user.email.split('@')[0];
-                    }
-                }
-                
-                document.getElementById("adminNameDisplay").innerText = currentAdmin;
-                document.getElementById("adminEmailDisplay").innerText = currentAdminEmail;
-                hideLoadingAndShowContent(true);
-                loadRequests();
-            } else {
-                hideLoadingAndShowContent(false);
-            }
-        });
-        
-    } catch (error) {
-        console.error("Firebase initialization error:", error);
-        document.getElementById("loadingScreen").innerHTML = `
-            <div style="color:red; text-align:center; padding:20px;">
-                <h3>❌ Firebase Configuration Error</h3>
-                <p>${error.message}</p>
-                <p>Make sure firebase-config.js exists and has valid configuration.</p>
-            </div>
-        `;
+    } catch(e) {
+        console.warn("Persistence warning:", e);
     }
+    
+    // Listen to auth state
+    auth.onAuthStateChanged((user) => {
+        console.log("Auth state changed:", user ? "Logged in" : "Logged out");
+        
+        const loadingScreen = document.getElementById("loadingScreen");
+        const loginModal = document.getElementById("loginModal");
+        const mainContent = document.getElementById("mainContent");
+        
+        if (user) {
+            // User is logged in
+            currentAdminEmail = user.email;
+            
+            // Get saved name or use email prefix
+            let savedName = localStorage.getItem("adminDisplayName");
+            if (savedName && savedName.trim()) {
+                currentAdmin = savedName;
+            } else if (user.displayName) {
+                currentAdmin = user.displayName;
+                localStorage.setItem("adminDisplayName", currentAdmin);
+            } else {
+                currentAdmin = user.email.split('@')[0];
+            }
+            
+            document.getElementById("adminNameDisplay").innerText = currentAdmin;
+            document.getElementById("adminEmailDisplay").innerText = currentAdminEmail;
+            
+            // Hide loading, show dashboard
+            loadingScreen.style.display = "none";
+            mainContent.style.display = "block";
+            loginModal.style.display = "none";
+            
+            // Load data
+            loadRequests();
+        } else {
+            // User is logged out - show login modal
+            loadingScreen.style.display = "none";
+            mainContent.style.display = "none";
+            loginModal.style.display = "flex";
+        }
+    });
 }
 
 async function loginWithEmail() {
@@ -970,11 +936,17 @@ async function loginWithEmail() {
     const errorDiv = document.getElementById("loginError");
     const loginBtn = document.getElementById("loginButton");
     
-    if (!displayName) { errorDiv.innerHTML = "❌ Please enter your name"; return; }
-    if (!email || !password) { errorDiv.innerHTML = "❌ Please enter both email and password"; return; }
+    if (!displayName) {
+        errorDiv.innerHTML = "❌ Please enter your name";
+        return;
+    }
+    if (!email || !password) {
+        errorDiv.innerHTML = "❌ Please enter both email and password";
+        return;
+    }
     
-    saveAdminName(displayName);
-    currentAdmin = displayName;
+    // Save name for later
+    localStorage.setItem("adminDisplayName", displayName);
     
     const originalText = loginBtn.innerHTML;
     loginBtn.innerHTML = '<span class="loading-spinner"></span> Logging in...';
@@ -984,6 +956,7 @@ async function loginWithEmail() {
         const userCredential = await auth.signInWithEmailAndPassword(email, password);
         await userCredential.user.updateProfile({ displayName: displayName });
         errorDiv.innerHTML = "";
+        // Auth state change will handle the UI update
     } catch (error) {
         console.error("Login error:", error);
         let errorMessage = "❌ Login failed: ";
@@ -1004,19 +977,15 @@ async function loginWithEmail() {
 async function logout() {
     if (confirm("Logout?")) {
         try {
-            document.getElementById("loadingScreen").style.display = "flex";
-            document.getElementById("mainContent").style.display = "none";
             await auth.signOut();
             showToast("Logged out successfully");
         } catch (error) {
             console.error("Logout error:", error);
             showToast("Error logging out");
-            document.getElementById("loadingScreen").style.display = "none";
         }
     }
 }
 
-function goBackToIndex() { window.location.href = "index.html"; }
 function openAnalytics() { window.open("analytics.html", "_blank"); }
 function openRevenue() { window.open("revenue.html", "_blank"); }
 
@@ -1024,31 +993,15 @@ async function loadRequests() {
     try {
         const snapshot = await db.collection("kitchen_requests").orderBy("timestamp", "desc").get();
         allRequests = [];
-        snapshot.forEach(doc => allRequests.push({ id: doc.id, ...doc.data() }));
-        findDuplicateRequests();
+        snapshot.forEach(doc => {
+            allRequests.push({ id: doc.id, ...doc.data() });
+        });
+        console.log(`Loaded ${allRequests.length} requests`);
         renderUI();
         updateStats();
     } catch(e) { 
         console.error("Error loading requests:", e);
-        showToast("Error loading data"); 
-    }
-}
-
-function findDuplicateRequests() {
-    duplicateMap.clear();
-    const signatureMap = new Map();
-    for (const req of allRequests) {
-        const itemSignature = req.items.map(item => `${item.code}|${item.originalQty}`).join(';');
-        const signature = `${req.section}|${req.chefName}|${itemSignature}`;
-        if (!signatureMap.has(signature)) signatureMap.set(signature, []);
-        signatureMap.get(signature).push(req);
-    }
-    for (const [sig, requests] of signatureMap.entries()) {
-        if (requests.length > 1) {
-            for (const req of requests) {
-                duplicateMap.set(req.id, { isDuplicate: true, count: requests.length, otherIds: requests.filter(r => r.id !== req.id).map(r => r.requestId) });
-            }
-        }
+        showToast("Error loading data: " + e.message);
     }
 }
 
@@ -1076,29 +1029,33 @@ async function updateRequest(id, items) {
         showToast(`✅ Updated by ${currentAdmin}`);
         await loadRequests();
         return true;
-    } catch(e) { console.error("Update error:", e); showToast("Update error"); return false; }
+    } catch(e) { 
+        console.error("Update error:", e);
+        showToast("Update error: " + e.message);
+        return false;
+    }
 }
 
-async function approveItemFlex(reqId, idx) {
+async function approveItem(reqId, idx) {
     const input = document.getElementById(`qty_${reqId}_${idx}`);
     let qty = parseFloat(input?.value || 0);
-    if(isNaN(qty) || qty < 0) { showToast("Enter valid quantity"); return; }
+    if(isNaN(qty) || qty < 0) { 
+        showToast("Enter valid quantity"); 
+        return;
+    }
     const req = allRequests.find(r => r.id === reqId);
     if(req) {
-        const item = req.items[idx];
-        item.status = "approved";
-        item.approvedQty = qty;
-        item.approvedBy = currentAdmin;
-        item.approvedAt = new Date().toLocaleString();
-        delete item.rejectionReason;
-        delete item.rejectedBy;
-        delete item.rejectedAt;
+        req.items[idx].status = "approved";
+        req.items[idx].approvedQty = qty;
+        req.items[idx].approvedBy = currentAdmin;
+        req.items[idx].approvedAt = new Date().toLocaleString();
+        delete req.items[idx].rejectionReason;
         await updateRequest(reqId, req.items);
     }
 }
 
 async function rejectItem(reqId, idx) {
-    const reason = prompt(`Rejection reason (${currentAdmin}):`, "Out of stock");
+    const reason = prompt("Rejection reason:", "Out of stock");
     if(reason) {
         const req = allRequests.find(r => r.id === reqId);
         if(req) {
@@ -1108,35 +1065,31 @@ async function rejectItem(reqId, idx) {
             req.items[idx].rejectedAt = new Date().toLocaleString();
             req.items[idx].approvedQty = 0;
             delete req.items[idx].approvedBy;
-            delete req.items[idx].approvedAt;
             await updateRequest(reqId, req.items);
         }
     }
 }
 
-async function approveAllFlex(reqId) {
-    if(!confirm(`Approve ALL items?`)) return;
+async function approveAll(reqId) {
+    if(!confirm("Approve ALL items with current quantities?")) return;
     const req = allRequests.find(r => r.id === reqId);
     if(req) {
         for(let i=0; i<req.items.length; i++) {
             const input = document.getElementById(`qty_${reqId}_${i}`);
             let qty = parseFloat(input?.value || 0);
             if(isNaN(qty)) qty = 0;
-            const item = req.items[i];
-            item.status = "approved";
-            item.approvedQty = qty;
-            item.approvedBy = currentAdmin;
-            item.approvedAt = new Date().toLocaleString();
-            delete item.rejectionReason;
-            delete item.rejectedBy;
-            delete item.rejectedAt;
+            req.items[i].status = "approved";
+            req.items[i].approvedQty = qty;
+            req.items[i].approvedBy = currentAdmin;
+            req.items[i].approvedAt = new Date().toLocaleString();
+            delete req.items[i].rejectionReason;
         }
         await updateRequest(reqId, req.items);
     }
 }
 
 async function rejectAll(reqId) {
-    const reason = prompt(`Rejection reason for ALL:`, "Not available");
+    const reason = prompt("Rejection reason for ALL items:", "Not available");
     if(reason) {
         const req = allRequests.find(r => r.id === reqId);
         if(req) {
@@ -1147,7 +1100,6 @@ async function rejectAll(reqId) {
                 item.rejectedAt = new Date().toLocaleString();
                 item.approvedQty = 0;
                 delete item.approvedBy;
-                delete item.approvedAt;
             });
             await updateRequest(reqId, req.items);
         }
@@ -1155,7 +1107,7 @@ async function rejectAll(reqId) {
 }
 
 async function acceptRequest(reqId) {
-    if(!confirm(`✅ ACCEPT REQUEST?\n\n• PENDING items will be AUTO-APPROVED with original quantities\n• Approved/Rejected stay as is\n\nContinue?`)) return;
+    if(!confirm("ACCEPT REQUEST?\n\nPending items will be AUTO-APPROVED with original quantities.\nApproved/Rejected items stay as is.\n\nContinue?")) return;
     const req = allRequests.find(r => r.id === reqId);
     if(req) {
         req.items.forEach(item => {
@@ -1165,8 +1117,6 @@ async function acceptRequest(reqId) {
                 item.approvedBy = currentAdmin;
                 item.approvedAt = new Date().toLocaleString();
                 delete item.rejectionReason;
-                delete item.rejectedBy;
-                delete item.rejectedAt;
             }
             item.completedVia = "accept";
         });
@@ -1175,64 +1125,60 @@ async function acceptRequest(reqId) {
     }
 }
 
-function showResetConfirmModal() {
-    const toDelete = allRequests.filter(req => getRequestStatus(req.items) !== "pending");
-    if(toDelete.length === 0) { showToast("ℹ️ No completed requests to delete"); return; }
-    const modal = document.createElement('div');
-    modal.className = 'confirm-modal';
-    modal.innerHTML = `
-        <div class="confirm-modal-content">
-            <h3>⚠️ PERMANENT DELETION ⚠️</h3>
-            <p>Delete <strong>${toDelete.length}</strong> completed request(s)?</p>
-            <p class="warning-text">Type <strong>DELETE</strong> to confirm:</p>
-            <input type="text" id="confirmDeleteInput" autocomplete="off">
-            <div class="confirm-buttons">
-                <button class="btn-cancel-delete" onclick="this.closest('.confirm-modal').remove()">Cancel</button>
-                <button class="btn-confirm-delete" id="confirmDeleteBtn" disabled>Delete</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(modal);
-    const input = modal.querySelector('#confirmDeleteInput');
-    const confirmBtn = modal.querySelector('#confirmDeleteBtn');
-    input.focus();
-    input.addEventListener('input', (e) => { confirmBtn.disabled = e.target.value !== 'DELETE'; });
-    confirmBtn.onclick = async () => {
-        if(input.value === 'DELETE') {
-            modal.remove();
-            let deletedCount = 0;
-            for(const req of toDelete) {
-                try { await db.collection("kitchen_requests").doc(req.id).delete(); deletedCount++; }
-                catch(e) { console.error(e); }
-            }
-            await loadRequests();
-            showToast(`✅ Deleted ${deletedCount} requests.`);
-        } else { showToast("Cancelled"); modal.remove(); }
-    };
+async function resetCompletedRequests() {
+    const completed = allRequests.filter(req => getRequestStatus(req.items) !== "pending");
+    if(completed.length === 0) {
+        showToast("No completed requests to delete");
+        return;
+    }
+    
+    const confirmed = confirm(`⚠️ PERMANENT DELETION ⚠️\n\nDelete ${completed.length} completed request(s)?\n\nType "DELETE" to confirm:`);
+    if (!confirmed) return;
+    
+    const confirmText = prompt(`Type "DELETE" to confirm deletion of ${completed.length} requests:`);
+    if (confirmText !== "DELETE") {
+        showToast("Cancelled");
+        return;
+    }
+    
+    let deleted = 0;
+    for(const req of completed) {
+        try {
+            await db.collection("kitchen_requests").doc(req.id).delete();
+            deleted++;
+        } catch(e) {
+            console.error(e);
+        }
+    }
+    await loadRequests();
+    showToast(`✅ Deleted ${deleted} requests`);
 }
 
-function exportExcel() {
-    if(!allRequests.length) { showToast("No data"); return; }
-    let csv = "Request ID,Kitchen,Chef,Date,Item,Code,Requested Qty,Unit,Price/Unit (EGP),Approved Qty,Status,Action By,Total Value (EGP),Duplicate\n";
+function exportToCSV() {
+    if(!allRequests.length) {
+        showToast("No data to export");
+        return;
+    }
+    
+    let csv = "Request ID,Kitchen,Chef,Date,Item,Code,Requested Qty,Unit,Price,Approved Qty,Status,Approved By,Total Value\n";
     allRequests.forEach(req => {
-        const isDup = duplicateMap.has(req.id) ? "YES" : "NO";
         req.items.forEach(item => {
-            let status = item.status, actionBy = "";
             const price = item.price || 0;
             const approvedQty = item.status === "approved" ? (item.approvedQty || 0) : 0;
-            const totalValue = approvedQty * price;
-            if(item.status === "approved") { status = "Approved"; actionBy = item.approvedBy || ""; }
-            else if(item.status === "rejected") { status = "Rejected"; actionBy = item.rejectedBy || ""; }
-            else if(item.completedVia === "accept") { status = "Accepted"; actionBy = item.approvedBy || item.rejectedBy || currentAdmin; }
-            else { status = "Pending"; actionBy = "-"; }
-            csv += `"${req.requestId}","${req.section}","${req.chefName}","${req.submittedAt}","${item.name}","${item.code}",${item.originalQty},"${item.unit}",${price},${approvedQty},"${status}","${actionBy}",${totalValue},"${isDup}"\n`;
+            const total = approvedQty * price;
+            const status = item.status || "pending";
+            const approvedBy = item.approvedBy || item.rejectedBy || "-";
+            
+            csv += `"${req.requestId}","${req.section}","${req.chefName}","${req.submittedAt}","${item.name}","${item.code}",${item.originalQty},"${item.unit}",${price},${approvedQty},"${status}","${approvedBy}",${total}\n`;
         });
     });
+    
     const blob = new Blob(["\uFEFF" + csv], {type: "text/csv;charset=utf-8"});
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `orders_${Date.now()}.csv`;
+    link.download = `kitchen_orders_${Date.now()}.csv`;
     link.click();
+    showToast("Export complete");
 }
 
 function updateStats() {
@@ -1254,13 +1200,15 @@ function updateStats() {
 function setFilter(status) { currentStatus = status; renderUI(); }
 function filterKitchen(kitchen) { currentKitchen = kitchen; renderUI(); }
 
+const KITCHENS = ["Hot Kitchen", "Cold Kitchen", "Pastry / Bakery", "Butchery", "Beach House", "Nihon Kitchen", "Staff Kitchen"];
+
 function renderUI() {
     const kitchenDiv = document.getElementById("kitchenFilters");
     kitchenDiv.innerHTML = `<button class="kitchen-filter-btn ${currentKitchen === 'all' ? 'active' : ''}" onclick="filterKitchen('all')">📋 All</button>`;
     KITCHENS.forEach(k => {
-        let icon = k === 'Hot Kitchen' ? '🔥' : k === 'Cold Kitchen' ? '❄️' : k === 'Pastry / Bakery' ? '🍰' : k === 'Butchery' ? '🥩' : k === 'Beach House' ? '🏖️' : k === 'Nihon Kitchen' ? '🍜' : '👥';
-        let name = k.replace(' Kitchen', '').replace(' / Bakery', '');
-        kitchenDiv.innerHTML += `<button class="kitchen-filter-btn ${currentKitchen === k ? 'active' : ''}" onclick="filterKitchen('${k}')">${icon} ${name}</button>`;
+        const icon = k === 'Hot Kitchen' ? '🔥' : k === 'Cold Kitchen' ? '❄️' : k === 'Pastry / Bakery' ? '🍰' : k === 'Butchery' ? '🥩' : k === 'Beach House' ? '🏖️' : k === 'Nihon Kitchen' ? '🍜' : '👥';
+        const shortName = k.replace(' Kitchen', '').replace(' / Bakery', '');
+        kitchenDiv.innerHTML += `<button class="kitchen-filter-btn ${currentKitchen === k ? 'active' : ''}" onclick="filterKitchen('${k}')">${icon} ${shortName}</button>`;
     });
     
     const tabsDiv = document.getElementById("statusTabs");
@@ -1276,78 +1224,85 @@ function renderUI() {
     if(currentStatus !== "all") filtered = filtered.filter(r => getRequestStatus(r.items) === currentStatus);
     
     const container = document.getElementById("requestsContainer");
-    if(!filtered.length) { container.innerHTML = `<div class="empty-state">📭 No requests found</div>`; return; }
+    if(!filtered.length) {
+        container.innerHTML = `<div class="empty-state">📭 No requests found</div>`;
+        return;
+    }
     
     container.innerHTML = "";
     filtered.forEach(req => {
         const requestStatus = getRequestStatus(req.items);
-        const kitchenClass = { "Hot Kitchen": "kitchen-hot", "Cold Kitchen": "kitchen-cold", "Pastry / Bakery": "kitchen-pastry", "Butchery": "kitchen-butchery", "Beach House": "kitchen-beach", "Nihon Kitchen": "kitchen-nihon", "Staff Kitchen": "kitchen-staff" }[req.section] || "kitchen-staff";
+        const kitchenClass = {
+            "Hot Kitchen": "kitchen-hot", "Cold Kitchen": "kitchen-cold",
+            "Pastry / Bakery": "kitchen-pastry", "Butchery": "kitchen-butchery",
+            "Beach House": "kitchen-beach", "Nihon Kitchen": "kitchen-nihon",
+            "Staff Kitchen": "kitchen-staff"
+        }[req.section] || "kitchen-staff";
         
-        const duplicateInfo = duplicateMap.get(req.id);
-        const duplicateWarning = duplicateInfo ? `<span class="duplicate-warning">⚠️ DUPLICATE (${duplicateInfo.count} identical)</span>` : '';
-        
-        let requestedTotalValue = 0, approvedTotalValue = 0;
+        let requestedTotal = 0, approvedTotal = 0;
         req.items.forEach(item => {
             const price = item.price || 0;
-            requestedTotalValue += item.originalQty * price;
-            if(item.status === "approved") approvedTotalValue += (item.approvedQty || 0) * price;
+            requestedTotal += item.originalQty * price;
+            if(item.status === "approved") approvedTotal += (item.approvedQty || 0) * price;
         });
         
-        let hasIndividualAction = false;
-        let isCompleted = false;
+        let hasPartial = false;
+        let isComplete = false;
         if(requestStatus === "pending") {
-            for(const item of req.items) {
-                if(item.status === "approved" || item.status === "rejected") {
-                    hasIndividualAction = true;
-                    break;
-                }
-            }
-        } else { isCompleted = true; }
+            hasPartial = req.items.some(i => i.status === "approved" || i.status === "rejected");
+        } else {
+            isComplete = true;
+        }
         
-        let itemsHtml = `<div class="table-wrapper"><table class="admin-table"><thead><tr><th>Code</th><th>Item</th><th>Requested Qty</th><th>Unit</th><th>Price/Unit</th><th>Admin Qty</th><th>Total Value</th><th>Action</th><th>Status</th></tr></thead><tbody>`;
+        let itemsHtml = `<div class="table-wrapper"><table class="admin-table"><thead><tr><th>Code</th><th>Item</th><th>Requested</th><th>Unit</th><th>Price</th><th>Admin Qty</th><th>Total</th><th>Action</th><th>Status</th></tr></thead><tbody>`;
         
         req.items.forEach((item, idx) => {
             const price = item.price || 0;
-            const approvedQty = item.status === "approved" ? (item.approvedQty || 0) : 0;
-            const totalValue = approvedQty * price;
-            
             if(item.status === "approved") {
-                itemsHtml += `<tr style="background:#e8f5e9;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td class="item-price">${price.toFixed(2)}</td>
-                    <td><strong>${approvedQty.toFixed(1)}</strong></td>
-                    <td><strong style="color:#27ae60;">${totalValue.toFixed(2)}</strong></td>
-                    <td><span class="btn-approve" style="background:#27ae60;opacity:0.7;">✅ Approved</span></td>
-                    <td><span class="status-approved-cell">Approved</span><div class="admin-info-text">👤 ${escapeHtml(item.approvedBy || '?')}<br>📅 ${item.approvedAt || ''}</div></td>
+                itemsHtml += `<tr style="background:#e8f5e9;">
+                    <td>${item.code}</td>
+                    <td><strong>${escapeHtml(item.name)}</strong></td>
+                    <td>${item.originalQty}</td>
+                    <td>${item.unit}</td>
+                    <td>${price.toFixed(2)}</td>
+                    <td><strong>${(item.approvedQty || 0).toFixed(1)}</strong></td>
+                    <td style="color:#27ae60;">${((item.approvedQty || 0) * price).toFixed(2)}</td>
+                    <td><span style="background:#27ae60;color:white;padding:4px 12px;border-radius:20px;">Approved</span></td>
+                    <td><div>👤 ${escapeHtml(item.approvedBy || '?')}</div><small>${item.approvedAt || ''}</small></td>
                 </tr>`;
             } else if(item.status === "rejected") {
-                itemsHtml += `<tr style="background:#fee2e2;"><td>${item.code}</td>
-                    <td><div class="item-name">${escapeHtml(item.name)}</div></td>
-                    <td><span class="requested-qty">${item.originalQty}</span></td>
+                itemsHtml += `<tr style="background:#fee2e2;">
+                    <td>${item.code}</td>
+                    <td><strong>${escapeHtml(item.name)}</strong></td>
+                    <td>${item.originalQty}</td>
                     <td>${item.unit}</td>
-                    <td class="item-price">${price.toFixed(2)}</td>
+                    <td>${price.toFixed(2)}</td>
                     <td><strong>0</strong></td>
-                    <td><strong style="color:#e74c3c;">0.00</strong></td>
-                    <td><span class="btn-reject" style="background:#e74c3c;opacity:0.7;">❌ Rejected</span></td>
-                    <td><span class="status-rejected-cell">Rejected</span><div class="admin-info-text">👤 ${escapeHtml(item.rejectedBy || '?')}<br>📅 ${item.rejectedAt || ''}<br>📝 ${escapeHtml(item.rejectionReason || '')}</div></td>
+                    <td style="color:#e74c3c;">0.00</td>
+                    <td><span style="background:#e74c3c;color:white;padding:4px 12px;border-radius:20px;">Rejected</span></td>
+                    <td><div>👤 ${escapeHtml(item.rejectedBy || '?')}</div><small>${item.rejectionReason || ''}</small></td>
                 </tr>`;
             } else {
                 const currentVal = (item.originalQty || 0).toFixed(1);
-                itemsHtml += `<tr style="background:#fff8e7;"><td>${item.code}</td>
-                    <td><div class="item-name">${escapeHtml(item.name)}</div></td>
-                    <td><span class="requested-qty">${item.originalQty}</span></td>
+                itemsHtml += `<tr style="background:#fff8e7;">
+                    <td>${item.code}</td>
+                    <td><strong>${escapeHtml(item.name)}</strong></td>
+                    <td>${item.originalQty}</td>
                     <td>${item.unit}</td>
-                    <td class="item-price">${price.toFixed(2)}</td>
-                    <td><input type="number" id="qty_${req.id}_${idx}" class="approval-input" value="${currentVal}" min="0" step="0.5" style="background:#fef9e6;"></td>
-                    <td><span id="totalValuePreview_${req.id}_${idx}" style="font-weight:600; color:#1e3c72;">${(item.originalQty * price).toFixed(2)}</span></td>
-                    <td class="action-buttons"><button class="btn-approve" onclick="approveItemFlex('${req.id}', ${idx})">✅ Approve</button><button class="btn-reject" onclick="rejectItem('${req.id}', ${idx})">❌ Reject</button></td>
-                    <td><span class="status-pending-cell">Pending</span><div class="admin-info-text">⚠️ Auto-approved on Accept</div></td>
+                    <td>${price.toFixed(2)}</td>
+                    <td><input type="number" id="qty_${req.id}_${idx}" class="approval-input" value="${currentVal}" min="0" step="0.5"></td>
+                    <td id="totalPrev_${req.id}_${idx}">${(item.originalQty * price).toFixed(2)}</td>
+                    <td><button class="btn-approve" onclick="approveItem('${req.id}', ${idx})">✅ Approve</button> <button class="btn-reject" onclick="rejectItem('${req.id}', ${idx})">❌ Reject</button></td>
+                    <td><span class="status-pending-cell">Pending</span></td>
                 </tr>`;
                 setTimeout(() => {
                     const input = document.getElementById(`qty_${req.id}_${idx}`);
-                    const totalSpan = document.getElementById(`totalValuePreview_${req.id}_${idx}`);
+                    const totalSpan = document.getElementById(`totalPrev_${req.id}_${idx}`);
                     if(input && totalSpan) {
-                        const updateTotal = () => { const newQty = parseFloat(input.value) || 0; totalSpan.innerText = (newQty * price).toFixed(2); };
-                        input.addEventListener('input', updateTotal);
-                        updateTotal();
+                        input.addEventListener('input', () => {
+                            const val = parseFloat(input.value) || 0;
+                            totalSpan.innerText = (val * price).toFixed(2);
+                        });
                     }
                 }, 50);
             }
@@ -1355,14 +1310,14 @@ function renderUI() {
         itemsHtml += `</tbody></table></div>`;
         
         let actions = "";
-        if(!isCompleted) {
+        if(!isComplete) {
             actions = `<div class="request-actions">
-                <button class="btn-approve-all" onclick="approveAllFlex('${req.id}')" ${hasIndividualAction ? 'disabled' : ''}>✅ Approve All</button>
-                <button class="btn-reject-all" onclick="rejectAll('${req.id}')" ${hasIndividualAction ? 'disabled' : ''}>❌ Reject All</button>
-                <button class="btn-accept" onclick="acceptRequest('${req.id}')" ${!hasIndividualAction ? 'disabled' : ''}>🟣 Accept</button>
+                <button class="btn-approve-all" onclick="approveAll('${req.id}')" ${hasPartial ? 'disabled' : ''}>✅ Approve All</button>
+                <button class="btn-reject-all" onclick="rejectAll('${req.id}')" ${hasPartial ? 'disabled' : ''}>❌ Reject All</button>
+                <button class="btn-accept" onclick="acceptRequest('${req.id}')" ${!hasPartial ? 'disabled' : ''}>🟣 Accept</button>
             </div>`;
         } else {
-            actions = `<div class="request-actions"><button class="btn-accept" style="background:#6c757d; cursor:default;" disabled>✅ Request Completed</button></div>`;
+            actions = `<div class="request-actions"><button class="btn-accept" style="background:#6c757d;" disabled>✅ Completed</button></div>`;
         }
         
         let statusText = "", statusClass = "";
@@ -1373,17 +1328,17 @@ function renderUI() {
         
         container.innerHTML += `<div class="request-card">
             <div class="request-header">
-                <div><span class="request-id">📄 ${req.requestId}</span>${duplicateWarning}<span class="kitchen-badge ${kitchenClass}" style="margin-left:10px;">${req.section}</span></div>
+                <div><span class="request-id">📄 ${req.requestId}</span><span class="kitchen-badge ${kitchenClass}" style="margin-left:10px;">${req.section}</span></div>
                 <div class="request-total-badge">
-                    <span>💰 Requested: ${requestedTotalValue.toFixed(2)} EGP</span>
-                    <span>✅ Approved: ${approvedTotalValue.toFixed(2)} EGP</span>
+                    <span>💰 Requested: ${requestedTotal.toFixed(2)} EGP</span>
+                    <span>✅ Approved: ${approvedTotal.toFixed(2)} EGP</span>
                 </div>
                 <span class="status-badge ${statusClass}">${statusText}</span>
             </div>
             <div class="request-info">
                 <div class="info-item"><div class="info-label">👨‍🍳 CHEF</div><div class="info-value">${escapeHtml(req.chefName)}</div></div>
                 <div class="info-item"><div class="info-label">📅 SUBMITTED</div><div class="info-value">${req.submittedAt}</div></div>
-                <div class="info-item"><div class="info-label">🆔 FIREBASE ID</div><div class="info-value firebase-id" onclick="copyDocId('${req.id}')">📋 ${req.id}</div></div>
+                <div class="info-item"><div class="info-label">🆔 ID</div><div class="info-value firebase-id" onclick="copyId('${req.id}')">📋 ${req.id}</div></div>
             </div>
             ${itemsHtml}
             ${actions}
@@ -1392,35 +1347,26 @@ function renderUI() {
     updateStats();
 }
 
-function copyDocId(docId) { 
-    navigator.clipboard.writeText(docId).then(() => showToast("📋 ID Copied")).catch(() => showToast("❌ Copy Failed")); 
+function copyId(id) {
+    navigator.clipboard.writeText(id);
+    showToast("ID Copied!");
 }
 
-function escapeHtml(str) { 
-    return str?.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m])) || ''; 
+function escapeHtml(str) {
+    if(!str) return '';
+    return str.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));
 }
 
-function showToast(msg) { 
-    const t = document.createElement("div"); 
-    t.className = "toast"; 
-    t.innerText = msg; 
-    document.body.appendChild(t); 
-    setTimeout(() => t.remove(), 2500); 
+function showToast(msg) {
+    const toast = document.createElement("div");
+    toast.className = "toast";
+    toast.innerText = msg;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 2500);
 }
 
 // Start the app
-document.addEventListener('DOMContentLoaded', () => {
-    initializeAuth();
-    
-    // Setup enter key for login
-    const nameInput = document.getElementById('adminDisplayName');
-    const emailInput = document.getElementById('loginEmail');
-    const passwordInput = document.getElementById('loginPassword');
-    const handleEnter = (e) => { if (e.key === 'Enter') loginWithEmail(); };
-    if (nameInput) nameInput.addEventListener('keypress', handleEnter);
-    if (emailInput) emailInput.addEventListener('keypress', handleEnter);
-    if (passwordInput) passwordInput.addEventListener('keypress', handleEnter);
-});
+initApp();
 </script>
 </body>
 </html>
