@@ -1227,54 +1227,6 @@ async function submitRequest(kitchen) {
     showToast(`✅ Request ${newRequest.requestId} submitted!`);
     await loadRequestsFromFirebase();
     if (currentKitchen) { loadMyRequests(currentKitchen); loadOrderHistory(currentKitchen); }
-}
-
-// ============ DEFAULT ITEMS (fallback when JSON files don't exist) ============
-function getDefaultItemsForKitchen(kitchen) {
-    const defaultItems = {
-        "Hot Kitchen": [
-            { code: "HK001", name: "Grilled Chicken", name_ar: "دجاج مشوي", unit: "kg", maxLimit: 50, price: 120, step: 0.5 },
-            { code: "HK002", name: "Beef Steak", name_ar: "ستيك لحم", unit: "kg", maxLimit: 30, price: 180, step: 0.5 },
-            { code: "HK003", name: "Fried Rice", name_ar: "أرز مقلي", unit: "kg", maxLimit: 40, price: 45, step: 0.5 },
-            { code: "HK004", name: "Mixed Vegetables", name_ar: "خضار مشكلة", unit: "kg", maxLimit: 35, price: 30, step: 0.5 }
-        ],
-        "Cold Kitchen": [
-            { code: "CK001", name: "Garden Salad", name_ar: "سلطة خضراء", unit: "kg", maxLimit: 20, price: 35, step: 0.5 },
-            { code: "CK002", name: "Caesar Salad", name_ar: "سلطة سيزر", unit: "kg", maxLimit: 20, price: 45, step: 0.5 },
-            { code: "CK003", name: "Greek Salad", name_ar: "سلطة يونانية", unit: "kg", maxLimit: 15, price: 50, step: 0.5 }
-        ],
-        "Pastry / Bakery": [
-            { code: "PB001", name: "Croissant", name_ar: "كرواسون", unit: "pcs", maxLimit: 100, price: 8, step: 1 },
-            { code: "PB002", name: "Baguette", name_ar: "باجيت", unit: "pcs", maxLimit: 80, price: 12, step: 1 },
-            { code: "PB003", name: "Pain au Chocolat", name_ar: "بان أو شوكولات", unit: "pcs", maxLimit: 60, price: 10, step: 1 }
-        ],
-        "Butchery": [
-            { code: "BT001", name: "Beef Mince", name_ar: "لحم مفروم", unit: "kg", maxLimit: 50, price: 140, step: 0.5 },
-            { code: "BT002", name: "Chicken Cut", name_ar: "تقطيع دجاج", unit: "kg", maxLimit: 60, price: 100, step: 0.5 },
-            { code: "BT003", name: "Lamb Chops", name_ar: "شرائح خروف", unit: "kg", maxLimit: 25, price: 200, step: 0.5 }
-        ],
-        "Beach House": [
-            { code: "BH001", name: "Grilled Fish", name_ar: "سمك مشوي", unit: "kg", maxLimit: 25, price: 150, step: 0.5 },
-            { code: "BH002", name: "Shrimp", name_ar: "جمبري", unit: "kg", maxLimit: 20, price: 200, step: 0.5 },
-            { code: "BH003", name: "Calamari", name_ar: "كالاماري", unit: "kg", maxLimit: 15, price: 180, step: 0.5 }
-        ],
-        "Nihon Kitchen": [
-            { code: "NK001", name: "Sushi Rice", name_ar: "أرز سوشي", unit: "kg", maxLimit: 30, price: 60, step: 0.5 },
-            { code: "NK002", name: "Nori Seaweed", name_ar: "نوري", unit: "pcs", maxLimit: 100, price: 5, step: 1 },
-            { code: "NK003", name: "Soy Sauce", name_ar: "صلصة الصويا", unit: "liter", maxLimit: 20, price: 25, step: 0.5 }
-        ],
-        "Staff Kitchen": [
-            { code: "SK001", name: "Staff Meal", name_ar: "وجبة موظفين", unit: "meal", maxLimit: 50, price: 25, step: 1 },
-            { code: "SK002", name: "Beverages", name_ar: "مشروبات", unit: "pcs", maxLimit: 100, price: 5, step: 1 },
-            { code: "SK003", name: "Snacks", name_ar: "وجبات خفيفة", unit: "pcs", maxLimit: 80, price: 10, step: 1 }
-        ]
-    };
-    
-    return defaultItems[kitchen] || [
-        { code: "GEN001", name: "Test Item 1", name_ar: "عنصر اختبار", unit: "kg", maxLimit: 100, price: 50, step: 0.5 },
-        { code: "GEN002", name: "Test Item 2", name_ar: "عنصر اختبار 2", unit: "pcs", maxLimit: 100, price: 10, step: 1 }
-    ];
-}
 
 // ============ ITEMS FUNCTIONS ============
 async function loadItemsForKitchen(kitchen, forceRefresh = false) {
