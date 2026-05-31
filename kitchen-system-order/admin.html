@@ -5,7 +5,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-<script src="firebase-config.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
 <title>Admin Dashboard - Full Quantity Control</title>
 
@@ -538,7 +537,6 @@ body {
     to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
-/* Loading Screen - No flash */
 .loading-screen {
     display: flex;
     position: fixed;
@@ -574,7 +572,6 @@ body {
     100% { transform: rotate(360deg); }
 }
 
-/* Login Modal Styles */
 .modal {
     display: none;
     position: fixed;
@@ -715,25 +712,10 @@ body {
     font-weight: bold;
 }
 
-.confirm-modal-content input:focus {
-    outline: none;
-    border-color: #e74c3c;
-}
-
 .confirm-buttons {
     display: flex;
     gap: 12px;
     margin-top: 10px;
-}
-
-.confirm-buttons button {
-    flex: 1;
-    padding: 12px;
-    border-radius: 40px;
-    font-weight: 600;
-    cursor: pointer;
-    border: none;
-    font-size: 14px;
 }
 
 .btn-confirm-delete {
@@ -792,19 +774,17 @@ body {
 </head>
 <body>
 
-<!-- Loading Screen - No flash of login modal -->
 <div id="loadingScreen" class="loading-screen">
     <div class="loading-spinner-large"></div>
     <div class="loading-text">Loading dashboard...</div>
 </div>
 
-<!-- Login Modal (hidden by default, only shows if needed) -->
 <div id="loginModal" class="modal">
     <div class="modal-content">
         <h2>🔐 Admin Login</h2>
         <h3>Sign in with Firebase</h3>
         <div class="form-group">
-            <input type="text" id="adminDisplayName" placeholder="Your Full Name (e.g., Marco, Chef Ahmed, etc.)" autocomplete="name">
+            <input type="text" id="adminDisplayName" placeholder="admin name" autocomplete="name">
         </div>
         <div class="form-group">
             <input type="email" id="loginEmail" placeholder="Email address" autocomplete="email">
@@ -857,6 +837,24 @@ body {
 </div>
 
 <script>
+// FIREBASE CONFIGURATION - UPDATE WITH YOUR ACTUAL CONFIG
+// IMPORTANT: Replace these values with your Firebase project configuration
+const firebaseConfig = {
+    apiKey: "YOUR_API_KEY",
+    authDomain: "YOUR_AUTH_DOMAIN",
+    projectId: "YOUR_PROJECT_ID",
+    storageBucket: "YOUR_STORAGE_BUCKET",
+    messagingSenderId: "YOUR_SENDER_ID",
+    appId: "YOUR_APP_ID"
+};
+
+// Initialize Firebase
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
+const db = firebase.firestore();
+const auth = firebase.auth();
+
 const KITCHENS = ["Hot Kitchen", "Cold Kitchen", "Pastry / Bakery", "Butchery", "Beach House", "Nihon Kitchen", "Staff Kitchen"];
 
 let currentAdmin = "";
@@ -865,9 +863,7 @@ let currentKitchen = "all";
 let currentStatus = "pending";
 let allRequests = [];
 let duplicateMap = new Map();
-let authChecked = false;
 
-// Function to save user name to localStorage
 function saveAdminName(name) {
     localStorage.setItem("adminDisplayName", name);
 }
@@ -876,7 +872,6 @@ function getSavedAdminName() {
     return localStorage.getItem("adminDisplayName") || "";
 }
 
-// Function to hide loading screen and show appropriate content
 function hideLoadingAndShowContent(showDashboard) {
     const loadingScreen = document.getElementById("loadingScreen");
     const loginModal = document.getElementById("loginModal");
@@ -891,27 +886,22 @@ function hideLoadingAndShowContent(showDashboard) {
             mainContent.style.display = "none";
             loginModal.style.display = "flex";
         }
-    }, 300); // Small delay for smooth transition
+    }, 300);
 }
 
-// Firebase Auth state observer - NO FLASH!
-firebase.auth().onAuthStateChanged((user) => {
+// Auth state observer
+auth.onAuthStateChanged((user) => {
     if (user) {
-        // User is signed in - show dashboard directly without login modal flash
         currentAdminEmail = user.email;
-        
-        // Get saved name from localStorage
         let savedName = getSavedAdminName();
         
         if (savedName && savedName.trim() !== "") {
             currentAdmin = savedName;
         } else {
-            // If no saved name, try to get from Firebase displayName
             if (user.displayName && user.displayName.trim() !== "") {
                 currentAdmin = user.displayName;
                 saveAdminName(currentAdmin);
             } else {
-                // Use email prefix
                 currentAdmin = user.email.split('@')[0];
             }
         }
@@ -919,22 +909,13 @@ firebase.auth().onAuthStateChanged((user) => {
         document.getElementById("adminNameDisplay").innerText = currentAdmin;
         document.getElementById("adminEmailDisplay").innerText = currentAdminEmail;
         
-        // Hide loading and show dashboard (no login modal flash)
         hideLoadingAndShowContent(true);
-        
-        // Load data
         loadRequests();
-        
     } else {
-        // No user logged in - show login modal (but only after loading screen)
-        if (!authChecked) {
-            authChecked = true;
-        }
         hideLoadingAndShowContent(false);
     }
 });
 
-// Login function
 async function loginWithEmail() {
     const displayName = document.getElementById("adminDisplayName").value.trim();
     const email = document.getElementById("loginEmail").value.trim();
@@ -946,68 +927,45 @@ async function loginWithEmail() {
         errorDiv.innerHTML = "❌ Please enter your name";
         return;
     }
-    
     if (!email || !password) {
         errorDiv.innerHTML = "❌ Please enter both email and password";
         return;
     }
     
-    // Save the display name before login
     saveAdminName(displayName);
     currentAdmin = displayName;
     
-    // Show loading state on button
     const originalText = loginBtn.innerHTML;
     loginBtn.innerHTML = '<span class="loading-spinner"></span> Logging in...';
     loginBtn.disabled = true;
     
     try {
-        const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
-        
-        // Update the user's profile with display name
-        await userCredential.user.updateProfile({
-            displayName: displayName
-        });
-        
-        console.log("Logged in as:", displayName, "(", userCredential.user.email, ")");
+        const userCredential = await auth.signInWithEmailAndPassword(email, password);
+        await userCredential.user.updateProfile({ displayName: displayName });
         errorDiv.innerHTML = "";
-        
     } catch (error) {
         console.error("Login error:", error);
         let errorMessage = "❌ Login failed: ";
         switch (error.code) {
-            case 'auth/invalid-email':
-                errorMessage += "Invalid email format";
-                break;
-            case 'auth/user-disabled':
-                errorMessage += "Account disabled";
-                break;
-            case 'auth/user-not-found':
-                errorMessage += "User not found";
-                break;
-            case 'auth/wrong-password':
-                errorMessage += "Wrong password";
-                break;
-            default:
-                errorMessage += error.message;
+            case 'auth/invalid-email': errorMessage += "Invalid email format"; break;
+            case 'auth/user-disabled': errorMessage += "Account disabled"; break;
+            case 'auth/user-not-found': errorMessage += "User not found"; break;
+            case 'auth/wrong-password': errorMessage += "Wrong password"; break;
+            default: errorMessage += error.message;
         }
         errorDiv.innerHTML = errorMessage;
         loginBtn.innerHTML = originalText;
         loginBtn.disabled = false;
-        // Remove saved name if login failed
         localStorage.removeItem("adminDisplayName");
     }
 }
 
-// Logout function
 async function logout() {
     if (confirm("Logout?")) {
         try {
-            // Show loading screen during logout
             document.getElementById("loadingScreen").style.display = "flex";
             document.getElementById("mainContent").style.display = "none";
-            
-            await firebase.auth().signOut();
+            await auth.signOut();
             showToast("Logged out successfully");
         } catch (error) {
             console.error("Logout error:", error);
@@ -1017,17 +975,9 @@ async function logout() {
     }
 }
 
-function goBackToIndex() { 
-    window.location.href = "index.html"; 
-}
-
-function openAnalytics() { 
-    window.open("analytics.html", "_blank"); 
-}
-
-function openRevenue() { 
-    window.open("revenue.html", "_blank"); 
-}
+function goBackToIndex() { window.location.href = "index.html"; }
+function openAnalytics() { window.open("analytics.html", "_blank"); }
+function openRevenue() { window.open("revenue.html", "_blank"); }
 
 async function loadRequests() {
     try {
@@ -1039,7 +989,7 @@ async function loadRequests() {
         updateStats();
     } catch(e) { 
         console.error("Error loading requests:", e);
-        showToast("Error loading data"); 
+        showToast("Error loading data. Make sure Firebase is configured correctly."); 
     }
 }
 
@@ -1047,7 +997,7 @@ function findDuplicateRequests() {
     duplicateMap.clear();
     const signatureMap = new Map();
     for (const req of allRequests) {
-        const itemSignature = req.items.map(item => `${item.code}|${item.originalQty}`).join(';');
+        const itemSignature = req.items ? req.items.map(item => `${item.code}|${item.originalQty}`).join(';') : '';
         const signature = `${req.section}|${req.chefName}|${itemSignature}`;
         if (!signatureMap.has(signature)) signatureMap.set(signature, []);
         signatureMap.get(signature).push(req);
@@ -1317,7 +1267,7 @@ function renderUI() {
             }
         } else { isCompleted = true; }
         
-        let itemsHtml = `<div class="table-wrapper"><table class="admin-table"><thead><tr><th>Code</th><th>Item</th><th>Requested Qty</th><th>Unit</th><th>Price/Unit</th><th>Admin Qty</th><th>Total Value</th><th>Action</th><th>Status</th></tr></thead><tbody>`;
+        let itemsHtml = `<div class="table-wrapper"><table class="admin-table"><thead><th>Code</th><th>Item</th><th>Requested Qty</th><th>Unit</th><th>Price/Unit</th><th>Admin Qty</th><th>Total Value</th><th>Action</th><th>Status</th></thead><tbody>`;
         
         req.items.forEach((item, idx) => {
             const price = item.price || 0;
@@ -1332,11 +1282,7 @@ function renderUI() {
                     <td><span class="status-approved-cell">Approved</span><div class="admin-info-text">👤 ${escapeHtml(item.approvedBy || '?')}<br>📅 ${item.approvedAt || ''}</div></td>
                 </tr>`;
             } else if(item.status === "rejected") {
-                itemsHtml += `<tr style="background:#fee2e2;"><td>${item.code}</td>
-                    <td><div class="item-name">${escapeHtml(item.name)}</div></td>
-                    <td><span class="requested-qty">${item.originalQty}</span></td>
-                    <td>${item.unit}</td>
-                    <td class="item-price">${price.toFixed(2)}</td>
+                itemsHtml += `<tr style="background:#fee2e2;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td class="item-price">${price.toFixed(2)}</td>
                     <td><strong>0</strong></td>
                     <td><strong style="color:#e74c3c;">0.00</strong></td>
                     <td><span class="btn-reject" style="background:#e74c3c;opacity:0.7;">❌ Rejected</span></td>
@@ -1344,11 +1290,7 @@ function renderUI() {
                 </tr>`;
             } else {
                 const currentVal = (item.originalQty || 0).toFixed(1);
-                itemsHtml += `<tr style="background:#fff8e7;"><td>${item.code}</td>
-                    <td><div class="item-name">${escapeHtml(item.name)}</div></td>
-                    <td><span class="requested-qty">${item.originalQty}</span></td>
-                    <td>${item.unit}</td>
-                    <td class="item-price">${price.toFixed(2)}</td>
+                itemsHtml += `<tr style="background:#fff8e7;"><td>${item.code}</td><td><div class="item-name">${escapeHtml(item.name)}</div></td><td><span class="requested-qty">${item.originalQty}</span></td><td>${item.unit}</td><td class="item-price">${price.toFixed(2)}</td>
                     <td><input type="number" id="qty_${req.id}_${idx}" class="approval-input" value="${currentVal}" min="0" step="0.5" style="background:#fef9e6;"></td>
                     <td><span id="totalValuePreview_${req.id}_${idx}" style="font-weight:600; color:#1e3c72;">${(item.originalQty * price).toFixed(2)}</span></td>
                     <td class="action-buttons"><button class="btn-approve" onclick="approveItemFlex('${req.id}', ${idx})">✅ Approve</button><button class="btn-reject" onclick="rejectItem('${req.id}', ${idx})">❌ Reject</button></td>
@@ -1421,18 +1363,11 @@ function showToast(msg) {
     setTimeout(() => t.remove(), 2500); 
 }
 
-// Enable Enter key to login
 document.addEventListener('DOMContentLoaded', () => {
     const nameInput = document.getElementById('adminDisplayName');
     const emailInput = document.getElementById('loginEmail');
     const passwordInput = document.getElementById('loginPassword');
-    
-    const handleEnter = (e) => {
-        if (e.key === 'Enter') {
-            loginWithEmail();
-        }
-    };
-    
+    const handleEnter = (e) => { if (e.key === 'Enter') loginWithEmail(); };
     if (nameInput) nameInput.addEventListener('keypress', handleEnter);
     if (emailInput) emailInput.addEventListener('keypress', handleEnter);
     if (passwordInput) passwordInput.addEventListener('keypress', handleEnter);
