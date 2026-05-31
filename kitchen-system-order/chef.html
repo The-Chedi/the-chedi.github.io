@@ -5,8 +5,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
-<!-- Load Firebase config from external file -->
-<script src="firebase-config.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
 <title>Chef Dashboard - Kitchen Order System</title>
 
@@ -860,22 +858,43 @@ body.arabic .items-scroll-container {
 <div class="sync-status" id="syncStatus">🔄 Connecting... <span id="autoRefreshIndicator" class="auto-refresh-indicator">(Auto-refresh: 60s)</span></div>
 
 <script>
-// Wait for Firebase to be initialized from firebase-config.js
-function waitForFirebase() {
-    return new Promise((resolve) => {
-        const checkInterval = setInterval(() => {
-            if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
-                clearInterval(checkInterval);
-                console.log("✅ Firebase found and initialized");
-                resolve();
-            }
-        }, 100);
-        setTimeout(() => {
+// ============ FIREBASE CONFIGURATION ============
+// ============ FIREBASE CONFIGURATION ============
+// Wait for firebase-config.js to load first
+// The config is already initialized in firebase-config.js
+// Just get references to the already initialized instances
+
+// Small delay to ensure firebase-config.js has loaded
+let db = null;
+let auth = null;
+
+function initFirebaseReferences() {
+    if (typeof firebase !== 'undefined' && firebase.apps && firebase.apps.length > 0) {
+        db = firebase.firestore();
+        auth = firebase.auth();
+        console.log("✅ Firebase references initialized");
+        return true;
+    }
+    return false;
+}
+
+// Try to initialize immediately, if not, wait for it
+if (!initFirebaseReferences()) {
+    console.log("Waiting for Firebase config to load...");
+    const checkInterval = setInterval(() => {
+        if (initFirebaseReferences()) {
             clearInterval(checkInterval);
-            console.error("Firebase not found after 5 seconds");
-            resolve();
-        }, 5000);
-    });
+            // Continue with initialization
+            if (typeof generatePages === 'function') {
+                generatePages();
+                startAutoRefresh();
+                loadRequestsFromFirebase();
+                loadLastSelectedKitchen();
+                initFreehandModeListener();
+                db.collection("kitchen_requests").onSnapshot(() => { loadRequestsFromFirebase(); });
+            }
+        }
+    }, 100);
 }
 
 // ============ LANGUAGE TRANSLATIONS ============
@@ -964,10 +983,6 @@ let currentItemsList = [];
 let autoRefreshInterval = null;
 let freehandModeActive = false;
 let freehandUnsubscribe = null;
-
-// These will be set after Firebase initializes
-let db = null;
-let auth = null;
 
 // ============ FIRESTORE PASSWORD VERIFICATION ============
 async function getKitchenPasswordFromFirestore(kitchenName) {
@@ -1097,6 +1112,10 @@ function saveCart() { const cartToSave = {}; kitchens.forEach(kitchen => { cartT
 function loadUnlockedKitchens() { const saved = localStorage.getItem("unlockedKitchens"); if(saved) unlockedKitchens = JSON.parse(saved); }
 function saveUnlockedKitchens() { localStorage.setItem("unlockedKitchens", JSON.stringify(unlockedKitchens)); }
 
+loadChefNames();
+loadSavedCart();
+loadUnlockedKitchens();
+
 // ============ PASSWORD MODAL ============
 function closePasswordModal() { const modal = document.getElementById("kitchenPasswordModal"); if(modal) modal.remove(); pendingKitchen = null; }
 
@@ -1135,49 +1154,35 @@ async function showKitchenPasswordModal(kitchen) {
 
 // ============ FIREBASE REQUESTS ============
 async function loadRequestsFromFirebase() {
-    if (!db) return;
     try {
         const snapshot = await db.collection("kitchen_requests").orderBy("timestamp", "desc").get();
         allRequests = [];
         snapshot.forEach(doc => { allRequests.push({ firebaseId: doc.id, ...doc.data() }); });
         if (currentKitchen) { loadMyRequests(currentKitchen); loadOrderHistory(currentKitchen); }
         document.getElementById("syncStatus").innerHTML = `✅ Connected • ${allRequests.length} orders <span id="autoRefreshIndicator" class="auto-refresh-indicator">(Auto-refresh: 60s)</span>`;
-    } catch (error) { 
-        console.error("Error loading requests:", error);
-        document.getElementById("syncStatus").innerHTML = "⚠️ Offline mode - " + error.message; 
-    }
+    } catch (error) { document.getElementById("syncStatus").innerHTML = "⚠️ Offline mode"; }
 }
 
 async function saveRequestToFirebase(request) {
-    if (!db) return;
     try {
         await db.collection("kitchen_requests").add(request);
         showToast("✅ Request saved!");
         await loadRequestsFromFirebase();
         if (currentKitchen) { loadMyRequests(currentKitchen); loadOrderHistory(currentKitchen); }
-    } catch (error) { 
-        console.error("Error saving:", error);
-        showToast("❌ Error saving: " + error.message); 
-    }
+    } catch (error) { showToast("❌ Error saving"); }
 }
 
 function getOverallStatus(items) {
     if (!items || !items.length) return "pending";
-    let approved = 0, rejected = 0, pending = 0;
-    items.forEach(item => {
-        if (item.status === "approved") approved++;
-        else if (item.status === "rejected") rejected++;
-        else pending++;
-    });
-    if (approved === items.length && items.length > 0) return "approved";
-    if (rejected === items.length && items.length > 0) return "rejected";
+    const approved = items.filter(i => i.status === "approved").length;
+    const rejected = items.filter(i => i.status === "rejected").length;
+    if (approved === items.length) return "approved";
+    if (rejected === items.length) return "rejected";
     if (approved > 0 && rejected > 0) return "partial";
-    if (approved > 0 && pending > 0) return "partial";
     return "pending";
 }
 
 async function checkForDuplicateOrder(section, chefName, cartItems) {
-    if (!db) return { isDuplicate: false };
     try {
         const snapshot = await db.collection("kitchen_requests").where("section", "==", section).get();
         for (const doc of snapshot.docs) {
@@ -1227,19 +1232,17 @@ async function submitRequest(kitchen) {
     showToast(`✅ Request ${newRequest.requestId} submitted!`);
     await loadRequestsFromFirebase();
     if (currentKitchen) { loadMyRequests(currentKitchen); loadOrderHistory(currentKitchen); }
+}
 
 // ============ ITEMS FUNCTIONS ============
 async function loadItemsForKitchen(kitchen, forceRefresh = false) {
     if (kitchenItemsCache[kitchen] && !forceRefresh) return kitchenItemsCache[kitchen];
     const fileName = kitchenToFileMap[kitchen];
-    if (!fileName) return getDefaultItemsForKitchen(kitchen);
+    if (!fileName) return [];
     const url = `items/${fileName}?t=${Date.now()}`;
     try {
         const response = await fetch(url);
-        if (!response.ok) {
-            console.warn(`Items file not found for ${kitchen}, using defaults`);
-            return getDefaultItemsForKitchen(kitchen);
-        }
+        if (!response.ok) return [];
         const data = await response.json();
         let itemsArray = Array.isArray(data) ? data : (data.items || []);
         itemsArray = itemsArray.map(item => ({ 
@@ -1248,10 +1251,7 @@ async function loadItemsForKitchen(kitchen, forceRefresh = false) {
         }));
         kitchenItemsCache[kitchen] = itemsArray;
         return itemsArray;
-    } catch (error) { 
-        console.warn(`Error loading items for ${kitchen}:`, error);
-        return getDefaultItemsForKitchen(kitchen);
-    }
+    } catch (error) { return []; }
 }
 
 function getItemsForKitchen(kitchen) { return kitchenItemsCache[kitchen] || []; }
@@ -1291,7 +1291,6 @@ function addItemWithQuantity(kitchen, code, itemName, unit, maxLimit, price, ste
     const itemPrice = item.price || price || 0;
     if (existing) { existing.qty += actualQtyToAdd; showToast(`✓ Added ${actualQtyToAdd.toFixed(step === 0.5 ? 1 : 0)} ${getItemName(item)}`); }
     else { kitchenData[kitchen].cart.push({ code: item.code, name: item.name, name_ar: item.name_ar, unit: item.unit || unit, qty: actualQtyToAdd, maxLimit: item.maxLimit || maxLimit, price: itemPrice }); showToast(`✓ Added ${actualQtyToAdd.toFixed(step === 0.5 ? 1 : 0)} ${getItemName(item)}`); }
-    if (!addedItemsStatus[kitchen]) addedItemsStatus[kitchen] = {};
     addedItemsStatus[kitchen][code] = true;
     selectedQuantities[kitchen][code] = 0;
     const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
@@ -1387,15 +1386,12 @@ function renderCart(kitchen) {
     const cart = kitchenData[kitchen].cart;
     const totalQty = cart.reduce((sum, i) => sum + i.qty, 0);
     const totalValue = cart.reduce((sum, i) => sum + (i.qty * (i.price || 0)), 0);
-    const totalItemsElem = document.getElementById(`totalItems_${kitchenId}`);
-    const lineCountElem = document.getElementById(`lineCount_${kitchenId}`);
-    const totalValueElem = document.getElementById(`totalValue_${kitchenId}`);
-    if (totalItemsElem) totalItemsElem.innerText = totalQty.toFixed(1);
-    if (lineCountElem) lineCountElem.innerText = cart.length;
-    if (totalValueElem) totalValueElem.innerText = totalValue.toFixed(2);
+    document.getElementById(`totalItems_${kitchenId}`).innerText = totalQty.toFixed(1);
+    document.getElementById(`lineCount_${kitchenId}`).innerText = cart.length;
+    document.getElementById(`totalValue_${kitchenId}`).innerText = totalValue.toFixed(2);
     const desktopBody = document.getElementById(`cartTableDesktop_${kitchenId}`);
     if (desktopBody) {
-        if (cart.length === 0) { desktopBody.innerHTML = `<tr><td colspan="7" style="text-align:center;">${t('noItems')}</td></tr>`; }
+        if (cart.length === 0) { desktopBody.innerHTML = `<tr><td colspan="7" style="text-align:center;">${t('noItems')}</td></table>`; }
         else {
             desktopBody.innerHTML = "";
             cart.forEach((item, idx) => {
@@ -1608,39 +1604,24 @@ function logout() {
 }
 
 // ============ INITIALIZATION ============
-async function init() {
-    // Wait for Firebase config to load
-    await waitForFirebase();
-    
-    // Get Firebase instances from window (set by firebase-config.js)
-    db = window.db || firebase.firestore();
-    auth = window.auth || firebase.auth();
-    
-    console.log("✅ Firebase ready, initializing dashboard...");
-    
-    // Load stored data
-    loadChefNames();
-    loadSavedCart();
-    loadUnlockedKitchens();
-    
-    // Generate UI
-    generatePages();
-    startAutoRefresh();
-    await loadRequestsFromFirebase();
-    loadLastSelectedKitchen();
-    initFreehandModeListener();
-    
-    // Set up real-time listener
-    db.collection("kitchen_requests").onSnapshot(() => { 
-        console.log("🔄 Real-time update received");
-        loadRequestsFromFirebase(); 
-    });
-    
-    showToast("✅ Dashboard ready!");
+// ============ INITIALIZATION ============
+// Only initialize if Firebase is ready, otherwise wait
+function initializeDashboard() {
+    if (db && auth) {
+        generatePages();
+        startAutoRefresh();
+        loadRequestsFromFirebase();
+        loadLastSelectedKitchen();
+        initFreehandModeListener();
+        db.collection("kitchen_requests").onSnapshot(() => { loadRequestsFromFirebase(); });
+        console.log("✅ Dashboard fully initialized");
+    } else {
+        console.log("Waiting for Firebase...");
+        setTimeout(initializeDashboard, 500);
+    }
 }
 
-// Start the app
-init();
+initializeDashboard();
 </script>
 </body>
 </html>
