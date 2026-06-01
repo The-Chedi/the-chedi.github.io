@@ -7,6 +7,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+<script src="firebase-config.js"></script>      
 <title>Developer Console - Complete Control</title>
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -298,28 +299,6 @@ hr { border-color: #2a3a5a; margin: 15px 0; }
 </div>
 
 <script>
-// ============ FIREBASE CONFIGURATION ============
-const firebaseConfig = {
-    apiKey: "AIzaSyD57ErKNYwqGbLcriDYYvPUtVIw8jRncXQ",
-    authDomain: "system-order-kitchen.firebaseapp.com",
-    projectId: "system-order-kitchen",
-    storageBucket: "system-order-kitchen.firebasestorage.app",
-    messagingSenderId: "429224554052",
-    appId: "1:429224554052:web:85d32727439fe55efcd611"
-};
-
-// Initialize Firebase
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-
-const db = firebase.firestore();
-const auth = firebase.auth();
-
-// Enable persistence
-auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
-
-console.log("✅ Firebase initialized successfully");
 
 // ============ GLOBAL VARIABLES ============
 let currentDeveloperEmail = "";
