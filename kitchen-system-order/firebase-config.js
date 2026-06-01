@@ -13,9 +13,8 @@ const firebaseConfig = {
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
-const db = firebase.firestore();
-console.log("✅ Firebase initialized successfully");
-// Get Firebase instances
+
+// Get Firebase instances - ONLY ONCE
 const db = firebase.firestore();
 const auth = firebase.auth();
 
