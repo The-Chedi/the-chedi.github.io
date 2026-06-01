@@ -6,6 +6,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+<script src="firebase-config.js"></script>  
 <title>Admin Dashboard - Full Quantity Control</title>
 
 <style>
@@ -837,33 +838,6 @@ body {
 </div>
 
 <script>
-// FIREBASE CONFIGURATION - UPDATE WITH YOUR ACTUAL CONFIG
-// IMPORTANT: Replace these values with your Firebase project configuration
-const firebaseConfig = {
-
-  apiKey: "AIzaSyD57ErKNYwqGbLcriDYYvPUtVIw8jRncXQ",
-
-  authDomain: "system-order-kitchen.firebaseapp.com",
-
-  databaseURL: "https://system-order-kitchen-default-rtdb.firebaseio.com",
-
-  projectId: "system-order-kitchen",
-
-  storageBucket: "system-order-kitchen.firebasestorage.app",
-
-  messagingSenderId: "429224554052",
-
-  appId: "1:429224554052:web:7536c4cdea334679fcd611"
-
-};
-
-
-// Initialize Firebase
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
-const db = firebase.firestore();
-const auth = firebase.auth();
 
 const KITCHENS = ["Hot Kitchen", "Cold Kitchen", "Pastry / Bakery", "Butchery", "Beach House", "Nihon Kitchen", "Staff Kitchen"];
 
