@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Command Center · Store & OPS Standard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: radial-gradient(circle at 10% 30%, #eef2f9, #d9e0eb);
+            min-height: 100vh;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+        }
+
+        /* animated background grain */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(#ffffff20 1px, transparent 1px);
+            background-size: 32px 32px;
+            pointer-events: none;
+            opacity: 0.4;
+        }
+
+        /* main glassmorphic container */
+        .launch-hub {
+            max-width: 1300px;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            border-radius: 3.5rem;
+            padding: 2rem 2rem 2.5rem 2rem;
+            box-shadow: 0 30px 50px -20px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255,255,255,0.5);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+
+        /* header area */
+        .brand {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+        .title-section h1 {
+            font-size: 2.6rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1F2A44, #2C3E66);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.02em;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .title-section h1 span {
+            background: none;
+            color: #2c3e66;
+            font-size: 2rem;
+        }
+        .sub {
+            color: #4a5b7a;
+            margin-top: 0.3rem;
+            font-weight: 500;
+            border-left: 3px solid #3b82f6;
+            padding-left: 1rem;
+            font-size: 1rem;
+        }
+        .status-chip {
+            background: rgba(59,130,246,0.12);
+            backdrop-filter: blur(4px);
+            padding: 0.4rem 1.1rem;
+            border-radius: 60px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: #1f4c8a;
+            border: 1px solid rgba(59,130,246,0.3);
+        }
+
+        /* double card layout premium */
+        .icon-duo {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2.2rem;
+            margin: 3rem 0 2rem;
+        }
+
+        .premium-card {
+            flex: 1;
+            min-width: 280px;
+            max-width: 420px;
+            background: rgba(255,255,255,0.96);
+            border-radius: 2.2rem;
+            padding: 2rem 1.8rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.35s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            text-decoration: none;
+            display: block;
+            color: inherit;
+            box-shadow: 0 20px 30px -12px rgba(0,0,0,0.08);
+            border: 1px solid rgba(255,255,255,0.8);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .premium-card::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 30% 20%, rgba(255,255,240,0.3), transparent);
+            opacity: 0;
+            transition: opacity 0.4s;
+            pointer-events: none;
+        }
+
+        .premium-card:hover::after {
+            opacity: 1;
+        }
+
+        .premium-card:hover {
+            transform: translateY(-12px) scale(1.01);
+            box-shadow: 0 35px 45px -18px rgba(0, 0, 0, 0.25);
+            border-color: rgba(59,130,246,0.5);
+            background: white;
+        }
+
+        /* icon container with 3D feel */
+        .icon-sphere {
+            width: 110px;
+            height: 110px;
+            margin: 0 auto 1.6rem auto;
+            background: linear-gradient(145deg, #f8fafd, #eef2f8);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 1px 3px #ffffff80, 0 12px 20px -10px rgba(0,0,0,0.1);
+            transition: all 0.25s;
+        }
+
+        .premium-card:hover .icon-sphere {
+            transform: scale(1.02);
+            background: linear-gradient(145deg, #ffffff, #eef2fc);
+            box-shadow: 0 18px 28px -12px rgba(0,0,0,0.2);
+        }
+
+        /* store specific sphere */
+        .store-sphere {
+            background: radial-gradient(ellipse at 30% 35%, #fef7e0, #ffe6c7);
+        }
+        .ops-sphere {
+            background: radial-gradient(ellipse at 30% 35%, #e0f2fe, #cae9ff);
+        }
+
+        .card-name {
+            font-size: 2.2rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+            margin: 0.6rem 0 0.4rem;
+        }
+
+        .store-name {
+            background: linear-gradient(120deg, #B45309, #F97316);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+        .ops-name {
+            background: linear-gradient(120deg, #0F5B4B, #1E7B62);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .description {
+            font-size: 0.95rem;
+            color: #334155;
+            line-height: 1.45;
+            margin: 0.75rem 0 1rem;
+            font-weight: 450;
+        }
+
+        .path-badge {
+            background: #f1f5f9;
+            padding: 0.35rem 1rem;
+            border-radius: 40px;
+            font-size: 0.75rem;
+            font-family: 'Fira Mono', monospace;
+            font-weight: 500;
+            color: #1e293b;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(2px);
+            transition: 0.2s;
+        }
+
+        .premium-card:hover .path-badge {
+            background: #e6edf5;
+            color: #0f2b3d;
+        }
+
+        .arrow-hint {
+            opacity: 0;
+            transform: translateX(-6px);
+            transition: 0.2s;
+            display: inline-block;
+        }
+
+        .premium-card:hover .arrow-hint {
+            opacity: 1;
+            transform: translateX(2px);
+        }
+
+        /* interactive footer */
+        .action-footer {
+            display: flex;
+            justify-content: center;
+            gap: 1.2rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+        .footer-note {
+            background: rgba(0,0,0,0.03);
+            backdrop-filter: blur(4px);
+            border-radius: 2rem;
+            padding: 0.7rem 1.3rem;
+            font-size: 0.8rem;
+            color: #2c3e50;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            border: 1px solid rgba(255,255,255,0.6);
+        }
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: #22c55e;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 0 2px #bef26480;
+        }
+        kbd {
+            background: #1e293b;
+            color: white;
+            padding: 0.2rem 0.5rem;
+            border-radius: 8px;
+            font-size: 0.7rem;
+            font-family: monospace;
+        }
+
+        @media (max-width: 780px) {
+            .launch-hub {
+                padding: 1.5rem;
+            }
+            .card-name {
+                font-size: 1.8rem;
+            }
+            .icon-sphere {
+                width: 85px;
+                height: 85px;
+            }
+            .title-section h1 {
+                font-size: 2rem;
+            }
+        }
+
+        @media (max-width: 580px) {
+            .premium-card {
+                min-width: 260px;
+            }
+        }
+
+        /* micro bounce */
+        @keyframes gentlePop {
+            0% { transform: scale(0.98); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .premium-card {
+            animation: gentlePop 0.4s ease-out backwards;
+        }
+        .premium-card:first-child {
+            animation-delay: 0.05s;
+        }
+        .premium-card:last-child {
+            animation-delay: 0.1s;
+        }
+    </style>
+</head>
+<body>
+
+<div class="launch-hub">
+    <div class="brand">
+        <div class="title-section">
+            <h1>
+                <span>⌘</span> Lan Manger
+            </h1>
+            <div class="sub">Dual command · instant access</div>
+        </div>
+        <div class="status-chip">
+            ✨ active gateways
+        </div>
+    </div>
+
+    <!-- TWO ICON BLOCKS: STORE (store/index.html) and OPS STANDARD (OSP/index.html) -->
+    <div class="icon-duo">
+        <!-- STORE CARD -->
+        <a href="/kitchen-system-order/store/index.html" class="premium-card" id="storeGateway">
+            <div class="icon-sphere store-sphere">
+                <svg width="58" height="58" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3.5 8.5L5.5 21.5H22.5L24.5 8.5H3.5Z" stroke="#D97706" stroke-width="1.6" stroke-linejoin="round" fill="#FFFBEB" />
+                    <path d="M8.5 8.5V5.5C8.5 3.84315 9.84315 2.5 11.5 2.5H16.5C18.1569 2.5 19.5 3.84315 19.5 5.5V8.5" stroke="#D97706" stroke-width="1.6" stroke-linecap="round" fill="none" />
+                    <circle cx="9.5" cy="14.5" r="1.8" fill="#F97316" stroke="none" />
+                    <circle cx="18.5" cy="14.5" r="1.8" fill="#F97316" stroke="none" />
+                    <path d="M14 12.5V17.5" stroke="#D97706" stroke-width="1.5" stroke-linecap="round" />
+                    <path d="M6 8.5L22 8.5" stroke="#D97706" stroke-width="1.2" stroke-dasharray="2 2" />
+                </svg>
+            </div>
+            <div class="card-name store-name">🛍️ Store</div>
+            <div class="description">
+                Digital marketplace · inventory management · fast checkout experience
+            </div>
+            <div class="path-badge">
+                <span>📁</span>  kitchen-system-order/store/index.html
+                <span class="arrow-hint">→</span>
+            </div>
+        </a>
+
+        <!-- OPS STANDARD CARD -->
+        <a href="/kitchen-system-order/OSPs/index.html" class="premium-card" id="opsGateway">
+            <div class="icon-sphere ops-sphere">
+                <svg width="58" height="58" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <g stroke="#117F6F" stroke-width="1.5">
+                        <path d="M14 17.5C16.0711 17.5 17.75 15.8211 17.75 13.75C17.75 11.6789 16.0711 10 14 10C11.9289 10 10.25 11.6789 10.25 13.75C10.25 15.8211 11.9289 17.5 14 17.5Z" fill="white" stroke="#117F6F"/>
+                        <path d="M21.5 16L20.6 16.5C20.4 16.6 20.2 16.7 20 16.7L19.1 17.2L18.6 18.1C18.4 18.5 18.1 18.8 17.7 19L15.8 20.1C15.6 20.2 15.4 20.2 15.2 20.1L13.3 19C12.9 18.8 12.6 18.5 12.4 18.1L11.9 17.2L11 16.7C10.6 16.5 10.3 16.3 10.1 16L8.4 14.9C8 14.7 7.7 14.4 7.5 14L6.4 12.1C6.3 11.9 6.3 11.7 6.4 11.5L7.5 9.6C7.7 9.2 8 8.9 8.4 8.7L10.1 7.6C10.3 7.4 10.6 7.2 10.8 7L11.9 6.3C12.1 6.1 12.3 5.9 12.5 5.7L13.2 4.8C13.4 4.4 13.7 4.1 14.1 3.9L15.2 3.6C15.4 3.5 15.6 3.5 15.8 3.6L16.9 3.9C17.3 4.1 17.6 4.4 17.8 4.8L18.5 5.7C18.7 5.9 18.9 6.1 19.1 6.3L20 7C20.2 7.2 20.4 7.4 20.6 7.6L21.5 8.1C21.9 8.3 22.2 8.6 22.4 9L23.5 10.9C23.6 11.1 23.6 11.3 23.5 11.5L22.4 13.4C22.2 13.8 21.9 14.1 21.5 14.3L21.5 16Z" fill="none" stroke="#117F6F"/>
+                        <path d="M14 11.5V14L15.5 15.5" stroke="#117F6F" stroke-width="1.4" stroke-linecap="round"/>
+                        <circle cx="14" cy="13.75" r="6" stroke="#117F6F" stroke-dasharray="1.8 1.8" stroke-width="1.1"/>
+                    </g>
+                </svg>
+            </div>
+            <div class="card-name ops-name">⚙️ OPS Standard</div>
+            <div class="description">
+                Operational framework · metrics & analytics · standardized workflows
+            </div>
+            <div class="path-badge">
+                <span>⚡</span> /OSP/index.html
+                <span class="arrow-hint">→</span>
+            </div>
+        </a>
+    </div>
+
+    <!-- additional info + interactive reassurance -->
+    <div class="action-footer">
+        <div class="footer-note">
+            <span class="dot"></span> both icons link to dedicated modules
+        </div>
+        <div class="footer-note">
+            <span>🔗</span> Store → <kbd>/store/</kbd> &nbsp;|&nbsp; OPS Standard → <kbd>/OSP/</kbd>
+        </div>
+        <div class="footer-note">
+            <span>✨</span> click any card · smooth navigation
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // enhance UX with mild analytics / error handling for development environments
+        const storeCard = document.getElementById('storeGateway');
+        const opsCard = document.getElementById('opsGateway');
+
+        // helper to log navigation and optionally detect broken links (only console)
+        const handleNav = (targetUrl, cardName) => {
+            console.groupCollapsed(`🔁 [nexus] ${cardName} navigation`);
+            console.log(`📍 destination: ${targetUrl}`);
+            console.log(`⚡ expected behavior: redirect to ${targetUrl}`);
+            console.groupEnd();
+
+            // in case of local 404, we don't interrupt, but give dev-friendly note in console
+            // (only if fetch is possible for diagnosis, but no blocking)
+            if (window.location.protocol === 'file:' || targetUrl.startsWith('/')) {
+                // subtle reminder: check that target directories exist
+                console.info(`💡 tip: ensure ${targetUrl} exists relative to server root.`);
+            }
+        };
+
+        if (storeCard) {
+            storeCard.addEventListener('click', function(event) {
+                // not preventing default — allowing natural navigation
+                handleNav('kitchen-system-order/store/index.html', 'STORE');
+                // optional: add transition class for micro feedback
+                storeCard.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    if (storeCard) storeCard.style.transform = '';
+                }, 120);
+            });
+        }
+
+        if (opsCard) {
+            opsCard.addEventListener('click', function(event) {
+                handleNav('kitchen-system-order/OSP/index.html', 'OPS STANDARD');
+                opsCard.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    if (opsCard) opsCard.style.transform = '';
+                }, 120);
+            });
+        }
+
+        // performance & accessibility: ensure that keyboard enter works (natively works on <a>)
+        // add micro ripple effect (optional)
+        const addRipple = (card, url) => {
+            if (!card) return;
+            card.addEventListener('mousedown', (e) => {
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple-effect';
+                const rect = card.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                ripple.style.width = ripple.style.height = `${size}px`;
+                ripple.style.left = `${e.clientX - rect.left - size/2}px`;
+                ripple.style.top = `${e.clientY - rect.top - size/2}px`;
+                ripple.style.position = 'absolute';
+                ripple.style.borderRadius = '50%';
+                ripple.style.background = 'radial-gradient(circle, rgba(59,130,246,0.2), transparent)';
+                ripple.style.pointerEvents = 'none';
+                ripple.style.transition = 'transform 0.4s, opacity 0.4s';
+                ripple.style.transform = 'scale(0)';
+                ripple.style.opacity = '0.8';
+                card.style.position = 'relative';
+                card.style.overflow = 'hidden';
+                card.appendChild(ripple);
+                requestAnimationFrame(() => {
+                    ripple.style.transform = 'scale(1)';
+                    ripple.style.opacity = '0';
+                });
+                setTimeout(() => {
+                    if (ripple && ripple.remove) ripple.remove();
+                }, 400);
+            });
+        };
+
+        addRipple(storeCard, '/store/index.html');
+        addRipple(opsCard, '/OSP/index.html');
+
+        // visual ready message
+        console.log('✅ Nexus ready — two-icon hub: STORE → /store/index.html | OPS → /OSP/index.html');
+    })();
+</script>
+
+<style>
+    /* additional ripple style embedded for clean integration */
+    .ripple-effect {
+        position: absolute;
+        background: radial-gradient(circle, rgba(59,130,246,0.25), rgba(255,255,255,0.4));
+        border-radius: 50%;
+        transform: scale(0);
+        pointer-events: none;
+        transition: transform 0.45s ease-out, opacity 0.5s ease-out;
+        z-index: 5;
+    }
+    .premium-card {
+        transition: transform 0.2s, box-shadow 0.3s, border-color 0.2s;
+        will-change: transform;
+    }
+    .premium-card:active {
+        transform: scale(0.97);
+        transition: 0.05s;
+    }
+    .path-badge .arrow-hint {
+        transition: transform 0.2s ease, opacity 0.2s;
+    }
+    .premium-card:focus-visible {
+        outline: 3px solid #3b82f6;
+        outline-offset: 6px;
+        border-radius: 2rem;
+    }
+    code, kbd {
+        font-family: 'SF Mono', 'Fira Code', monospace;
+    }
+</style>
+</body>
+</html>
