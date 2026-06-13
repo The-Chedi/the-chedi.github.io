@@ -1,0 +1,32 @@
+{
+  "name": "🥛 Dairy, Cheese & Butter",
+  "icon": "https://cdn-icons-png.flaticon.com/512/2997/2997502.png",
+  "items": [
+    { "name": "Butter Ghee", "qty": "15g" },
+    { "name": "Butter", "qty": "15g" },
+    { "name": "Vegetarian Butter", "qty": "15g" },
+    { "name": "Milk Full Cream", "qty": "100ml" },
+    { "name": "Cooking Cream", "qty": "50ml" },
+    { "name": "Whipping Cream", "qty": "50ml" },
+    { "name": "Sweetened Condensed Milk", "qty": "30ml" },
+    { "name": "Oat Milk", "qty": "100ml" },
+    { "name": "Milk Powder", "qty": "20g" },
+    { "name": "Skimmed Milk", "qty": "100ml" },
+    { "name": "Soya Milk", "qty": "100ml" },
+    { "name": "Cheddar Cheese", "qty": "50g" },
+    { "name": "Edam Cheese", "qty": "50g" },
+    { "name": "Feta Cheese", "qty": "50g" },
+    { "name": "Goat Cheese", "qty": "50g" },
+    { "name": "Grana Padano", "qty": "30g" },
+    { "name": "Halloumi Cheese", "qty": "60g" },
+    { "name": "White Cheese", "qty": "60g" },
+    { "name": "Brie Cheese", "qty": "50g" },
+    { "name": "Gouda Cheese", "qty": "50g" },
+    { "name": "Smoked Cheese", "qty": "50g" },
+    { "name": "Camembert Cheese", "qty": "50g" },
+    { "name": "Emental Cheese", "qty": "50g" },
+    { "name": "Roquefort Cheese", "qty": "30g" },
+    { "name": "Cream Cheese", "qty": "40g" },
+    { "name": "Tofu", "qty": "100g" }
+  ]
+}

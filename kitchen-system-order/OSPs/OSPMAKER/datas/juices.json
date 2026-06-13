@@ -1,0 +1,17 @@
+{
+  "name": "🧃 Beverages & Juices",
+  "icon": "https://cdn-icons-png.flaticon.com/512/3031/3031312.png",
+  "items": [
+    { "name": "Frozen Guava Juice", "qty": "200ml" },
+    { "name": "Frozen Mango Juice", "qty": "200ml" },
+    { "name": "Frozen Orange Juice", "qty": "200ml" },
+    { "name": "Frozen Strawberry Juice", "qty": "200ml" },
+    { "name": "Mango Juice Powder", "qty": "20g" },
+    { "name": "Orange Juice Powder", "qty": "20g" },
+    { "name": "Pineapple Juice Powder", "qty": "20g" },
+    { "name": "Sobia Powder", "qty": "25g" },
+    { "name": "Tea", "qty": "2g" },
+    { "name": "Almond Milk", "qty": "200ml" },
+    { "name": "Coconut Milk", "qty": "100ml" }
+  ]
+}

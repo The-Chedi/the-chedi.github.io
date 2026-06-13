@@ -1,0 +1,24 @@
+{
+  "name": "🥫 Canned & Pickles",
+  "icon": "https://cdn-icons-png.flaticon.com/512/3143/3143655.png",
+  "items": [
+    { "name": "Anchovies", "qty": "30g" },
+    { "name": "Capers", "qty": "10g" },
+    { "name": "Palm Heart", "qty": "80g" },
+    { "name": "Sweet Corn", "qty": "80g" },
+    { "name": "White Beans Cooked", "qty": "100g" },
+    { "name": "Red Kidney Beans", "qty": "100g" },
+    { "name": "Tuna", "qty": "80g" },
+    { "name": "Tomato Paste", "qty": "30g" },
+    { "name": "Fava Beans Cooked", "qty": "100g" },
+    { "name": "Peeled Tomato", "qty": "100g" },
+    { "name": "Coconut Cream", "qty": "50ml" },
+    { "name": "Mixed Pickles", "qty": "50g" },
+    { "name": "Black Olives", "qty": "40g" },
+    { "name": "Green Olives", "qty": "40g" },
+    { "name": "Pickled Cucumber", "qty": "40g" },
+    { "name": "Jalapeno Pickles", "qty": "30g" },
+    { "name": "Pickled Onion", "qty": "30g" },
+    { "name": "Pomegranate Molasses", "qty": "15ml" }
+  ]
+}

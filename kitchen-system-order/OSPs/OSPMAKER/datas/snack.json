@@ -1,0 +1,22 @@
+{
+  "name": "🍟 Snacks & Appetizers",
+  "icon": "https://cdn-icons-png.flaticon.com/512/2553/2553691.png",
+  "items": [
+    { "name": "Spring Roll", "qty": "3 pieces" },
+    { "name": "Stuffed Wine Leaves", "qty": "4 pieces" },
+    { "name": "Potato Croquettes", "qty": "5 pieces" },
+    { "name": "Mini Cheese Sambousk", "qty": "4 pieces" },
+    { "name": "Prawn Crackers", "qty": "20g" },
+    { "name": "Vegetable Burger (Vegan)", "qty": "1 piece" },
+    { "name": "Pringles Chips", "qty": "30g" },
+    { "name": "Chocolate Stone", "qty": "20g" },
+    { "name": "Granola Strawberry & Raspberry", "qty": "40g" },
+    { "name": "Pretzels", "qty": "30g" },
+    { "name": "Choco Pops", "qty": "30g" },
+    { "name": "Corn Flakes", "qty": "30g" },
+    { "name": "Fruit Rings", "qty": "30g" },
+    { "name": "Honey Pops", "qty": "30g" },
+    { "name": "Muesli", "qty": "50g" },
+    { "name": "White Oats", "qty": "40g" }
+  ]
+}

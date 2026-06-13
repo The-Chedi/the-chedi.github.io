@@ -1,0 +1,23 @@
+{
+  "name": "🍯 Sweeteners, Jams & Honey",
+  "icon": "https://cdn-icons-png.flaticon.com/512/3023/3023656.png",
+  "items": [
+    { "name": "Honey", "qty": "15g" },
+    { "name": "Black Honey (Molasses)", "qty": "15ml" },
+    { "name": "Apricot Jam", "qty": "30g" },
+    { "name": "Strawberry Jam", "qty": "30g" },
+    { "name": "Fig Jam", "qty": "30g" },
+    { "name": "Blueberry Jam", "qty": "30g" },
+    { "name": "Black Cherry Jam", "qty": "30g" },
+    { "name": "Mango Jam", "qty": "30g" },
+    { "name": "Orange Jam", "qty": "30g" },
+    { "name": "Carrot Jam", "qty": "30g" },
+    { "name": "Date Jam", "qty": "30g" },
+    { "name": "Raspberry Jam", "qty": "30g" },
+    { "name": "Glucose Honey", "qty": "10g" },
+    { "name": "Maple Syrup", "qty": "15ml" },
+    { "name": "Brown Sugar", "qty": "10g" },
+    { "name": "Powdered Sugar", "qty": "10g" },
+    { "name": "Crystal Sugar", "qty": "10g" }
+  ]
+}

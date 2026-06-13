@@ -1,0 +1,42 @@
+
+  {
+    "name": "🧂 Spices & Seasonings",
+    "icon": "https://cdn-icons-png.flaticon.com/512/2330/2330919.png",
+    "items": [
+      { "name": "Black Pepper Corn", "qty": "1g" },
+      { "name": "Black Pepper Powder", "qty": "1g" },
+      { "name": "Black Seeds", "qty": "1g" },
+      { "name": "Black Sesame Seeds", "qty": "3g" },
+      { "name": "Cardamom", "qty": "1 piece" },
+      { "name": "Chili Powder", "qty": "1g" },
+      { "name": "Cinnamon Powder", "qty": "1g" },
+      { "name": "Cinnamon Stick", "qty": "1 piece" },
+      { "name": "Cloves", "qty": "2 pieces" },
+      { "name": "Coriander Powder", "qty": "2g" },
+      { "name": "Cumin Powder", "qty": "2g" },
+      { "name": "Cumin Whole", "qty": "2g" },
+      { "name": "Garlic Powder", "qty": "2g" },
+      { "name": "Ginger Powder", "qty": "2g" },
+      { "name": "Green Pepper Corn", "qty": "5g" },
+      { "name": "Nutmeg", "qty": "1g" },
+      { "name": "Onion Powder", "qty": "3g" },
+      { "name": "Dried Oregano", "qty": "1g" },
+      { "name": "Smoked Paprika", "qty": "2g" },
+      { "name": "Star Anise", "qty": "1 piece" },
+      { "name": "Sumac", "qty": "2g" },
+      { "name": "Turmeric", "qty": "2g" },
+      { "name": "White Pepper Powder", "qty": "1g" },
+      { "name": "Himalayan Salt", "qty": "2g" },
+      { "name": "Kitchen Salt", "qty": "2g" },
+      { "name": "Lemon Salt", "qty": "1g" },
+      { "name": "Sea Salt Flakes", "qty": "2g" },
+      { "name": "Curry Powder", "qty": "5g" },
+      { "name": "Red Curry Paste", "qty": "15g" },
+      { "name": "Green Curry Paste", "qty": "15g" },
+      { "name": "Tom Yum Paste", "qty": "20g" },
+      { "name": "Wasabi Powder", "qty": "5g" },
+      { "name": "Togarashi", "qty": "3g" },
+      { "name": "Carob Powder", "qty": "10g" }
+    ]
+  }
+  
