@@ -409,7 +409,7 @@
         if (storeCard) {
             storeCard.addEventListener('click', function(event) {
                 // not preventing default — allowing natural navigation
-                handleNav('/store/index.html', 'STORE');
+                handleNav('kitchen-system-order/store/index.html', 'STORE');
                 // optional: add transition class for micro feedback
                 storeCard.style.transform = 'scale(0.98)';
                 setTimeout(() => {
@@ -420,7 +420,7 @@
 
         if (opsCard) {
             opsCard.addEventListener('click', function(event) {
-                handleNav('/OSP/index.html', 'OPS STANDARD');
+                handleNav('kitchen-system-order/OSP/index.html', 'OPS STANDARD');
                 opsCard.style.transform = 'scale(0.98)';
                 setTimeout(() => {
                     if (opsCard) opsCard.style.transform = '';
