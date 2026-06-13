@@ -1,1 +1,280 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPS Center · OSPMAKER | Standard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0B1820 0%, #0A0F1A 100%);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            background: rgba(15, 25, 35, 0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 2rem;
+            padding: 2rem;
+            border: 1px solid rgba(16, 185, 129, 0.2);
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.4);
+        }
+
+        /* header */
+        .ops-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(16, 185, 129, 0.15);
+            padding: 0.3rem 1rem;
+            border-radius: 60px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: #6EE7B7;
+            letter-spacing: 1px;
+            margin-bottom: 1rem;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: white;
+            letter-spacing: -0.3px;
+        }
+
+        h1 span {
+            background: linear-gradient(135deg, #10B981, #34D399);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .sub {
+            color: #94A3B8;
+            margin-top: 0.5rem;
+            font-size: 0.85rem;
+        }
+
+        /* two option cards */
+        .options-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+
+        .option-card {
+            flex: 1;
+            min-width: 250px;
+            max-width: 320px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 1.5rem;
+            padding: 2rem 1.5rem;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            transition: all 0.25s ease;
+            border: 1px solid rgba(255,255,255,0.08);
+            cursor: pointer;
+        }
+
+        .option-card:hover {
+            transform: translateY(-6px);
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(16, 185, 129, 0.4);
+            box-shadow: 0 20px 30px -12px rgba(0,0,0,0.3);
+        }
+
+        .option-card:active {
+            transform: translateY(0);
+        }
+
+        /* icon circle */
+        .icon-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+
+        .maker-icon {
+            background: radial-gradient(circle at 30% 30%, #F59E0B, #B45309);
+            box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+        }
+
+        .standard-icon {
+            background: radial-gradient(circle at 30% 30%, #10B981, #047857);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .option-title {
+            font-size: 1.8rem;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .maker-title {
+            background: linear-gradient(135deg, #FBBF24, #F97316);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .standard-title {
+            background: linear-gradient(135deg, #34D399, #10B981);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .option-desc {
+            font-size: 0.8rem;
+            color: #9CA3AF;
+            text-align: center;
+            line-height: 1.4;
+        }
+
+        .option-path {
+            font-size: 0.65rem;
+            font-family: monospace;
+            background: rgba(0,0,0,0.5);
+            padding: 0.25rem 0.8rem;
+            border-radius: 20px;
+            color: #CBD5E1;
+            margin-top: 0.3rem;
+        }
+
+        /* footer */
+        .footer-note {
+            text-align: center;
+            margin-top: 2rem;
+            padding-top: 1rem;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            font-size: 0.7rem;
+            color: #64748B;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #6EE7B7;
+            text-decoration: none;
+            font-size: 0.75rem;
+            margin-top: 1rem;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 650px) {
+            .container {
+                padding: 1.5rem;
+            }
+            .option-title {
+                font-size: 1.5rem;
+            }
+            .icon-circle {
+                width: 65px;
+                height: 65px;
+            }
+            h1 {
+                font-size: 1.6rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="ops-header">
+            <div class="badge">⚙️ OPS CONTROL</div>
+            <h1>OPS <span>Standard</span></h1>
+            <div class="sub">select your operation mode</div>
+        </div>
+
+        <div class="options-row">
+            <!-- OSPMAKER option -->
+            <a href="/OSP/OSPMAKER/index.html" class="option-card" id="makerCard">
+                <div class="icon-circle maker-icon">
+                    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 4V20M20 12H4" stroke="white" stroke-width="1.6" stroke-linecap="round"/>
+                        <circle cx="12" cy="12" r="9" stroke="white" stroke-width="1.4" fill="none"/>
+                        <path d="M12 8L12 16M8 12L16 12" stroke="white" stroke-width="1.2" stroke-linecap="round" opacity="0.7"/>
+                    </svg>
+                </div>
+                <div class="option-title maker-title">OSPMAKER</div>
+                <div class="option-desc">Create, customize & build OSP workflows · advanced editor</div>
+                <div class="option-path">/OSP/OSPMAKER/index.html</div>
+            </a>
+
+            <!-- STANDARD option -->
+            <a href="/OSP/Standard/index.html" class="option-card" id="standardCard">
+                <div class="icon-circle standard-icon">
+                    <svg width="42" height="42" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 15C13.6569 15 15 13.6569 15 12C15 10.3431 13.6569 9 12 9C10.3431 9 9 10.3431 9 12C9 13.6569 10.3431 15 12 15Z" stroke="white" stroke-width="1.5" fill="rgba(255,255,255,0.1)"/>
+                        <path d="M19.4 15.05L18.3 15.65C18.1 15.75 17.9 15.85 17.7 15.85L16.6 16.45L16 17.55C15.8 17.95 15.5 18.25 15.1 18.45L12.9 19.65C12.7 19.75 12.5 19.75 12.3 19.65L10.1 18.45C9.7 18.25 9.4 17.95 9.2 17.55L8.6 16.45L7.5 15.85C7.1 15.65 6.8 15.45 6.5 15.15L4.6 13.85C4.2 13.65 3.9 13.35 3.7 12.95L2.5 10.75C2.4 10.55 2.4 10.35 2.5 10.15L3.7 7.95C3.9 7.55 4.2 7.25 4.6 7.05L6.5 5.75C6.8 5.55 7.1 5.45 7.4 5.15L8.6 4.45C8.9 4.25 9.1 4.05 9.3 3.75L10.1 2.65C10.3 2.25 10.6 1.95 11 1.75L12.3 1.45C12.5 1.35 12.7 1.35 12.9 1.45L14.2 1.75C14.6 1.95 14.9 2.25 15.1 2.65L15.9 3.75C16.1 4.05 16.3 4.25 16.6 4.45L17.7 5.15C18 5.35 18.2 5.55 18.5 5.85L19.6 6.55C20 6.75 20.3 7.05 20.5 7.45L21.7 9.65C21.8 9.85 21.8 10.05 21.7 10.25L20.5 12.45C20.3 12.85 20 13.15 19.6 13.35L19.4 15.05Z" stroke="white" stroke-width="1.2" fill="none"/>
+                        <path d="M12 8V12L14 14" stroke="white" stroke-width="1.4" stroke-linecap="round"/>
+                    </svg>
+                </div>
+                <div class="option-title standard-title">Standard</div>
+                <div class="option-desc">Predefined OPS workflows · metrics & compliance</div>
+                <div class="option-path">/OSP/Standard/index.html</div>
+            </a>
+        </div>
+
+        <div class="footer-note">
+            <span>◈ OPS v2.0 · choose your path ◈</span>
+            <div>
+                <a href="/index1.html" class="back-link">← back to MangerLan</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const makerCard = document.getElementById('makerCard');
+        const standardCard = document.getElementById('standardCard');
+
+        const logNavigation = (name, url) => {
+            console.log(`[OPS] 🎯 ${name} → ${url}`);
+        };
+
+        if (makerCard) {
+            makerCard.addEventListener('click', (e) => {
+                logNavigation('OSPMAKER', '/OSP/OSPMAKER/index.html');
+            });
+        }
+
+        if (standardCard) {
+            standardCard.addEventListener('click', (e) => {
+                logNavigation('Standard', '/OSP/Standard/index.html');
+            });
+        }
+
+        console.log('✅ OPS Center ready — OSPMAKER & Standard options available');
+    </script>
+</body>
+</html>
