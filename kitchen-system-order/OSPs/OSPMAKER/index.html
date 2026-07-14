@@ -1,19 +1,25 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Chedi | Signature Recipe Studio</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
+    </script>
     <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js">
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900&family=Great+Vibes&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         :root {
             --bg-primary: #0a0a0a;
             --bg-secondary: #111111;
@@ -26,7 +32,7 @@
             --danger: #8B4513;
             --input-bg: #1a1a1a;
         }
-        
+
         body.light-mode {
             --bg-primary: #f5f0e8;
             --bg-secondary: #ffffff;
@@ -39,23 +45,32 @@
             --danger: #8B4513;
             --input-bg: #ffffff;
         }
-        
+
         body {
             background: var(--bg-primary);
             font-family: 'Inter', sans-serif;
             transition: background 0.3s ease;
         }
-        
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: var(--border-color); border-radius: 10px; }
-        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
-        
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: var(--border-color);
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: var(--accent);
+            border-radius: 10px;
+        }
+
         .app-container {
             max-width: 1600px;
             margin: 0 auto;
             padding: 24px 32px;
         }
-        
+
         .header {
             display: flex;
             justify-content: space-between;
@@ -66,21 +81,21 @@
             flex-wrap: wrap;
             gap: 20px;
         }
-        
+
         .logo-area h1 {
             font-family: 'Playfair Display', serif;
             font-size: 42px;
             font-weight: 700;
             color: var(--accent);
         }
-        
+
         .logo-area p {
             font-size: 11px;
             letter-spacing: 4px;
             color: var(--text-secondary);
             margin-top: 6px;
         }
-        
+
         .status-badge {
             background: var(--bg-card);
             border: 1px solid var(--accent);
@@ -89,7 +104,7 @@
             font-size: 12px;
             color: var(--accent);
         }
-        
+
         .action-bar {
             display: flex;
             justify-content: flex-end;
@@ -97,7 +112,7 @@
             margin-bottom: 32px;
             flex-wrap: wrap;
         }
-        
+
         .btn {
             padding: 10px 24px;
             border-radius: 12px;
@@ -110,13 +125,30 @@
             align-items: center;
             gap: 8px;
         }
-        
-        .btn-primary { background: var(--accent); color: #0a0a0a; }
-        .btn-secondary { background: var(--bg-card); color: var(--accent); border: 1px solid var(--accent); }
-        .btn-danger { background: var(--danger); color: white; }
-        .btn-dark { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-color); }
-        .btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
-        
+
+        .btn-primary {
+            background: var(--accent);
+            color: #0a0a0a;
+        }
+        .btn-secondary {
+            background: var(--bg-card);
+            color: var(--accent);
+            border: 1px solid var(--accent);
+        }
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+        .btn-dark {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+        }
+
         .theme-toggle-btn {
             position: fixed;
             bottom: 24px;
@@ -133,13 +165,13 @@
             color: #0a0a0a;
             font-weight: bold;
         }
-        
+
         .main-grid {
             display: grid;
             grid-template-columns: 300px 1fr;
             gap: 28px;
         }
-        
+
         .sidebar {
             background: var(--bg-secondary);
             border-radius: 20px;
@@ -149,14 +181,14 @@
             position: sticky;
             top: 20px;
         }
-        
+
         .sidebar h3 {
             color: var(--accent);
             font-size: 12px;
             letter-spacing: 2px;
             margin-bottom: 20px;
         }
-        
+
         .categories-scroll {
             max-height: 500px;
             overflow-y: auto;
@@ -164,7 +196,7 @@
             flex-direction: column;
             gap: 8px;
         }
-        
+
         .category-item {
             background: var(--bg-card);
             border-radius: 12px;
@@ -176,28 +208,48 @@
             gap: 12px;
             border: 1px solid var(--border-color);
         }
-        
-        .category-item:hover { background: var(--bg-primary); border-color: var(--accent); }
-        .category-item.active { background: linear-gradient(135deg, var(--accent)20, var(--accent)08); border-color: var(--accent); }
-        
-        .category-icon { width: 36px; height: 36px; object-fit: contain; }
-        .category-info { flex: 1; }
-        .category-name { font-size: 13px; font-weight: 600; color: var(--text-primary); }
-        .category-count { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
-        
+
+        .category-item:hover {
+            background: var(--bg-primary);
+            border-color: var(--accent);
+        }
+        .category-item.active {
+            background: linear-gradient(135deg, var(--accent)20, var(--accent)08);
+            border-color: var(--accent);
+        }
+
+        .category-icon {
+            width: 36px;
+            height: 36px;
+            object-fit: contain;
+        }
+        .category-info {
+            flex: 1;
+        }
+        .category-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .category-count {
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+        }
+
         .content {
             background: var(--bg-secondary);
             border-radius: 20px;
             border: 1px solid var(--border-color);
             overflow: hidden;
         }
-        
+
         .tabs {
             display: flex;
             border-bottom: 1px solid var(--border-color);
             background: var(--bg-primary);
         }
-        
+
         .tab {
             padding: 16px 24px;
             cursor: pointer;
@@ -210,12 +262,24 @@
             align-items: center;
             gap: 8px;
         }
-        
-        .tab.active { color: var(--accent); border-bottom: 2px solid var(--accent); }
-        .tab-content { display: none; padding: 28px; }
-        .tab-content.active { display: block; }
-        
-        .search-input, .recipe-title-input, textarea, input:not([type="color"]), select {
+
+        .tab.active {
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+        }
+        .tab-content {
+            display: none;
+            padding: 28px;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        .search-input,
+        .recipe-title-input,
+        textarea,
+        input:not([type="color"]),
+        select {
             background: var(--input-bg);
             border: 1px solid var(--border-color);
             border-radius: 12px;
@@ -223,13 +287,13 @@
             color: var(--text-primary);
             width: 100%;
         }
-        
+
         .recipe-title-input {
             font-size: 22px;
             font-family: 'Playfair Display', serif;
             font-weight: 600;
         }
-        
+
         .form-label {
             display: block;
             font-size: 11px;
@@ -239,14 +303,14 @@
             margin-bottom: 8px;
             text-transform: uppercase;
         }
-        
+
         .method-textarea {
             min-height: 120px;
             font-family: 'Cormorant Garamond', serif;
             font-size: 14px;
             line-height: 1.6;
         }
-        
+
         .ingredients-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
@@ -256,7 +320,7 @@
             padding: 4px;
             margin-top: 12px;
         }
-        
+
         .ingredient-card {
             background: var(--bg-card);
             border-radius: 10px;
@@ -268,12 +332,29 @@
             align-items: center;
             transition: all 0.15s;
         }
-        
-        .ingredient-card:hover { transform: translateX(2px); border-color: var(--accent); }
-        .ingredient-card.selected { background: var(--accent)20; border-color: var(--accent); }
-        .ingredient-name { font-size: 13px; font-weight: 500; color: var(--text-primary); }
-        .ingredient-qty { font-size: 11px; color: var(--accent); background: var(--accent)15; padding: 2px 10px; border-radius: 20px; font-weight: 600; }
-        
+
+        .ingredient-card:hover {
+            transform: translateX(2px);
+            border-color: var(--accent);
+        }
+        .ingredient-card.selected {
+            background: var(--accent)20;
+            border-color: var(--accent);
+        }
+        .ingredient-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        .ingredient-qty {
+            font-size: 11px;
+            color: var(--accent);
+            background: var(--accent)15;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-weight: 600;
+        }
+
         .selected-list {
             background: var(--bg-card);
             border-radius: 14px;
@@ -283,7 +364,7 @@
             overflow-y: auto;
             border: 1px solid var(--border-color);
         }
-        
+
         .selected-item {
             display: flex;
             justify-content: space-between;
@@ -296,11 +377,32 @@
             border: 1px solid transparent;
             transition: all 0.1s;
         }
-        
-        .selected-item:hover { border-color: var(--accent); }
-        .selected-item-name { font-size: 13px; font-weight: 500; color: var(--text-primary); }
-        .selected-item-qty { font-size: 11px; font-weight: 600; color: var(--accent); background: var(--accent)15; padding: 2px 10px; border-radius: 20px; }
-        
+
+        .selected-item:hover {
+            border-color: var(--accent);
+        }
+        .selected-item-name {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+        .selected-item-qty {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--accent);
+            background: var(--accent)15;
+            padding: 2px 10px;
+            border-radius: 20px;
+            border: none;
+            width: 80px;
+            text-align: center;
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+        .selected-item-qty:focus {
+            outline: 1px solid var(--accent);
+        }
+
         .remove-btn {
             background: var(--danger);
             border: none;
@@ -312,11 +414,18 @@
             font-size: 12px;
             transition: all 0.15s;
         }
-        
-        .remove-btn:hover { transform: scale(1.05); }
-        
-        .badges-group { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
-        
+
+        .remove-btn:hover {
+            transform: scale(1.05);
+        }
+
+        .badges-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 8px;
+        }
+
         .badge {
             padding: 6px 14px;
             border-radius: 100px;
@@ -328,12 +437,22 @@
             color: var(--text-secondary);
             transition: all 0.1s;
         }
-        
-        .badge:hover { transform: translateY(-1px); }
-        .badge.selected { background: var(--accent); color: #0a0a0a; border-color: var(--accent); }
-        
-        .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        
+
+        .badge:hover {
+            transform: translateY(-1px);
+        }
+        .badge.selected {
+            background: var(--accent);
+            color: #0a0a0a;
+            border-color: var(--accent);
+        }
+
+        .row-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
         .info-row {
             background: linear-gradient(135deg, var(--bg-card), var(--bg-primary));
             border-radius: 16px;
@@ -345,11 +464,24 @@
             gap: 15px;
             border: 1px solid var(--border-color);
         }
-        
-        .info-item { display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; color: var(--text-primary); }
-        .info-item i { color: var(--accent); font-size: 16px; }
-        .info-value { color: var(--accent); font-weight: 700; }
-        
+
+        .info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        .info-item i {
+            color: var(--accent);
+            font-size: 16px;
+        }
+        .info-value {
+            color: var(--accent);
+            font-weight: 700;
+        }
+
         .restaurant-panel {
             background: var(--bg-card);
             border-radius: 16px;
@@ -357,10 +489,21 @@
             margin-top: 20px;
             border: 1px solid var(--border-color);
         }
-        
-        .style-controls { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
-        .style-controls input, .style-controls select { flex: 1; min-width: 100px; padding: 8px 12px; font-size: 12px; }
-        
+
+        .style-controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .style-controls input,
+        .style-controls select {
+            flex: 1;
+            min-width: 100px;
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
         .card-color-controls {
             display: flex;
             gap: 12px;
@@ -368,13 +511,32 @@
             padding-top: 12px;
             border-top: 1px solid var(--border-color);
         }
-        
-        .card-color-controls .color-item { flex: 1; min-width: 110px; }
-        .card-color-controls label { display: block; font-size: 10px; color: var(--text-secondary); margin-bottom: 4px; }
-        .card-color-controls input { width: 100%; height: 32px; border-radius: 8px; border: 1px solid var(--border-color); cursor: pointer; }
-        
-        .upload-area { display: flex; gap: 16px; flex-wrap: wrap; margin: 20px 0; }
-        
+
+        .card-color-controls .color-item {
+            flex: 1;
+            min-width: 110px;
+        }
+        .card-color-controls label {
+            display: block;
+            font-size: 10px;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+        .card-color-controls input {
+            width: 100%;
+            height: 32px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+
+        .upload-area {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin: 20px 0;
+        }
+
         .upload-btn {
             background: var(--bg-card);
             border: 1px solid var(--border-color);
@@ -388,10 +550,17 @@
             gap: 8px;
             transition: all 0.15s;
         }
-        
-        .upload-btn:hover { background: var(--accent)10; border-color: var(--accent); }
-        .image-preview img { max-width: 70px; border-radius: 8px; margin-top: 8px; }
-        
+
+        .upload-btn:hover {
+            background: var(--accent)10;
+            border-color: var(--accent);
+        }
+        .image-preview img {
+            max-width: 70px;
+            border-radius: 8px;
+            margin-top: 8px;
+        }
+
         .generate-btn {
             width: 100%;
             padding: 16px;
@@ -405,9 +574,12 @@
             margin-top: 20px;
             transition: all 0.2s;
         }
-        
-        .generate-btn:hover { transform: translateY(-2px); filter: brightness(1.05); }
-        
+
+        .generate-btn:hover {
+            transform: translateY(-2px);
+            filter: brightness(1.05);
+        }
+
         .json-import {
             background: var(--bg-card);
             border-radius: 14px;
@@ -418,7 +590,7 @@
             flex-wrap: wrap;
             align-items: center;
         }
-        
+
         .record-item {
             background: var(--bg-card);
             border-radius: 12px;
@@ -430,8 +602,10 @@
             border: 1px solid var(--border-color);
             transition: all 0.15s;
         }
-        
-        .record-item:hover { border-left: 3px solid var(--accent); }
+
+        .record-item:hover {
+            border-left: 3px solid var(--accent);
+        }
         .record-actions button {
             background: var(--bg-primary);
             border: 1px solid var(--border-color);
@@ -442,7 +616,7 @@
             font-size: 11px;
             color: var(--accent);
         }
-        
+
         .debug-info {
             background: var(--bg-card);
             border-radius: 12px;
@@ -452,7 +626,7 @@
             margin-top: 16px;
             border: 1px solid var(--border-color);
         }
-        
+
         /* PDF Styles */
         .preview-container {
             margin-top: 40px;
@@ -462,25 +636,44 @@
             display: none;
             border: 1px solid var(--border-color);
         }
-        
+
         .recipe-card {
             max-width: 1000px;
             margin: 0 auto;
             background: #fffef7;
             border-radius: 28px;
             overflow: hidden;
-            box-shadow: 0 30px 45px -20px rgba(0,0,0,0.3);
+            box-shadow: 0 30px 45px -20px rgba(0, 0, 0, 0.3);
             min-height: 1050px;
             display: flex;
             flex-direction: column;
             position: relative;
         }
-        
-        .recipe-card::before { content: ""; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #fffef7; z-index: -2; }
-        
-        .card-header { position: relative; height: 260px; overflow: hidden; flex-shrink: 0; border-radius: 28px 28px 0 0; }
-        .card-header img { width: 100%; height: 100%; object-fit: cover; }
-        
+
+        .recipe-card::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #fffef7;
+            z-index: -2;
+        }
+
+        .card-header {
+            position: relative;
+            height: 260px;
+            overflow: hidden;
+            flex-shrink: 0;
+            border-radius: 28px 28px 0 0;
+        }
+        .card-header img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
         .header-overlay {
             position: absolute;
             bottom: 0;
@@ -488,15 +681,34 @@
             right: 0;
             padding: 20px 35px 16px;
         }
-        
-        .recipe-title { font-family: 'Playfair Display', serif; font-size: 38px; font-weight: 700; color: #e8d5a3; }
-        
-        .card-body { flex: 1; padding: 24px 30px 28px; display: flex; flex-direction: column; background: #fffef7; }
-        
-        .two-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; flex: 1; }
-        
-        .left-panel { border-right: 1px solid #ece2d4; padding-right: 24px; }
-        
+
+        .recipe-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 38px;
+            font-weight: 700;
+            color: #e8d5a3;
+        }
+
+        .card-body {
+            flex: 1;
+            padding: 24px 30px 28px;
+            display: flex;
+            flex-direction: column;
+            background: #fffef7;
+        }
+
+        .two-columns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            flex: 1;
+        }
+
+        .left-panel {
+            border-right: 1px solid #ece2d4;
+            padding-right: 24px;
+        }
+
         .section-emblem {
             font-weight: 600;
             font-size: 10px;
@@ -506,30 +718,115 @@
             padding-bottom: 4px;
             margin-bottom: 14px;
         }
-        
-        .ingredient-list { list-style: none; margin-bottom: 16px; }
-        .ingredient-list li { font-size: 11px; padding: 5px 0; display: flex; justify-content: space-between; border-bottom: 1px dashed #f0e7dc; }
-        
-        .allergen-section-pdf { margin: 12px 0 16px 0; border-top: 1px dashed #e7dac8; padding-top: 10px; }
-        .allergen-title-pdf { font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; margin-bottom: 8px; }
-        .allergen-badge-pdf { display: inline-block; padding: 4px 12px; border-radius: 30px; font-size: 9px; font-weight: 700; margin-right: 6px; margin-bottom: 6px; background: #f0e6da; }
-        
-        .info-strip { background: #fef3e2; border-radius: 14px; padding: 8px 14px; display: flex; justify-content: space-between; margin: 14px 0 16px; font-size: 10px; font-weight: 600; color: #6a4c27; }
-        
-        .garnish-section p { font-weight: 600; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 5px; }
-        .garnish-tags { display: flex; flex-wrap: wrap; gap: 6px; }
-        .garnish-tag { background: #f6ede2; padding: 3px 10px; border-radius: 40px; font-size: 9px; color: #4e3b28; }
-        
-        .right-panel { display: flex; flex-direction: column; }
-        
-        .restaurant-info { text-align: right; margin-bottom: 18px; border-bottom: 1px solid #e9decb; padding-bottom: 10px; }
-        .restaurant-name-display { font-size: 28px; font-weight: 700; letter-spacing: 2px; margin-bottom: 4px; }
-        .recipe-date { font-size: 9px; color: #9b7b5c; margin-top: 4px; }
-        
-        .method-card { border-radius: 22px; padding: 20px 24px; flex: 1; }
-        .method-card h3 { font-family: 'Playfair Display', serif; font-size: 15px; letter-spacing: 2px; margin-bottom: 14px; border-left: 3px solid; padding-left: 10px; }
-        
-        .method-steps { list-style: none; counter-reset: step-counter; }
+
+        .ingredient-list {
+            list-style: none;
+            margin-bottom: 16px;
+        }
+        .ingredient-list li {
+            font-size: 11px;
+            padding: 5px 0;
+            display: flex;
+            justify-content: space-between;
+            border-bottom: 1px dashed #f0e7dc;
+        }
+
+        .allergen-section-pdf {
+            margin: 12px 0 16px 0;
+            border-top: 1px dashed #e7dac8;
+            padding-top: 10px;
+        }
+        .allergen-title-pdf {
+            font-size: 9px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        .allergen-badge-pdf {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 9px;
+            font-weight: 700;
+            margin-right: 6px;
+            margin-bottom: 6px;
+            background: #f0e6da;
+        }
+
+        .info-strip {
+            background: #fef3e2;
+            border-radius: 14px;
+            padding: 8px 14px;
+            display: flex;
+            justify-content: space-between;
+            margin: 14px 0 16px;
+            font-size: 10px;
+            font-weight: 600;
+            color: #6a4c27;
+        }
+
+        .garnish-section p {
+            font-weight: 600;
+            font-size: 9px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        .garnish-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+        .garnish-tag {
+            background: #f6ede2;
+            padding: 3px 10px;
+            border-radius: 40px;
+            font-size: 9px;
+            color: #4e3b28;
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .restaurant-info {
+            text-align: right;
+            margin-bottom: 18px;
+            border-bottom: 1px solid #e9decb;
+            padding-bottom: 10px;
+        }
+        .restaurant-name-display {
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin-bottom: 4px;
+        }
+        .recipe-date {
+            font-size: 9px;
+            color: #9b7b5c;
+            margin-top: 4px;
+        }
+
+        .method-card {
+            border-radius: 22px;
+            padding: 20px 24px;
+            flex: 1;
+        }
+        .method-card h3 {
+            font-family: 'Playfair Display', serif;
+            font-size: 15px;
+            letter-spacing: 2px;
+            margin-bottom: 14px;
+            border-left: 3px solid;
+            padding-left: 10px;
+        }
+
+        .method-steps {
+            list-style: none;
+            counter-reset: step-counter;
+        }
         .method-steps li {
             counter-increment: step-counter;
             margin-bottom: 8px;
@@ -552,9 +849,14 @@
             font-size: 9px;
             flex-shrink: 0;
         }
-        
-        .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
-        
+
+        .badge-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 12px 0;
+        }
+
         .logo-row {
             display: flex;
             justify-content: space-between;
@@ -563,12 +865,25 @@
             padding-top: 16px;
             border-top: 2px solid #c6a858;
         }
-        
-        .logo-box { text-align: center; flex: 1; }
-        .logo-box img { max-height: 60px; max-width: 150px; object-fit: contain; }
-        
-        .footer-note { margin-top: 16px; text-align: center; font-size: 8px; color: #b9ae9a; padding-bottom: 8px; }
-        
+
+        .logo-box {
+            text-align: center;
+            flex: 1;
+        }
+        .logo-box img {
+            max-height: 60px;
+            max-width: 150px;
+            object-fit: contain;
+        }
+
+        .footer-note {
+            margin-top: 16px;
+            text-align: center;
+            font-size: 8px;
+            color: #b9ae9a;
+            padding-bottom: 8px;
+        }
+
         .loading-spinner {
             display: inline-block;
             width: 14px;
@@ -578,565 +893,768 @@
             border-radius: 50%;
             animation: spin 0.6s linear infinite;
         }
-        
-        @keyframes spin { to { transform: rotate(360deg); } }
-        
-        @media (max-width: 1000px) {
-            .main-grid { grid-template-columns: 1fr; }
-            .sidebar { position: static; }
-            .app-container { padding: 16px; }
-            .two-columns { grid-template-columns: 1fr; }
-            .left-panel { border-right: none; padding-right: 0; }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
         }
-        
-        .fa, .fas, .far { margin-right: 6px; }
-        .empty-state { color: var(--text-secondary); text-align: center; padding: 20px; font-size: 13px; }
+
+        @media (max-width: 1000px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            .sidebar {
+                position: static;
+            }
+            .app-container {
+                padding: 16px;
+            }
+            .two-columns {
+                grid-template-columns: 1fr;
+            }
+            .left-panel {
+                border-right: none;
+                padding-right: 0;
+            }
+        }
+
+        .fa,
+        .fas,
+        .far {
+            margin-right: 6px;
+        }
+        .empty-state {
+            color: var(--text-secondary);
+            text-align: center;
+            padding: 20px;
+            font-size: 13px;
+        }
+
+        /* custom ingredient adder */
+        .custom-adder {
+            display: flex;
+            gap: 8px;
+            margin: 16px 0 8px 0;
+            flex-wrap: wrap;
+        }
+        .custom-adder input {
+            flex: 2;
+            min-width: 120px;
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1px solid var(--border-color);
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+        .custom-adder button {
+            padding: 8px 16px;
+            border-radius: 10px;
+            border: none;
+            background: var(--accent);
+            color: #0a0a0a;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        .custom-adder button:hover {
+            filter: brightness(1.05);
+        }
     </style>
 </head>
 <body>
-<div class="app-container">
-    <div class="header">
-        <div class="logo-area">
-            <h1>THE CHEDI</h1>
-            <p>SIGNATURE RECIPE STUDIO</p>
+    <div class="app-container">
+        <div class="header">
+            <div class="logo-area">
+                <h1>THE CHEDI</h1>
+                <p>SIGNATURE RECIPE STUDIO</p>
+            </div>
+            <div class="status-badge" id="loadStatus"><i class="fas fa-cloud"></i> Initializing...</div>
         </div>
-        <div class="status-badge" id="loadStatus"><i class="fas fa-cloud"></i> Initializing...</div>
-    </div>
-    
-    <div class="action-bar">
-        <button class="btn btn-secondary" id="fetchFirebaseBtn"><i class="fas fa-database"></i> Load from Cloud</button>
-        <button class="btn btn-primary" id="saveRecipeBtn"><i class="fas fa-save"></i> Save Recipe</button>
-        <button class="btn btn-danger" id="exportPdfBtn"><i class="fas fa-file-pdf"></i> Export PDF</button>
-        <button class="btn btn-dark" id="clearBtn"><i class="fas fa-plus"></i> New Recipe</button>
-    </div>
-    
-    <div class="main-grid">
-        <div class="sidebar">
-            <h3><i class="fas fa-folder"></i> INGREDIENT LIBRARIES</h3>
-            <div class="categories-scroll" id="categoriesGrid"><div class="loading-spinner"></div> Loading...</div>
-            <div class="json-import">
-                <input type="text" id="jsonUrlInput" placeholder="JSON URL or filename" style="flex:1;">
-                <button class="btn btn-dark" id="fetchJsonBtn" style="padding:8px 12px;"><i class="fas fa-link"></i></button>
-                <label class="btn btn-dark" style="padding:8px 12px; cursor:pointer;"><i class="fas fa-upload"></i><input type="file" id="jsonFileUpload" accept=".json" style="display:none"></label>
-            </div>
-            <button class="btn btn-dark" id="refreshCategoriesBtn" style="width:100%;"><i class="fas fa-sync-alt"></i> Reload All JSON</button>
-        </div>
-        
-        <div class="content">
-            <div class="tabs">
-                <button class="tab active" data-tab="builder"><i class="fas fa-magic"></i> Recipe Builder</button>
-                <button class="tab" data-tab="records"><i class="fas fa-cloud"></i> Cloud Recipes</button>
-            </div>
-            
-            <div class="tab-content active" id="tab-builder">
-                <div class="row-2" style="margin-bottom: 20px;">
-                    <div><label class="form-label"><i class="fas fa-utensils"></i> DISH NAME</label><input type="text" id="recipeTitle" class="recipe-title-input" value="Beef Bourguignon"></div>
-                    <div><label class="form-label"><i class="fas fa-clock"></i> PREP & SERVINGS</label><div class="row-2" style="gap: 12px;"><input type="text" id="prepTimeValue" value="25 min"><input type="text" id="servingsValue" value="4 guests"></div></div>
-                </div>
-                
-                <div class="info-row">
-                    <div class="info-item"><i class="fas fa-hourglass-half"></i> Prep: <span class="info-value" id="prepDisplay">25 min</span></div>
-                    <div class="info-item"><i class="fas fa-users"></i> Serves: <span class="info-value" id="servingsDisplay">4 guests</span></div>
-                    <div class="info-item"><i class="fas fa-pepper-hot"></i> Spice: <span class="info-value" id="spiceDisplay">Extra Hot</span></div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label"><i class="fas fa-search"></i> INGREDIENTS LIBRARY</label>
-                    <input type="text" id="searchInput" class="search-input" placeholder="Search ingredients...">
-                    <div id="ingredientList" class="ingredients-grid"></div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label"><i class="fas fa-list"></i> SELECTED INGREDIENTS <span style="font-size:9px;">(drag to reorder)</span></label>
-                    <div class="selected-list" id="selectedItemsList"></div>
-                </div>
-                
-                <div class="row-2" style="gap: 20px; margin-bottom: 20px;">
-                    <div><label class="form-label">ALLERGENS</label><div class="badges-group" id="allergensGroup"></div></div>
-                    <div><label class="form-label">FOOD TYPE</label><div class="badges-group" id="foodTypesGroup"></div></div>
-                </div>
-                <div class="row-2" style="gap: 20px; margin-bottom: 20px;">
-                    <div><label class="form-label">SPICE LEVEL</label><div class="badges-group" id="spiceGroup"></div></div>
-                    <div><label class="form-label">GARNISH</label><div class="badges-group" id="garnishGroup"></div></div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label">METHOD</label>
-                    <textarea id="methodSteps" class="method-textarea" placeholder="Step by step instructions...">1. Season beef generously with salt and pepper.
-2. Sear in hot pan until golden brown on all sides.
-3. Add aromatics and deglaze with red wine.
-4. Add beef stock and simmer for 2 hours.
-5. Finish with fresh herbs and serve hot.</textarea>
-                </div>
-                
-                <div class="restaurant-panel">
-                    <label class="form-label">RESTAURANT IDENTITY</label>
-                    <div class="style-controls">
-                        <input type="text" id="restaurantNameInput" value="THE CHEDI">
-                        <input type="color" id="restaurantColor" value="#c6a858">
-                        <select id="restaurantFont">
-                            <option value="'Playfair Display', serif">Playfair Display</option>
-                            <option value="'Great Vibes', cursive">Great Vibes</option>
-                            <option value="'Inter', sans-serif">Inter</option>
-                        </select>
-                        <select id="restaurantFormat">
-                            <option value="uppercase">UPPERCASE</option>
-                            <option value="capitalize">Capitalize</option>
-                            <option value="normal">Normal</option>
-                        </select>
-                    </div>
-                    
-                    <div class="card-color-controls">
-                        <div class="color-item"><label><i class="fas fa-palette"></i> Accent Color</label><input type="color" id="cardAccentColor" value="#c6a858"></div>
-                        <div class="color-item"><label><i class="fas fa-fill-drip"></i> Header Overlay</label><input type="color" id="headerOverlayColor" value="#000000"></div>
-                        <div class="color-item"><label><i class="fas fa-square"></i> Method Card BG</label><input type="color" id="methodCardBgColor" value="#1a1a2e"></div>
-                        <div class="color-item"><label><i class="fas fa-font"></i> Method Text</label><input type="color" id="methodTextColor" value="#f7f1e3"></div>
-                    </div>
-                </div>
-                
-                <div class="upload-area">
-                    <div><label class="upload-btn"><i class="fas fa-image"></i> Plate Image<input type="file" id="plateImageUpload" accept="image/*" style="display:none"></label><div id="plateImagePreview" class="image-preview"></div></div>
-                    <div><label class="upload-btn"><i class="fas fa-trademark"></i> Logo Left<input type="file" id="logo1Upload" accept="image/*" style="display:none"></label><div id="logo1Preview" class="image-preview"></div></div>
-                    <div><label class="upload-btn"><i class="fas fa-certificate"></i> Logo Right<input type="file" id="logo2Upload" accept="image/*" style="display:none"></label><div id="logo2Preview" class="image-preview"></div></div>
-                </div>
-                
-                <button class="generate-btn" id="generateCardBtn"><i class="fas fa-star"></i> GENERATE RECIPE CARD</button>
-                <div class="debug-info" id="debugInfo"></div>
-            </div>
-            
-            <div class="tab-content" id="tab-records">
-                <div id="savedRecipesContainer" style="padding: 20px; text-align: center; color: var(--text-secondary);">
-                    <i class="fas fa-cloud"></i> Click "Load from Cloud" to retrieve saved recipes
-                </div>
-            </div>
-        </div>
-    </div>
-    
-    <div id="previewContainer" class="preview-container"></div>
-</div>
 
-<button class="theme-toggle-btn" id="themeToggle"><i class="fas fa-moon"></i> Dark/Light</button>
+        <div class="action-bar">
+            <button class="btn btn-secondary" id="fetchFirebaseBtn"><i class="fas fa-database"></i> Load from Cloud</button>
+            <button class="btn btn-primary" id="saveRecipeBtn"><i class="fas fa-save"></i> Save Recipe</button>
+            <button class="btn btn-danger" id="exportPdfBtn"><i class="fas fa-file-pdf"></i> Export PDF</button>
+            <button class="btn btn-dark" id="clearBtn"><i class="fas fa-plus"></i> New Recipe</button>
+        </div>
 
-<script>
-    // Firebase Config
-    const firebaseConfig = {
-        apiKey: "AIzaSyDzrkfU6rDPxiBjxWLfHj-Kt_3K20Eg2oo",
-        authDomain: "recipe-card-templates.firebaseapp.com",
-        databaseURL: "https://recipe-card-templates-default-rtdb.firebaseio.com",
-        projectId: "recipe-card-templates",
-        storageBucket: "recipe-card-templates.firebasestorage.app",
-        messagingSenderId: "256616321405",
-        appId: "1:256616321405:web:5d6c6dd8cbecc0d4627c14"
-    };
-    
-    let db, firebaseInitialized = false;
-    try {
-        if (firebase.apps.length === 0) firebase.initializeApp(firebaseConfig);
-        db = firebase.firestore();
-        firebaseInitialized = true;
-        console.log("Firebase initialized");
-    } catch(e) { console.warn(e); }
-    
-    let categories = {};
-    let currentCategory = "";
-    let selectedIngredients = [];
-    let selectedAllergens = ["Gluten", "Dairy", "Nuts"];
-    let selectedFoodTypes = ["Main Course"];
-    let selectedSpice = "Extra Hot";
-    let selectedGarnishes = ["Beef bacon crumble", "Parsley gel", "Confit tomatoes"];
-    let plateImageData = null, logo1Data = null, logo2Data = null, dragIndex = null;
-    
-    const allergensList = ["Gluten", "Dairy", "Nuts", "Eggs", "Shellfish", "Soy", "Sesame", "Sulfites", "Mustard", "Celery", "Fish", "Peanuts"];
-    const foodTypesList = ["Main Course", "Starter", "Salad", "Seafood", "Vegetarian", "Grill", "Pasta", "Soup", "Dessert", "Breakfast", "Appetizer", "Side Dish", "Bread", "Tapas", "BBQ", "Stew", "Curry"];
-    const spiceLevelsList = ["Mild", "Medium", "Hot", "Extra Hot"];
-    const garnishesList = ["Beef bacon crumble", "Parsley gel", "Confit tomatoes", "Microgreens", "Edible flowers", "Lemon zest", "Fresh herbs", "Toasted nuts"];
-    
-    const allJsonFiles = ["beef.json", "chocolate.json", "dairy.json", "Desserts.json", "food_colors.json", "frozen.json", "grains.json", "ice_cream.json", "jams.json", "juices.json", "nuts_dried.json", "oil.json", "pickles.json", "poultry.json", "seafood.json", "seeds.json", "snack.json", "Spices.json", "Vegetables.json"];
-    
-    const categoryDisplayNames = {
-        "beef": "🥩 Beef", "chocolate": "🍫 Chocolate", "dairy": "🧀 Dairy", "desserts": "🍰 Desserts",
-        "food_colors": "🎨 Colors", "frozen": "❄️ Frozen", "grains": "🌾 Grains", "ice_cream": "🍦 Ice Cream",
-        "jams": "🍯 Jams", "juices": "🧃 Juices", "nuts_dried": "🥜 Nuts", "oil": "🫒 Oils",
-        "pickles": "🥒 Pickles", "poultry": "🍗 Poultry", "seafood": "🦐 Seafood", "seeds": "🌱 Seeds",
-        "snack": "🍿 Snacks", "spices": "🌿 Spices", "vegetables": "🥬 Vegetables"
-    };
-    
-    async function autoLoadAllJsonFiles() {
-        const grid = document.getElementById('categoriesGrid');
-        if(grid) grid.innerHTML = '<div class="loading-spinner"></div> Loading JSON files...';
-        let loadedCount = 0, failedCount = 0;
-        const newCategories = {};
-        
-        for (const filename of allJsonFiles) {
-            try {
-                const response = await fetch(`datas/${filename}`);
-                if (!response.ok) { failedCount++; continue; }
-                const data = await response.json();
-                const categoryKey = filename.replace('.json', '').toLowerCase().replace(/\s+/g, '_');
-                let displayName = categoryDisplayNames[categoryKey] || data.name || categoryKey;
-                let iconUrl = data.icon || `https://cdn-icons-png.flaticon.com/512/1046/1046784.png`;
-                let items = data.items || data.ingredients || data.products || [];
-                if(items && items.length > 0){
-                    newCategories[categoryKey] = {
-                        name: displayName, icon: iconUrl,
-                        items: items.map(item => {
-                            if (typeof item === 'string') return { name: item, qty: "as needed" };
-                            return { name: item.name || item, qty: item.qty || item.quantity || "to taste" };
-                        })
-                    };
-                    loadedCount++;
-                } else { failedCount++; }
-            } catch(e) { failedCount++; }
-        }
-        
-        if(loadedCount === 0){
-            newCategories["vegetables"] = { name: "🥬 Vegetables", icon: "https://cdn-icons-png.flaticon.com/512/2398/2398841.png", items: [{name:"Carrot",qty:"100g"},{name:"Onion",qty:"1pc"},{name:"Garlic",qty:"3 cloves"}] };
-            newCategories["beef"] = { name: "🥩 Beef", icon: "https://cdn-icons-png.flaticon.com/512/2964/2964743.png", items: [{name:"Beef Ribeye",qty:"200g"},{name:"Beef Stock",qty:"300ml"},{name:"Beef Fillet",qty:"200g"},{name:"Beef Shoulder",qty:"200g"}] };
-            loadedCount = 2;
-        }
-        
-        categories = newCategories;
-        currentCategory = Object.keys(categories)[0] || "";
-        renderCategories();
-        renderIngredientList();
-        document.getElementById('loadStatus').innerHTML = `<i class="fas fa-check-circle"></i> ${loadedCount} categories loaded | Firebase ${firebaseInitialized ? '✓' : '✗'}`;
-        document.getElementById('debugInfo').innerHTML = `<i class="fas fa-folder"></i> /datas/ folder: ${loadedCount} loaded, ${failedCount} failed. Click on any ingredient to add to recipe.`;
-    }
-    
-    function renderCategories() {
-        const container = document.getElementById('categoriesGrid');
-        if(!container) return;
-        container.innerHTML = '';
-        for (const [key, cat] of Object.entries(categories)) {
-            container.innerHTML += `<div class="category-item ${currentCategory === key ? 'active' : ''}" onclick="setCategory('${key}')">
-                <img class="category-icon" src="${cat.icon}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1046/1046784.png'">
-                <div class="category-info"><div class="category-name">${escapeHtml(cat.name)}</div><div class="category-count">${cat.items.length} items</div></div>
-            </div>`;
-        }
-    }
-    
-    window.setCategory = function(cat) { currentCategory = cat; renderCategories(); renderIngredientList(); };
-    
-    function renderIngredientList() {
-        const container = document.getElementById('ingredientList');
-        if(!container) return;
-        const cat = categories[currentCategory];
-        if(!cat?.items || cat.items.length === 0) { 
-            container.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle"></i> No ingredients in this category</div>'; 
-            return; 
-        }
-        const term = document.getElementById('searchInput').value.toLowerCase();
-        const filtered = cat.items.filter(i => i.name.toLowerCase().includes(term));
-        if(filtered.length === 0){
-            container.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i> No matching ingredients</div>';
-            return;
-        }
-        container.innerHTML = filtered.map(item => {
-            const isSelected = selectedIngredients.some(s => s.name === item.name);
-            return `<div class="ingredient-card ${isSelected ? 'selected' : ''}" onclick="toggleIngredient('${escapeHtml(item.name)}','${escapeHtml(item.qty)}')">
-                <span class="ingredient-name">${escapeHtml(item.name)}</span>
-                <span class="ingredient-qty">${escapeHtml(item.qty)}</span>
-            </div>`;
-        }).join('');
-    }
-    
-    window.toggleIngredient = function(name, qty) {
-        const existingIndex = selectedIngredients.findIndex(i => i.name === name);
-        if (existingIndex === -1) {
-            selectedIngredients.push({ name: name, qty: qty });
-        } else {
-            selectedIngredients.splice(existingIndex, 1);
-        }
-        renderIngredientList();
-        renderSelectedList();
-    };
-    
-    function renderSelectedList() {
-        const container = document.getElementById('selectedItemsList');
-        if(!container) return;
-        if(selectedIngredients.length === 0) { 
-            container.innerHTML = '<div class="empty-state"><i class="fas fa-hand-pointer"></i> Click ingredients above to add them to your recipe</div>'; 
-            return; 
-        }
-        container.innerHTML = selectedIngredients.map((item, i) => `
-            <div class="selected-item" draggable="true" ondragstart="dragStart(event, ${i})" ondragend="dragEnd(event)" ondragover="dragOver(event)" ondrop="drop(event, ${i})">
-                <span><i class="fas fa-grip-vertical" style="color:var(--text-secondary); margin-right:10px; cursor:grab;"></i><span class="selected-item-name">${escapeHtml(item.name)}</span></span>
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <span class="selected-item-qty">${escapeHtml(item.qty)}</span>
-                    <button class="remove-btn" onclick="removeIngredient(${i})" title="Remove ingredient">✕</button>
+        <div class="main-grid">
+            <div class="sidebar">
+                <h3><i class="fas fa-folder"></i> INGREDIENT LIBRARIES</h3>
+                <div class="categories-scroll" id="categoriesGrid">
+                    <div class="loading-spinner"></div> Loading...
+                </div>
+                <div class="json-import">
+                    <input type="text" id="jsonUrlInput" placeholder="JSON URL or filename" style="flex:1;">
+                    <button class="btn btn-dark" id="fetchJsonBtn" style="padding:8px 12px;"><i class="fas fa-link"></i></button>
+                    <label class="btn btn-dark" style="padding:8px 12px; cursor:pointer;"><i class="fas fa-upload"></i><input type="file" id="jsonFileUpload" accept=".json" style="display:none"></label>
+                </div>
+                <button class="btn btn-dark" id="refreshCategoriesBtn" style="width:100%;"><i class="fas fa-sync-alt"></i> Reload All JSON</button>
+            </div>
+
+            <div class="content">
+                <div class="tabs">
+                    <button class="tab active" data-tab="builder"><i class="fas fa-magic"></i> Recipe Builder</button>
+                    <button class="tab" data-tab="records"><i class="fas fa-cloud"></i> Cloud Recipes</button>
+                </div>
+
+                <div class="tab-content active" id="tab-builder">
+                    <div class="row-2" style="margin-bottom: 20px;">
+                        <div><label class="form-label"><i class="fas fa-utensils"></i> DISH NAME</label><input type="text" id="recipeTitle" class="recipe-title-input" value="Beef Bourguignon"></div>
+                        <div><label class="form-label"><i class="fas fa-clock"></i> PREP & SERVINGS</label>
+                            <div class="row-2" style="gap: 12px;"><input type="text" id="prepTimeValue" value="25 min"><input type="text" id="servingsValue" value="4 guests"></div>
+                        </div>
+                    </div>
+
+                    <div class="info-row">
+                        <div class="info-item"><i class="fas fa-hourglass-half"></i> Prep: <span class="info-value" id="prepDisplay">25 min</span></div>
+                        <div class="info-item"><i class="fas fa-users"></i> Serves: <span class="info-value" id="servingsDisplay">4 guests</span></div>
+                        <div class="info-item"><i class="fas fa-pepper-hot"></i> Spice: <span class="info-value" id="spiceDisplay">Extra Hot</span></div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-search"></i> INGREDIENTS LIBRARY</label>
+                        <input type="text" id="searchInput" class="search-input" placeholder="Search ingredients...">
+                        <div id="ingredientList" class="ingredients-grid"></div>
+                    </div>
+
+                    <!-- custom ingredient adder -->
+                    <div class="custom-adder">
+                        <input type="text" id="customIngredientName" placeholder="Ingredient name (e.g. Truffle oil)">
+                        <input type="text" id="customIngredientQty" placeholder="Qty (e.g. 2 tbsp)">
+                        <button id="addCustomIngredientBtn"><i class="fas fa-plus"></i> Add</button>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label"><i class="fas fa-list"></i> SELECTED INGREDIENTS <span style="font-size:9px;">(drag to reorder, click qty to edit)</span></label>
+                        <div class="selected-list" id="selectedItemsList"></div>
+                    </div>
+
+                    <div class="row-2" style="gap: 20px; margin-bottom: 20px;">
+                        <div><label class="form-label">ALLERGENS</label>
+                            <div class="badges-group" id="allergensGroup"></div>
+                        </div>
+                        <div><label class="form-label">FOOD TYPE</label>
+                            <div class="badges-group" id="foodTypesGroup"></div>
+                        </div>
+                    </div>
+                    <div class="row-2" style="gap: 20px; margin-bottom: 20px;">
+                        <div><label class="form-label">SPICE LEVEL</label>
+                            <div class="badges-group" id="spiceGroup"></div>
+                        </div>
+                        <div><label class="form-label">GARNISH</label>
+                            <div class="badges-group" id="garnishGroup"></div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">METHOD</label>
+                        <textarea id="methodSteps" class="method-textarea" placeholder="Step by step instructions...">1. Season beef generously with salt and pepper.
+                        2. Sear in hot pan until golden brown on all sides.
+                        3. Add aromatics and deglaze with red wine.
+                        4. Add beef stock and simmer for 2 hours.
+                        5. Finish with fresh herbs and serve hot.</textarea>
+                    </div>
+
+                    <div class="restaurant-panel">
+                        <label class="form-label">RESTAURANT IDENTITY</label>
+                        <div class="style-controls">
+                            <input type="text" id="restaurantNameInput" value="THE CHEDI">
+                            <input type="color" id="restaurantColor" value="#c6a858">
+                            <select id="restaurantFont">
+                                <option value="'Playfair Display', serif">Playfair Display</option>
+                                <option value="'Great Vibes', cursive">Great Vibes</option>
+                                <option value="'Inter', sans-serif">Inter</option>
+                            </select>
+                            <select id="restaurantFormat">
+                                <option value="uppercase">UPPERCASE</option>
+                                <option value="capitalize">Capitalize</option>
+                                <option value="normal">Normal</option>
+                            </select>
+                        </div>
+
+                        <div class="card-color-controls">
+                            <div class="color-item"><label><i class="fas fa-palette"></i> Accent Color</label><input type="color" id="cardAccentColor" value="#c6a858"></div>
+                            <div class="color-item"><label><i class="fas fa-fill-drip"></i> Header Overlay</label><input type="color" id="headerOverlayColor" value="#000000"></div>
+                            <div class="color-item"><label><i class="fas fa-square"></i> Method Card BG</label><input type="color" id="methodCardBgColor" value="#1a1a2e"></div>
+                            <div class="color-item"><label><i class="fas fa-font"></i> Method Text</label><input type="color" id="methodTextColor" value="#f7f1e3"></div>
+                        </div>
+                    </div>
+
+                    <div class="upload-area">
+                        <div><label class="upload-btn"><i class="fas fa-image"></i> Plate Image<input type="file" id="plateImageUpload" accept="image/*" style="display:none"></label>
+                            <div id="plateImagePreview" class="image-preview"></div>
+                        </div>
+                        <div><label class="upload-btn"><i class="fas fa-trademark"></i> Logo Left<input type="file" id="logo1Upload" accept="image/*" style="display:none"></label>
+                            <div id="logo1Preview" class="image-preview"></div>
+                        </div>
+                        <div><label class="upload-btn"><i class="fas fa-certificate"></i> Logo Right<input type="file" id="logo2Upload" accept="image/*" style="display:none"></label>
+                            <div id="logo2Preview" class="image-preview"></div>
+                        </div>
+                    </div>
+
+                    <button class="generate-btn" id="generateCardBtn"><i class="fas fa-star"></i> GENERATE RECIPE CARD</button>
+                    <div class="debug-info" id="debugInfo"></div>
+                </div>
+
+                <div class="tab-content" id="tab-records">
+                    <div id="savedRecipesContainer" style="padding: 20px; text-align: center; color: var(--text-secondary);">
+                        <i class="fas fa-cloud"></i> Click "Load from Cloud" to retrieve saved recipes
+                    </div>
                 </div>
             </div>
-        `).join('');
-    }
-    
-    window.removeIngredient = function(index) { 
-        selectedIngredients.splice(index, 1); 
-        renderSelectedList(); 
-        renderIngredientList(); 
-    };
-    
-    function dragStart(e, i) { dragIndex = i; e.dataTransfer.effectAllowed = 'move'; }
-    function dragOver(e) { e.preventDefault(); }
-    function drop(e, target) { 
-        e.preventDefault(); 
-        if(dragIndex !== null && dragIndex !== target) { 
-            const moved = selectedIngredients[dragIndex]; 
-            selectedIngredients.splice(dragIndex, 1); 
-            selectedIngredients.splice(target, 0, moved); 
-            dragIndex = null; 
-            renderSelectedList(); 
-        } 
-    }
-    function dragEnd(e) { dragIndex = null; }
-    window.dragStart = dragStart; window.dragOver = dragOver; window.drop = drop; window.dragEnd = dragEnd;
-    
-    function updateInfoDisplay() {
-        document.getElementById('prepDisplay').innerText = document.getElementById('prepTimeValue').value;
-        document.getElementById('servingsDisplay').innerText = document.getElementById('servingsValue').value;
-        document.getElementById('spiceDisplay').innerText = selectedSpice;
-    }
-    
-    function renderAllergens() { 
-        document.getElementById('allergensGroup').innerHTML = allergensList.map(a => `<span class="badge ${selectedAllergens.includes(a) ? 'selected' : ''}" onclick="toggleAllergen('${a}')">⚠️ ${a}</span>`).join('');
-    }
-    
-    function renderFoodTypes() { 
-        document.getElementById('foodTypesGroup').innerHTML = foodTypesList.map(f => `<span class="badge ${selectedFoodTypes.includes(f) ? 'selected' : ''}" onclick="toggleFoodType('${f}')">🍽️ ${f}</span>`).join('');
-    }
-    
-    function renderSpiceLevels() { 
-        document.getElementById('spiceGroup').innerHTML = spiceLevelsList.map(s => `<span class="badge ${selectedSpice === s ? 'selected' : ''}" onclick="setSpice('${s}')">🌶️ ${s}</span>`).join('');
-        updateInfoDisplay();
-    }
-    
-    function renderGarnishes() { 
-        document.getElementById('garnishGroup').innerHTML = garnishesList.map(g => `<span class="badge ${selectedGarnishes.includes(g) ? 'selected' : ''}" onclick="toggleGarnish('${g}')">✨ ${g}</span>`).join('');
-    }
-    
-    window.toggleAllergen = function(a) { 
-        selectedAllergens.includes(a) ? selectedAllergens = selectedAllergens.filter(x => x !== a) : selectedAllergens.push(a); 
-        renderAllergens(); 
-    };
-    window.toggleFoodType = function(f) { 
-        selectedFoodTypes.includes(f) ? selectedFoodTypes = selectedFoodTypes.filter(x => x !== f) : selectedFoodTypes.push(f); 
-        renderFoodTypes(); 
-    };
-    window.setSpice = function(s) { 
-        selectedSpice = s; 
-        renderSpiceLevels(); 
-        updateInfoDisplay();
-    };
-    window.toggleGarnish = function(g) { 
-        selectedGarnishes.includes(g) ? selectedGarnishes = selectedGarnishes.filter(x => x !== g) : selectedGarnishes.push(g); 
-        renderGarnishes(); 
-    };
-    
-    document.getElementById('prepTimeValue').addEventListener('input', updateInfoDisplay);
-    document.getElementById('servingsValue').addEventListener('input', updateInfoDisplay);
-    
-    document.getElementById('plateImageUpload').onchange = e => { const f = e.target.files[0]; if(f){ const r = new FileReader(); r.onload = ev => { plateImageData = ev.target.result; document.getElementById('plateImagePreview').innerHTML = `<img src="${plateImageData}">`; }; r.readAsDataURL(f); } };
-    document.getElementById('logo1Upload').onchange = e => { const f = e.target.files[0]; if(f){ const r = new FileReader(); r.onload = ev => { logo1Data = ev.target.result; document.getElementById('logo1Preview').innerHTML = `<img src="${logo1Data}">`; }; r.readAsDataURL(f); } };
-    document.getElementById('logo2Upload').onchange = e => { const f = e.target.files[0]; if(f){ const r = new FileReader(); r.onload = ev => { logo2Data = ev.target.result; document.getElementById('logo2Preview').innerHTML = `<img src="${logo2Data}">`; }; r.readAsDataURL(f); } };
-    
-    document.getElementById('fetchJsonBtn').onclick = async () => {
-        const url = document.getElementById('jsonUrlInput').value;
-        if(!url) return alert('Enter URL');
-        try {
-            const resp = await fetch(url.startsWith('http') ? url : `datas/${url}`);
-            const data = await resp.json();
-            const catName = prompt('Category name:', 'Imported');
-            if(catName){
-                const key = catName.toLowerCase().replace(/\s+/g, '_');
-                let items = data.items || data;
-                if(!Array.isArray(items)) items = [];
-                categories[key] = { name: catName, icon: 'https://cdn-icons-png.flaticon.com/512/1046/1046784.png', items: items.map(i => ({ name: i.name || i, qty: i.qty || "as needed" })) };
-                renderCategories();
-                alert(`Imported ${items.length} items`);
-            }
-        } catch(err) { alert('Failed to load: ' + err.message); }
-    };
-    
-    document.getElementById('jsonFileUpload').onchange = e => {
-        const file = e.target.files[0];
-        if(file){
-            const reader = new FileReader();
-            reader.onload = ev => {
-                try {
-                    const data = JSON.parse(ev.target.result);
-                    const catName = prompt('Category name:', file.name.replace('.json', ''));
-                    if(catName){
-                        const key = catName.toLowerCase().replace(/\s+/g, '_');
-                        let items = data.items || data;
-                        if(!Array.isArray(items)) items = [];
-                        categories[key] = { name: catName, icon: 'https://cdn-icons-png.flaticon.com/512/1046/1046784.png', items: items.map(i => ({ name: i.name || i, qty: i.qty || "as needed" })) };
-                        renderCategories();
-                        alert(`Imported ${items.length} items to "${catName}"`);
-                    }
-                } catch(err) { alert('Invalid JSON file'); }
-            };
-            reader.readAsText(file);
-        }
-    };
-    
-    function generateAndPreview() {
-        const recipeName = document.getElementById('recipeTitle').value;
-        const method = document.getElementById('methodSteps').value;
-        const prep = document.getElementById('prepTimeValue').value;
-        const servings = document.getElementById('servingsValue').value;
-        let restName = document.getElementById('restaurantNameInput').value;
-        const restColor = document.getElementById('restaurantColor').value;
-        const font = document.getElementById('restaurantFont').value;
-        const format = document.getElementById('restaurantFormat').value;
-        const cardAccentColor = document.getElementById('cardAccentColor').value;
-        const headerOverlayColor = document.getElementById('headerOverlayColor').value;
-        const methodCardBgColor = document.getElementById('methodCardBgColor').value;
-        const methodTextColor = document.getElementById('methodTextColor').value;
-        
-        if(format === 'uppercase') restName = restName.toUpperCase();
-        if(format === 'capitalize') restName = restName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
-        const methodLines = method.split('\n').filter(l => l.trim());
-        const hero = plateImageData || `https://placehold.co/1200x400/1a1a2e/${cardAccentColor.replace('#', '')}?text=${encodeURIComponent(recipeName)}`;
-        const dateValue = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-        const allergensHtml = selectedAllergens.length ? `<div class="allergen-section-pdf"><div class="allergen-title-pdf" style="color:${cardAccentColor};">⚠️ ALLERGEN INFORMATION</div><div>${selectedAllergens.map(a => `<span class="allergen-badge-pdf">⚠️ ${escapeHtml(a)}</span>`).join('')}</div></div>` : '';
-        const overlayGradient = `linear-gradient(0deg, ${headerOverlayColor}dd 0%, ${headerOverlayColor}00 100%)`;
-        
-        const previewHtml = `<div class="recipe-card" id="masterRecipeCard">
-            <div class="card-header" style="background: ${methodCardBgColor};"><img src="${hero}" alt="${escapeHtml(recipeName)}" crossorigin="anonymous"><div class="header-overlay" style="background: ${overlayGradient};"><div class="recipe-title">${escapeHtml(recipeName)}</div></div></div>
-            <div class="card-body"><div class="two-columns">
-                <div class="left-panel"><div class="section-emblem" style="color: ${cardAccentColor}; border-bottom-color: ${cardAccentColor};">INGREDIENTS</div>
-                <ul class="ingredient-list">${selectedIngredients.map(i => `<li><span>${escapeHtml(i.name)}</span><span style="color:${cardAccentColor};">${escapeHtml(i.qty)}</span></li>`).join('')}</ul>
-                ${allergensHtml}
-                <div class="badge-row">${selectedFoodTypes.map(f => `<span style="background:${cardAccentColor}; color:#1a1a2e; padding:3px 12px; border-radius:20px; font-size:9px;">🍽️ ${escapeHtml(f)}</span>`).join('')}<span style="background:#991b1b; color:white; padding:3px 12px; border-radius:20px; font-size:9px;">🌶️ ${escapeHtml(selectedSpice)}</span></div>
-                <div class="info-strip"><span>⏱ Prep: ${escapeHtml(prep)}</span><span>🍽 Serves: ${escapeHtml(servings)}</span></div>
-                <div class="garnish-section"><p style="color: ${cardAccentColor};">✦ GARNISH</p><div class="garnish-tags">${selectedGarnishes.map(g => `<span class="garnish-tag">✨ ${escapeHtml(g)}</span>`).join('')}</div></div>
-                </div>
-                <div class="right-panel"><div class="restaurant-info"><div class="restaurant-name-display" style="color:${restColor}; font-family:${font};">${escapeHtml(restName)}</div><div class="recipe-date">${escapeHtml(dateValue)}</div></div>
-                <div class="method-card" style="background: ${methodCardBgColor}; color: ${methodTextColor};"><h3 style="color: ${cardAccentColor}; border-left-color: ${cardAccentColor};">METHOD</h3><ol class="method-steps">${methodLines.map(step => `<li style="color: ${methodTextColor};">${escapeHtml(step)}</li>`).join('')}</ol></div>
-                </div>
-            </div>
-            <div class="logo-row" style="border-top-color: ${cardAccentColor};"><div class="logo-box">${logo1Data ? `<img src="${logo1Data}" alt="Logo">` : '<span style="color:' + cardAccentColor + '; font-size:24px;">✦</span>'}</div><div class="logo-box">${logo2Data ? `<img src="${logo2Data}" alt="Logo">` : '<span style="color:' + cardAccentColor + '; font-size:24px;">✦</span>'}</div></div>
-            <div class="footer-note" style="color: ${cardAccentColor}99;">THE CHEDI · SIGNATURE COLLECTION</div></div></div>`;
-        
-        document.getElementById('previewContainer').style.display = 'block';
-        document.getElementById('previewContainer').innerHTML = previewHtml;
-        document.getElementById('previewContainer').scrollIntoView({ behavior: 'smooth' });
-    }
-    
-    async function exportToPDF() {
-        const card = document.getElementById('masterRecipeCard');
-        if(!card){ alert('Generate recipe card first!'); return; }
-        const btn = document.getElementById('exportPdfBtn');
-        btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
-        try {
-            await new Promise(r => setTimeout(r, 200));
-            const opt = { margin: [0.2, 0.2, 0.2, 0.2], filename: `${document.getElementById('recipeTitle').value}_THE_CHEDI.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2.8, useCORS: true, backgroundColor: '#fffef7' }, jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' } };
-            await html2pdf().set(opt).from(card).save();
-        } catch(err) { alert('PDF error: ' + err.message); }
-        finally { btn.disabled = false; btn.innerHTML = '<i class="fas fa-file-pdf"></i> Export PDF'; }
-    }
-    
-    async function saveToFirebase() {
-        if(!firebaseInitialized || !db){ alert('Firebase not ready'); return; }
-        const recipe = { 
-            name: document.getElementById('recipeTitle').value, 
-            ingredients: selectedIngredients, 
-            method: document.getElementById('methodSteps').value, 
-            prepTime: document.getElementById('prepTimeValue').value, 
-            servings: document.getElementById('servingsValue').value, 
-            restaurantName: document.getElementById('restaurantNameInput').value, 
-            restaurantColor: document.getElementById('restaurantColor').value,
-            cardAccentColor: document.getElementById('cardAccentColor').value,
-            headerOverlayColor: document.getElementById('headerOverlayColor').value,
-            methodCardBgColor: document.getElementById('methodCardBgColor').value,
-            methodTextColor: document.getElementById('methodTextColor').value,
-            allergens: selectedAllergens, 
-            foodTypes: selectedFoodTypes, 
-            spice: selectedSpice, 
-            garnishes: selectedGarnishes, 
-            createdAt: new Date() 
+        </div>
+
+        <div id="previewContainer" class="preview-container"></div>
+    </div>
+
+    <button class="theme-toggle-btn" id="themeToggle"><i class="fas fa-moon"></i> Dark/Light</button>
+
+    <script>
+        // Firebase Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyDzrkfU6rDPxiBjxWLfHj-Kt_3K20Eg2oo",
+            authDomain: "recipe-card-templates.firebaseapp.com",
+            databaseURL: "https://recipe-card-templates-default-rtdb.firebaseio.com",
+            projectId: "recipe-card-templates",
+            storageBucket: "recipe-card-templates.firebasestorage.app",
+            messagingSenderId: "256616321405",
+            appId: "1:256616321405:web:5d6c6dd8cbecc0d4627c14"
         };
-        try { await db.collection('signature_recipes').add(recipe); alert('Recipe saved to cloud!'); loadFromFirebase(); } catch(e) { alert('Error saving: ' + e.message); }
-    }
-    
-    async function loadFromFirebase() {
-        if(!firebaseInitialized || !db){ document.getElementById('savedRecipesContainer').innerHTML = '<div class="empty-state">Firebase unavailable</div>'; return; }
-        const container = document.getElementById('savedRecipesContainer');
-        container.innerHTML = '<div class="empty-state"><div class="loading-spinner"></div> Loading recipes...</div>';
+
+        let db, firebaseInitialized = false;
         try {
-            const snap = await db.collection('signature_recipes').orderBy('createdAt', 'desc').limit(20).get();
-            if(snap.empty){ container.innerHTML = '<div class="empty-state">No saved recipes found. Create one and save it!</div>'; return; }
+            if (firebase.apps.length === 0) firebase.initializeApp(firebaseConfig);
+            db = firebase.firestore();
+            firebaseInitialized = true;
+            console.log("Firebase initialized");
+        } catch (e) { console.warn(e); }
+
+        let categories = {};
+        let currentCategory = "";
+        let selectedIngredients = [];
+        let selectedAllergens = ["Gluten", "Dairy", "Nuts"];
+        let selectedFoodTypes = ["Main Course"];
+        let selectedSpice = "Extra Hot";
+        let selectedGarnishes = ["Beef bacon crumble", "Parsley gel", "Confit tomatoes"];
+        let plateImageData = null,
+            logo1Data = null,
+            logo2Data = null,
+            dragIndex = null;
+
+        const allergensList = ["Gluten", "Dairy", "Nuts", "Eggs", "Shellfish", "Soy", "Sesame", "Sulfites", "Mustard", "Celery",
+            "Fish", "Peanuts"
+        ];
+        const foodTypesList = ["Main Course", "Starter", "Salad", "Seafood", "Vegetarian", "Grill", "Pasta", "Soup",
+            "Dessert", "Breakfast", "Appetizer", "Side Dish", "Bread", "Tapas", "BBQ", "Stew", "Curry"
+        ];
+        const spiceLevelsList = ["Mild", "Medium", "Hot", "Extra Hot"];
+        const garnishesList = ["Beef bacon crumble", "Parsley gel", "Confit tomatoes", "Microgreens", "Edible flowers",
+            "Lemon zest", "Fresh herbs", "Toasted nuts"
+        ];
+
+        const allJsonFiles = ["beef.json", "chocolate.json", "dairy.json", "Desserts.json", "food_colors.json",
+            "frozen.json", "grains.json", "ice_cream.json", "jams.json", "juices.json", "nuts_dried.json",
+            "oil.json", "pickles.json", "poultry.json", "seafood.json", "seeds.json", "snack.json", "Spices.json",
+            "Vegetables.json"
+        ];
+
+        const categoryDisplayNames = {
+            "beef": "🥩 Beef",
+            "chocolate": "🍫 Chocolate",
+            "dairy": "🧀 Dairy",
+            "desserts": "🍰 Desserts",
+            "food_colors": "🎨 Colors",
+            "frozen": "❄️ Frozen",
+            "grains": "🌾 Grains",
+            "ice_cream": "🍦 Ice Cream",
+            "jams": "🍯 Jams",
+            "juices": "🧃 Juices",
+            "nuts_dried": "🥜 Nuts",
+            "oil": "🫒 Oils",
+            "pickles": "🥒 Pickles",
+            "poultry": "🍗 Poultry",
+            "seafood": "🦐 Seafood",
+            "seeds": "🌱 Seeds",
+            "snack": "🍿 Snacks",
+            "spices": "🌿 Spices",
+            "vegetables": "🥬 Vegetables"
+        };
+
+        async function autoLoadAllJsonFiles() {
+            const grid = document.getElementById('categoriesGrid');
+            if (grid) grid.innerHTML = '<div class="loading-spinner"></div> Loading JSON files...';
+            let loadedCount = 0,
+                failedCount = 0;
+            const newCategories = {};
+
+            for (const filename of allJsonFiles) {
+                try {
+                    const response = await fetch(`datas/${filename}`);
+                    if (!response.ok) { failedCount++; continue; }
+                    const data = await response.json();
+                    const categoryKey = filename.replace('.json', '').toLowerCase().replace(/\s+/g, '_');
+                    let displayName = categoryDisplayNames[categoryKey] || data.name || categoryKey;
+                    let iconUrl = data.icon || `https://cdn-icons-png.flaticon.com/512/1046/1046784.png`;
+                    let items = data.items || data.ingredients || data.products || [];
+                    if (items && items.length > 0) {
+                        newCategories[categoryKey] = {
+                            name: displayName,
+                            icon: iconUrl,
+                            items: items.map(item => {
+                                if (typeof item === 'string') return { name: item, qty: "as needed" };
+                                return { name: item.name || item, qty: item.qty || item.quantity ||
+                                        "to taste" };
+                            })
+                        };
+                        loadedCount++;
+                    } else { failedCount++; }
+                } catch (e) { failedCount++; }
+            }
+
+            if (loadedCount === 0) {
+                newCategories["vegetables"] = { name: "🥬 Vegetables", icon: "https://cdn-icons-png.flaticon.com/512/2398/2398841.png",
+                    items: [{ name: "Carrot", qty: "100g" }, { name: "Onion", qty: "1pc" }, { name: "Garlic",
+                        qty: "3 cloves" }] };
+                newCategories["beef"] = { name: "🥩 Beef", icon: "https://cdn-icons-png.flaticon.com/512/2964/2964743.png",
+                    items: [{ name: "Beef Ribeye", qty: "200g" }, { name: "Beef Stock", qty: "300ml" },
+                    { name: "Beef Fillet", qty: "200g" }, { name: "Beef Shoulder", qty: "200g" }] };
+                loadedCount = 2;
+            }
+
+            categories = newCategories;
+            currentCategory = Object.keys(categories)[0] || "";
+            renderCategories();
+            renderIngredientList();
+            document.getElementById('loadStatus').innerHTML =
+                `<i class="fas fa-check-circle"></i> ${loadedCount} categories loaded | Firebase ${firebaseInitialized ? '✓' : '✗'}`;
+            document.getElementById('debugInfo').innerHTML =
+                `<i class="fas fa-folder"></i> /datas/ folder: ${loadedCount} loaded, ${failedCount} failed. Click on any ingredient to add to recipe.`;
+        }
+
+        function renderCategories() {
+            const container = document.getElementById('categoriesGrid');
+            if (!container) return;
             container.innerHTML = '';
-            snap.forEach(doc => {
-                const r = doc.data();
-                const div = document.createElement('div'); div.className = 'record-item';
-                div.innerHTML = `<div class="record-name"><i class="fas fa-utensils"></i> ${escapeHtml(r.name)}</div><div class="record-actions"><button class="loadCloudBtn" data-id="${doc.id}">Load</button><button class="deleteCloudBtn" data-id="${doc.id}">Delete</button></div>`;
-                container.appendChild(div);
-            });
-            document.querySelectorAll('.loadCloudBtn').forEach(btn => btn.addEventListener('click', async (e) => {
-                const id = btn.getAttribute('data-id');
-                const docSnap = await db.collection('signature_recipes').doc(id).get();
-                if(docSnap.exists){
-                    const r = docSnap.data();
-                    document.getElementById('recipeTitle').value = r.name || '';
-                    document.getElementById('methodSteps').value = r.method || '';
-                    document.getElementById('prepTimeValue').value = r.prepTime || '';
-                    document.getElementById('servingsValue').value = r.servings || '';
-                    document.getElementById('restaurantNameInput').value = r.restaurantName || '';
-                    if(r.restaurantColor) document.getElementById('restaurantColor').value = r.restaurantColor;
-                    if(r.cardAccentColor) document.getElementById('cardAccentColor').value = r.cardAccentColor;
-                    if(r.headerOverlayColor) document.getElementById('headerOverlayColor').value = r.headerOverlayColor;
-                    if(r.methodCardBgColor) document.getElementById('methodCardBgColor').value = r.methodCardBgColor;
-                    if(r.methodTextColor) document.getElementById('methodTextColor').value = r.methodTextColor;
-                    selectedIngredients = r.ingredients || [];
-                    selectedAllergens = r.allergens || ["Gluten","Dairy"];
-                    selectedFoodTypes = r.foodTypes || ["Main Course"];
-                    selectedSpice = r.spice || "Extra Hot";
-                    selectedGarnishes = r.garnishes || [];
-                    renderSelectedList(); renderIngredientList(); renderAllergens(); renderFoodTypes(); renderSpiceLevels(); renderGarnishes();
-                    updateInfoDisplay();
-                    alert(`Loaded "${r.name}"`);
-                    document.querySelector('.tab[data-tab="builder"]').click();
+            for (const [key, cat] of Object.entries(categories)) {
+                container.innerHTML += `<div class="category-item ${currentCategory === key ? 'active' : ''}" onclick="setCategory('${key}')">
+                    <img class="category-icon" src="${cat.icon}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1046/1046784.png'">
+                    <div class="category-info"><div class="category-name">${escapeHtml(cat.name)}</div><div class="category-count">${cat.items.length} items</div></div>
+                </div>`;
+            }
+        }
+
+        window.setCategory = function(cat) { currentCategory = cat;
+            renderCategories();
+            renderIngredientList(); };
+
+        function renderIngredientList() {
+            const container = document.getElementById('ingredientList');
+            if (!container) return;
+            const cat = categories[currentCategory];
+            if (!cat?.items || cat.items.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-info-circle"></i> No ingredients in this category</div>';
+                return;
+            }
+            const term = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = cat.items.filter(i => i.name.toLowerCase().includes(term));
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-search"></i> No matching ingredients</div>';
+                return;
+            }
+            container.innerHTML = filtered.map(item => {
+                const isSelected = selectedIngredients.some(s => s.name === item.name);
+                return `<div class="ingredient-card ${isSelected ? 'selected' : ''}" onclick="toggleIngredient('${escapeHtml(item.name)}','${escapeHtml(item.qty)}')">
+                    <span class="ingredient-name">${escapeHtml(item.name)}</span>
+                    <span class="ingredient-qty">${escapeHtml(item.qty)}</span>
+                </div>`;
+            }).join('');
+        }
+
+        window.toggleIngredient = function(name, qty) {
+            const existingIndex = selectedIngredients.findIndex(i => i.name === name);
+            if (existingIndex === -1) {
+                selectedIngredients.push({ name: name, qty: qty });
+            } else {
+                selectedIngredients.splice(existingIndex, 1);
+            }
+            renderIngredientList();
+            renderSelectedList();
+        };
+
+        function renderSelectedList() {
+            const container = document.getElementById('selectedItemsList');
+            if (!container) return;
+            if (selectedIngredients.length === 0) {
+                container.innerHTML = '<div class="empty-state"><i class="fas fa-hand-pointer"></i> Click ingredients above to add them to your recipe</div>';
+                return;
+            }
+            container.innerHTML = selectedIngredients.map((item, i) => `
+                <div class="selected-item" draggable="true" ondragstart="dragStart(event, ${i})" ondragend="dragEnd(event)" ondragover="dragOver(event)" ondrop="drop(event, ${i})">
+                    <span><i class="fas fa-grip-vertical" style="color:var(--text-secondary); margin-right:10px; cursor:grab;"></i><span class="selected-item-name">${escapeHtml(item.name)}</span></span>
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <input class="selected-item-qty" value="${escapeHtml(item.qty)}" data-index="${i}" onchange="updateQty(${i}, this.value)" />
+                        <button class="remove-btn" onclick="removeIngredient(${i})" title="Remove ingredient">✕</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // update qty from input
+        window.updateQty = function(index, newQty) {
+            if (index >= 0 && index < selectedIngredients.length) {
+                selectedIngredients[index].qty = newQty;
+            }
+        };
+
+        window.removeIngredient = function(index) {
+            selectedIngredients.splice(index, 1);
+            renderSelectedList();
+            renderIngredientList();
+        };
+
+        function dragStart(e, i) { dragIndex = i;
+            e.dataTransfer.effectAllowed = 'move'; }
+
+        function dragOver(e) { e.preventDefault(); }
+
+        function drop(e, target) {
+            e.preventDefault();
+            if (dragIndex !== null && dragIndex !== target) {
+                const moved = selectedIngredients[dragIndex];
+                selectedIngredients.splice(dragIndex, 1);
+                selectedIngredients.splice(target, 0, moved);
+                dragIndex = null;
+                renderSelectedList();
+            }
+        }
+
+        function dragEnd(e) { dragIndex = null; }
+        window.dragStart = dragStart;
+        window.dragOver = dragOver;
+        window.drop = drop;
+        window.dragEnd = dragEnd;
+
+        function updateInfoDisplay() {
+            document.getElementById('prepDisplay').innerText = document.getElementById('prepTimeValue').value;
+            document.getElementById('servingsDisplay').innerText = document.getElementById('servingsValue').value;
+            document.getElementById('spiceDisplay').innerText = selectedSpice;
+        }
+
+        function renderAllergens() {
+            document.getElementById('allergensGroup').innerHTML = allergensList.map(a =>
+                `<span class="badge ${selectedAllergens.includes(a) ? 'selected' : ''}" onclick="toggleAllergen('${a}')">⚠️ ${a}</span>`
+                ).join('');
+        }
+
+        function renderFoodTypes() {
+            document.getElementById('foodTypesGroup').innerHTML = foodTypesList.map(f =>
+                `<span class="badge ${selectedFoodTypes.includes(f) ? 'selected' : ''}" onclick="toggleFoodType('${f}')">🍽️ ${f}</span>`
+                ).join('');
+        }
+
+        function renderSpiceLevels() {
+            document.getElementById('spiceGroup').innerHTML = spiceLevelsList.map(s =>
+                `<span class="badge ${selectedSpice === s ? 'selected' : ''}" onclick="setSpice('${s}')">🌶️ ${s}</span>`
+                ).join('');
+            updateInfoDisplay();
+        }
+
+        function renderGarnishes() {
+            document.getElementById('garnishGroup').innerHTML = garnishesList.map(g =>
+                `<span class="badge ${selectedGarnishes.includes(g) ? 'selected' : ''}" onclick="toggleGarnish('${g}')">✨ ${g}</span>`
+                ).join('');
+        }
+
+        window.toggleAllergen = function(a) {
+            selectedAllergens.includes(a) ? selectedAllergens = selectedAllergens.filter(x => x !== a) : selectedAllergens
+                .push(a);
+            renderAllergens();
+        };
+        window.toggleFoodType = function(f) {
+            selectedFoodTypes.includes(f) ? selectedFoodTypes = selectedFoodTypes.filter(x => x !== f) : selectedFoodTypes
+                .push(f);
+            renderFoodTypes();
+        };
+        window.setSpice = function(s) {
+            selectedSpice = s;
+            renderSpiceLevels();
+            updateInfoDisplay();
+        };
+        window.toggleGarnish = function(g) {
+            selectedGarnishes.includes(g) ? selectedGarnishes = selectedGarnishes.filter(x => x !== g) : selectedGarnishes
+                .push(g);
+            renderGarnishes();
+        };
+
+        document.getElementById('prepTimeValue').addEventListener('input', updateInfoDisplay);
+        document.getElementById('servingsValue').addEventListener('input', updateInfoDisplay);
+
+        document.getElementById('plateImageUpload').onchange = e => { const f = e.target.files[0]; if (f) { const r =
+                    new FileReader();
+                r.onload = ev => { plateImageData = ev.target.result;
+                    document.getElementById('plateImagePreview').innerHTML = `<img src="${plateImageData}">`; };
+                r.readAsDataURL(f); } };
+        document.getElementById('logo1Upload').onchange = e => { const f = e.target.files[0]; if (f) { const r =
+                    new FileReader();
+                r.onload = ev => { logo1Data = ev.target.result;
+                    document.getElementById('logo1Preview').innerHTML = `<img src="${logo1Data}">`; };
+                r.readAsDataURL(f); } };
+        document.getElementById('logo2Upload').onchange = e => { const f = e.target.files[0]; if (f) { const r =
+                    new FileReader();
+                r.onload = ev => { logo2Data = ev.target.result;
+                    document.getElementById('logo2Preview').innerHTML = `<img src="${logo2Data}">`; };
+                r.readAsDataURL(f); } };
+
+        document.getElementById('fetchJsonBtn').onclick = async () => {
+            const url = document.getElementById('jsonUrlInput').value;
+            if (!url) return alert('Enter URL');
+            try {
+                const resp = await fetch(url.startsWith('http') ? url : `datas/${url}`);
+                const data = await resp.json();
+                const catName = prompt('Category name:', 'Imported');
+                if (catName) {
+                    const key = catName.toLowerCase().replace(/\s+/g, '_');
+                    let items = data.items || data;
+                    if (!Array.isArray(items)) items = [];
+                    categories[key] = { name: catName, icon: 'https://cdn-icons-png.flaticon.com/512/1046/1046784.png',
+                        items: items.map(i => ({ name: i.name || i, qty: i.qty || "as needed" })) };
+                    renderCategories();
+                    alert(`Imported ${items.length} items`);
                 }
-            }));
-            document.querySelectorAll('.deleteCloudBtn').forEach(btn => btn.addEventListener('click', async (e) => {
-                if(confirm('Delete this recipe?')){
-                    const id = btn.getAttribute('data-id');
-                    await db.collection('signature_recipes').doc(id).delete();
-                    loadFromFirebase();
-                    alert('Recipe deleted');
-                }
-            }));
-        } catch(e) { container.innerHTML = '<div class="empty-state">Error loading recipes</div>'; }
-    }
-    
-    function clearAll() { if(confirm('Reset all changes? This will clear your current recipe.')) location.reload(); }
-    function escapeHtml(str) { if(!str) return ''; const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
-    
-    const themeToggle = document.getElementById('themeToggle');
-    themeToggle.addEventListener('click', () => {
-        document.body.classList.toggle('light-mode');
-        themeToggle.innerHTML = document.body.classList.contains('light-mode') ? '<i class="fas fa-sun"></i> Light' : '<i class="fas fa-moon"></i> Dark';
-    });
-    
-    document.querySelectorAll('.tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            tab.classList.add('active');
-            document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+            } catch (err) { alert('Failed to load: ' + err.message); }
+        };
+
+        document.getElementById('jsonFileUpload').onchange = e => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = ev => {
+                    try {
+                        const data = JSON.parse(ev.target.result);
+                        const catName = prompt('Category name:', file.name.replace('.json', ''));
+                        if (catName) {
+                            const key = catName.toLowerCase().replace(/\s+/g, '_');
+                            let items = data.items || data;
+                            if (!Array.isArray(items)) items = [];
+                            categories[key] = { name: catName,
+                                icon: 'https://cdn-icons-png.flaticon.com/512/1046/1046784.png',
+                                items: items.map(i => ({ name: i.name || i, qty: i.qty || "as needed" })) };
+                            renderCategories();
+                            alert(`Imported ${items.length} items to "${catName}"`);
+                        }
+                    } catch (err) { alert('Invalid JSON file'); }
+                };
+                reader.readAsText(file);
+            }
+        };
+
+        // custom ingredient adder
+        document.getElementById('addCustomIngredientBtn').addEventListener('click', function() {
+            const nameInput = document.getElementById('customIngredientName');
+            const qtyInput = document.getElementById('customIngredientQty');
+            const name = nameInput.value.trim();
+            const qty = qtyInput.value.trim() || 'as needed';
+            if (!name) { alert('Please enter an ingredient name.'); return; }
+            // avoid duplicates? we allow duplicates but we can warn
+            selectedIngredients.push({ name, qty });
+            renderSelectedList();
+            renderIngredientList();
+            nameInput.value = '';
+            qtyInput.value = '';
         });
-    });
-    
-    document.getElementById('generateCardBtn').onclick = generateAndPreview;
-    document.getElementById('saveRecipeBtn').onclick = saveToFirebase;
-    document.getElementById('fetchFirebaseBtn').onclick = loadFromFirebase;
-    document.getElementById('exportPdfBtn').onclick = exportToPDF;
-    document.getElementById('clearBtn').onclick = clearAll;
-    document.getElementById('searchInput').onkeyup = () => renderIngredientList();
-    document.getElementById('refreshCategoriesBtn').onclick = () => autoLoadAllJsonFiles();
-    
-    renderAllergens(); renderFoodTypes(); renderSpiceLevels(); renderGarnishes(); updateInfoDisplay();
-    autoLoadAllJsonFiles();
-</script>
+
+        function generateAndPreview() {
+            const recipeName = document.getElementById('recipeTitle').value;
+            const method = document.getElementById('methodSteps').value;
+            const prep = document.getElementById('prepTimeValue').value;
+            const servings = document.getElementById('servingsValue').value;
+            let restName = document.getElementById('restaurantNameInput').value;
+            const restColor = document.getElementById('restaurantColor').value;
+            const font = document.getElementById('restaurantFont').value;
+            const format = document.getElementById('restaurantFormat').value;
+            const cardAccentColor = document.getElementById('cardAccentColor').value;
+            const headerOverlayColor = document.getElementById('headerOverlayColor').value;
+            const methodCardBgColor = document.getElementById('methodCardBgColor').value;
+            const methodTextColor = document.getElementById('methodTextColor').value;
+
+            if (format === 'uppercase') restName = restName.toUpperCase();
+            if (format === 'capitalize') restName = restName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)
+                .toLowerCase()).join(' ');
+            const methodLines = method.split('\n').filter(l => l.trim());
+            const hero = plateImageData ||
+                `https://placehold.co/1200x400/1a1a2e/${cardAccentColor.replace('#', '')}?text=${encodeURIComponent(recipeName)}`;
+            const dateValue = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+            const allergensHtml = selectedAllergens.length ?
+                `<div class="allergen-section-pdf"><div class="allergen-title-pdf" style="color:${cardAccentColor};">⚠️ ALLERGEN INFORMATION</div><div>${selectedAllergens.map(a => `<span class="allergen-badge-pdf">⚠️ ${escapeHtml(a)}</span>`).join('')}</div></div>` :
+                '';
+            const overlayGradient = `linear-gradient(0deg, ${headerOverlayColor}dd 0%, ${headerOverlayColor}00 100%)`;
+
+            const previewHtml = `<div class="recipe-card" id="masterRecipeCard">
+                <div class="card-header" style="background: ${methodCardBgColor};"><img src="${hero}" alt="${escapeHtml(recipeName)}" crossorigin="anonymous"><div class="header-overlay" style="background: ${overlayGradient};"><div class="recipe-title">${escapeHtml(recipeName)}</div></div></div>
+                <div class="card-body"><div class="two-columns">
+                    <div class="left-panel"><div class="section-emblem" style="color: ${cardAccentColor}; border-bottom-color: ${cardAccentColor};">INGREDIENTS</div>
+                    <ul class="ingredient-list">${selectedIngredients.map(i => `<li><span>${escapeHtml(i.name)}</span><span style="color:${cardAccentColor};">${escapeHtml(i.qty)}</span></li>`).join('')}</ul>
+                    ${allergensHtml}
+                    <div class="badge-row">${selectedFoodTypes.map(f => `<span style="background:${cardAccentColor}; color:#1a1a2e; padding:3px 12px; border-radius:20px; font-size:9px;">🍽️ ${escapeHtml(f)}</span>`).join('')}<span style="background:#991b1b; color:white; padding:3px 12px; border-radius:20px; font-size:9px;">🌶️ ${escapeHtml(selectedSpice)}</span></div>
+                    <div class="info-strip"><span>⏱ Prep: ${escapeHtml(prep)}</span><span>🍽 Serves: ${escapeHtml(servings)}</span></div>
+                    <div class="garnish-section"><p style="color: ${cardAccentColor};">✦ GARNISH</p><div class="garnish-tags">${selectedGarnishes.map(g => `<span class="garnish-tag">✨ ${escapeHtml(g)}</span>`).join('')}</div></div>
+                    </div>
+                    <div class="right-panel"><div class="restaurant-info"><div class="restaurant-name-display" style="color:${restColor}; font-family:${font};">${escapeHtml(restName)}</div><div class="recipe-date">${escapeHtml(dateValue)}</div></div>
+                    <div class="method-card" style="background: ${methodCardBgColor}; color: ${methodTextColor};"><h3 style="color: ${cardAccentColor}; border-left-color: ${cardAccentColor};">METHOD</h3><ol class="method-steps">${methodLines.map(step => `<li style="color: ${methodTextColor};">${escapeHtml(step)}</li>`).join('')}</ol></div>
+                    </div>
+                </div>
+                <div class="logo-row" style="border-top-color: ${cardAccentColor};"><div class="logo-box">${logo1Data ? `<img src="${logo1Data}" alt="Logo">` : '<span style="color:' + cardAccentColor + '; font-size:24px;">✦</span>'}</div><div class="logo-box">${logo2Data ? `<img src="${logo2Data}" alt="Logo">` : '<span style="color:' + cardAccentColor + '; font-size:24px;">✦</span>'}</div></div>
+                <div class="footer-note" style="color: ${cardAccentColor}99;">THE CHEDI · SIGNATURE COLLECTION</div></div></div>`;
+
+            document.getElementById('previewContainer').style.display = 'block';
+            document.getElementById('previewContainer').innerHTML = previewHtml;
+            document.getElementById('previewContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async function exportToPDF() {
+            const card = document.getElementById('masterRecipeCard');
+            if (!card) { alert('Generate recipe card first!'); return; }
+            const btn = document.getElementById('exportPdfBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+            try {
+                await new Promise(r => setTimeout(r, 200));
+                const opt = { margin: [0.2, 0.2, 0.2, 0.2], filename: `${document.getElementById('recipeTitle').value}_THE_CHEDI.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2.8, useCORS: true,
+                        backgroundColor: '#fffef7' }, jsPDF: { unit: 'in', format: 'a4',
+                        orientation: 'portrait' } };
+                await html2pdf().set(opt).from(card).save();
+            } catch (err) { alert('PDF error: ' + err.message); } finally { btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-file-pdf"></i> Export PDF'; }
+        }
+
+        async function saveToFirebase() {
+            if (!firebaseInitialized || !db) { alert('Firebase not ready'); return; }
+            const recipe = {
+                name: document.getElementById('recipeTitle').value,
+                ingredients: selectedIngredients,
+                method: document.getElementById('methodSteps').value,
+                prepTime: document.getElementById('prepTimeValue').value,
+                servings: document.getElementById('servingsValue').value,
+                restaurantName: document.getElementById('restaurantNameInput').value,
+                restaurantColor: document.getElementById('restaurantColor').value,
+                cardAccentColor: document.getElementById('cardAccentColor').value,
+                headerOverlayColor: document.getElementById('headerOverlayColor').value,
+                methodCardBgColor: document.getElementById('methodCardBgColor').value,
+                methodTextColor: document.getElementById('methodTextColor').value,
+                allergens: selectedAllergens,
+                foodTypes: selectedFoodTypes,
+                spice: selectedSpice,
+                garnishes: selectedGarnishes,
+                createdAt: new Date()
+            };
+            try { await db.collection('signature_recipes').add(recipe);
+                alert('Recipe saved to cloud!');
+                loadFromFirebase(); } catch (e) { alert('Error saving: ' + e.message); }
+        }
+
+        async function loadFromFirebase() {
+            if (!firebaseInitialized || !db) { document.getElementById('savedRecipesContainer').innerHTML =
+                    '<div class="empty-state">Firebase unavailable</div>'; return; }
+            const container = document.getElementById('savedRecipesContainer');
+            container.innerHTML = '<div class="empty-state"><div class="loading-spinner"></div> Loading recipes...</div>';
+            try {
+                const snap = await db.collection('signature_recipes').orderBy('createdAt', 'desc').limit(20).get();
+                if (snap.empty) { container.innerHTML =
+                        '<div class="empty-state">No saved recipes found. Create one and save it!</div>'; return; }
+                container.innerHTML = '';
+                snap.forEach(doc => {
+                    const r = doc.data();
+                    const div = document.createElement('div');
+                    div.className = 'record-item';
+                    div.innerHTML =
+                        `<div class="record-name"><i class="fas fa-utensils"></i> ${escapeHtml(r.name)}</div><div class="record-actions"><button class="loadCloudBtn" data-id="${doc.id}">Load</button><button class="deleteCloudBtn" data-id="${doc.id}">Delete</button></div>`;
+                    container.appendChild(div);
+                });
+                document.querySelectorAll('.loadCloudBtn').forEach(btn => btn.addEventListener('click', async (e) => {
+                    const id = btn.getAttribute('data-id');
+                    const docSnap = await db.collection('signature_recipes').doc(id).get();
+                    if (docSnap.exists) {
+                        const r = docSnap.data();
+                        document.getElementById('recipeTitle').value = r.name || '';
+                        document.getElementById('methodSteps').value = r.method || '';
+                        document.getElementById('prepTimeValue').value = r.prepTime || '';
+                        document.getElementById('servingsValue').value = r.servings || '';
+                        document.getElementById('restaurantNameInput').value = r.restaurantName || '';
+                        if (r.restaurantColor) document.getElementById('restaurantColor').value = r
+                        .restaurantColor;
+                        if (r.cardAccentColor) document.getElementById('cardAccentColor').value = r
+                            .cardAccentColor;
+                        if (r.headerOverlayColor) document.getElementById('headerOverlayColor').value = r
+                            .headerOverlayColor;
+                        if (r.methodCardBgColor) document.getElementById('methodCardBgColor').value = r
+                            .methodCardBgColor;
+                        if (r.methodTextColor) document.getElementById('methodTextColor').value = r
+                            .methodTextColor;
+                        selectedIngredients = r.ingredients || [];
+                        selectedAllergens = r.allergens || ["Gluten", "Dairy"];
+                        selectedFoodTypes = r.foodTypes || ["Main Course"];
+                        selectedSpice = r.spice || "Extra Hot";
+                        selectedGarnishes = r.garnishes || [];
+                        renderSelectedList();
+                        renderIngredientList();
+                        renderAllergens();
+                        renderFoodTypes();
+                        renderSpiceLevels();
+                        renderGarnishes();
+                        updateInfoDisplay();
+                        alert(`Loaded "${r.name}"`);
+                        document.querySelector('.tab[data-tab="builder"]').click();
+                    }
+                }));
+                document.querySelectorAll('.deleteCloudBtn').forEach(btn => btn.addEventListener('click', async (
+                e) => {
+                    if (confirm('Delete this recipe?')) {
+                        const id = btn.getAttribute('data-id');
+                        await db.collection('signature_recipes').doc(id).delete();
+                        loadFromFirebase();
+                        alert('Recipe deleted');
+                    }
+                }));
+            } catch (e) { container.innerHTML = '<div class="empty-state">Error loading recipes</div>'; }
+        }
+
+        function clearAll() { if (confirm('Reset all changes? This will clear your current recipe.')) location.reload(); }
+
+        function escapeHtml(str) { if (!str) return ''; const div = document.createElement('div');
+            div.textContent = str; return div.innerHTML; }
+
+        const themeToggle = document.getElementById('themeToggle');
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('light-mode');
+            themeToggle.innerHTML = document.body.classList.contains('light-mode') ? '<i class="fas fa-sun"></i> Light' :
+                '<i class="fas fa-moon"></i> Dark';
+        });
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+            });
+        });
+
+        document.getElementById('generateCardBtn').onclick = generateAndPreview;
+        document.getElementById('saveRecipeBtn').onclick = saveToFirebase;
+        document.getElementById('fetchFirebaseBtn').onclick = loadFromFirebase;
+        document.getElementById('exportPdfBtn').onclick = exportToPDF;
+        document.getElementById('clearBtn').onclick = clearAll;
+        document.getElementById('searchInput').onkeyup = () => renderIngredientList();
+        document.getElementById('refreshCategoriesBtn').onclick = () => autoLoadAllJsonFiles();
+
+        renderAllergens();
+        renderFoodTypes();
+        renderSpiceLevels();
+        renderGarnishes();
+        updateInfoDisplay();
+        autoLoadAllJsonFiles();
+    </script>
 </body>
 </html>
