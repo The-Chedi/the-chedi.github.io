@@ -1181,72 +1181,84 @@
             "vegetables": "🥬 Vegetables"
         };
 
-        async function autoLoadAllJsonFiles() {
-            const grid = document.getElementById('categoriesGrid');
-            if (grid) grid.innerHTML = '<div class="loading-spinner"></div> Loading JSON files...';
-            let loadedCount = 0,
-                failedCount = 0;
-            const newCategories = {};
-
-            for (const filename of allJsonFiles) {
-                try {
-                    const response = await fetch(`datas/${filename}`);
-                    if (!response.ok) { failedCount++; continue; }
-                    const data = await response.json();
-                    const categoryKey = filename.replace('.json', '').toLowerCase().replace(/\s+/g, '_');
-                    let displayName = categoryDisplayNames[categoryKey] || data.name || categoryKey;
-                    let iconUrl = data.icon || `https://cdn-icons-png.flaticon.com/512/1046/1046784.png`;
-                    let items = data.items || data.ingredients || data.products || [];
-                    if (items && items.length > 0) {
-                        newCategories[categoryKey] = {
-                            name: displayName,
-                            icon: iconUrl,
-                            items: items.map(item => {
-                                if (typeof item === 'string') return { name: item, qty: "as needed" };
-                                return { name: item.name || item, qty: item.qty || item.quantity ||
-                                        "to taste" };
-                            })
-                        };
-                        loadedCount++;
-                    } else { failedCount++; }
-                } catch (e) { failedCount++; }
-            }
-
-            if (loadedCount === 0) {
-                newCategories["vegetables"] = { name: "🥬 Vegetables", icon: "https://cdn-icons-png.flaticon.com/512/2398/2398841.png",
-                    items: [{ name: "Carrot", qty: "100g" }, { name: "Onion", qty: "1pc" }, { name: "Garlic",
-                        qty: "3 cloves" }] };
-                newCategories["beef"] = { name: "🥩 Beef", icon: "https://cdn-icons-png.flaticon.com/512/2964/2964743.png",
-                    items: [{ name: "Beef Ribeye", qty: "200g" }, { name: "Beef Stock", qty: "300ml" },
-                    { name: "Beef Fillet", qty: "200g" }, { name: "Beef Shoulder", qty: "200g" }] };
-                loadedCount = 2;
-            }
-
-            categories = newCategories;
-            currentCategory = Object.keys(categories)[0] || "";
-            renderCategories();
-            renderIngredientList();
-            document.getElementById('loadStatus').innerHTML =
-                `<i class="fas fa-check-circle"></i> ${loadedCount} categories loaded | Firebase ${firebaseInitialized ? '✓' : '✗'}`;
-            document.getElementById('debugInfo').innerHTML =
-                `<i class="fas fa-folder"></i> /datas/ folder: ${loadedCount} loaded, ${failedCount} failed. Click on any ingredient to add to recipe.`;
-        }
-
-        function renderCategories() {
-            const container = document.getElementById('categoriesGrid');
-            if (!container) return;
-            container.innerHTML = '';
-            for (const [key, cat] of Object.entries(categories)) {
-                container.innerHTML += `<div class="category-item ${currentCategory === key ? 'active' : ''}" onclick="setCategory('${key}')">
-                    <img class="category-icon" src="${cat.icon}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1046/1046784.png'">
-                    <div class="category-info"><div class="category-name">${escapeHtml(cat.name)}</div><div class="category-count">${cat.items.length} items</div></div>
-                </div>`;
+      async function autoLoadAllJsonFiles() {
+        const grid = document.getElementById('categoriesGrid');
+        if (grid) grid.innerHTML = '<div class="loading-spinner"></div> Loading JSON files...';
+        let loadedCount = 0,
+            failedCount = 0;
+        const newCategories = {};
+    
+        // Get the current script's directory
+        const scriptPath = document.currentScript.src;
+        const basePath = scriptPath.substring(0, scriptPath.lastIndexOf('/') + 1);
+        const dataPath = basePath + 'datas/';
+    
+        for (const filename of allJsonFiles) {
+            try {
+                const response = await fetch(`${dataPath}${filename}`);
+                if (!response.ok) { 
+                    console.log(`Failed to load ${filename}: ${response.status}`);
+                    failedCount++; 
+                    continue; 
+                }
+                const data = await response.json();
+                const categoryKey = filename.replace('.json', '').toLowerCase().replace(/\s+/g, '_');
+                let displayName = categoryDisplayNames[categoryKey] || data.name || categoryKey;
+                let iconUrl = data.icon || `https://cdn-icons-png.flaticon.com/512/1046/1046784.png`;
+                let items = data.items || data.ingredients || data.products || [];
+                if (items && items.length > 0) {
+                    newCategories[categoryKey] = {
+                        name: displayName,
+                        icon: iconUrl,
+                        items: items.map(item => {
+                            if (typeof item === 'string') return { name: item, qty: "as needed" };
+                            return { name: item.name || item, qty: item.qty || item.quantity ||
+                                    "to taste" };
+                        })
+                    };
+                    loadedCount++;
+                } else { failedCount++; }
+            } catch (e) { 
+                console.log(`Error loading ${filename}:`, e);
+                failedCount++; 
             }
         }
-
-        window.setCategory = function(cat) { currentCategory = cat;
-            renderCategories();
-            renderIngredientList(); };
+    
+        if (loadedCount === 0) {
+            newCategories["vegetables"] = { name: "🥬 Vegetables", icon: "https://cdn-icons-png.flaticon.com/512/2398/2398841.png",
+                items: [{ name: "Carrot", qty: "100g" }, { name: "Onion", qty: "1pc" }, { name: "Garlic",
+                    qty: "3 cloves" }] };
+            newCategories["beef"] = { name: "🥩 Beef", icon: "https://cdn-icons-png.flaticon.com/512/2964/2964743.png",
+                items: [{ name: "Beef Ribeye", qty: "200g" }, { name: "Beef Stock", qty: "300ml" },
+                { name: "Beef Fillet", qty: "200g" }, { name: "Beef Shoulder", qty: "200g" }] };
+            loadedCount = 2;
+        }
+    
+        categories = newCategories;
+        currentCategory = Object.keys(categories)[0] || "";
+        renderCategories();
+        renderIngredientList();
+        document.getElementById('loadStatus').innerHTML =
+            `<i class="fas fa-check-circle"></i> ${loadedCount} categories loaded | Firebase ${firebaseInitialized ? '✓' : '✗'}`;
+        document.getElementById('debugInfo').innerHTML =
+            `<i class="fas fa-folder"></i> /datas/ folder: ${loadedCount} loaded, ${failedCount} failed. Click on any ingredient to add to recipe.`;
+    }
+    
+            function renderCategories() {
+                const container = document.getElementById('categoriesGrid');
+                if (!container) return;
+                container.innerHTML = '';
+                for (const [key, cat] of Object.entries(categories)) {
+                    container.innerHTML += `<div class="category-item ${currentCategory === key ? 'active' : ''}" onclick="setCategory('${key}')">
+                        <img class="category-icon" src="${cat.icon}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1046/1046784.png'">
+                        <div class="category-info"><div class="category-name">${escapeHtml(cat.name)}</div><div class="category-count">${cat.items.length} items</div></div>
+                    </div>`;
+                }
+            }
+    
+            window.setCategory = function(cat) { currentCategory = cat;
+                renderCategories();
+                renderIngredientList(); };
 
         function renderIngredientList() {
             const container = document.getElementById('ingredientList');
