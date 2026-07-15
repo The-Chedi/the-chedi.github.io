@@ -1181,84 +1181,90 @@
             "vegetables": "🥬 Vegetables"
         };
 
-      async function autoLoadAllJsonFiles() {
-        const grid = document.getElementById('categoriesGrid');
-        if (grid) grid.innerHTML = '<div class="loading-spinner"></div> Loading JSON files...';
-        let loadedCount = 0,
-            failedCount = 0;
-        const newCategories = {};
-    
-        // Get the current script's directory
-        const scriptPath = document.currentScript.src;
-        const basePath = scriptPath.substring(0, scriptPath.lastIndexOf('/') + 1);
-        const dataPath = basePath + 'datas/';
-    
-        for (const filename of allJsonFiles) {
-            try {
-                const response = await fetch(`${dataPath}${filename}`);
-                if (!response.ok) { 
-                    console.log(`Failed to load ${filename}: ${response.status}`);
-                    failedCount++; 
-                    continue; 
+        async function autoLoadAllJsonFiles() {
+            const grid = document.getElementById('categoriesGrid');
+            if (grid) grid.innerHTML = '<div class="loading-spinner"></div> Loading JSON files...';
+            let loadedCount = 0,
+                failedCount = 0;
+            const newCategories = {};
+
+            // Use a simple relative path that always works
+            const dataPath = './datas/';
+
+            for (const filename of allJsonFiles) {
+                try {
+                    const response = await fetch(`${dataPath}${filename}`);
+                    if (!response.ok) {
+                        console.log(`Failed to load ${filename}: ${response.status}`);
+                        failedCount++;
+                        continue;
+                    }
+                    const data = await response.json();
+                    const categoryKey = filename.replace('.json', '').toLowerCase().replace(/\s+/g, '_');
+                    let displayName = categoryDisplayNames[categoryKey] || data.name || categoryKey;
+                    let iconUrl = data.icon || `https://cdn-icons-png.flaticon.com/512/1046/1046784.png`;
+                    let items = data.items || data.ingredients || data.products || [];
+                    if (items && items.length > 0) {
+                        newCategories[categoryKey] = {
+                            name: displayName,
+                            icon: iconUrl,
+                            items: items.map(item => {
+                                if (typeof item === 'string') return { name: item, qty: "as needed" };
+                                return { name: item.name || item, qty: item.qty || item.quantity ||
+                                        "to taste" };
+                            })
+                        };
+                        loadedCount++;
+                    } else { failedCount++; }
+                } catch (e) {
+                    console.log(`Error loading ${filename}:`, e);
+                    failedCount++;
                 }
-                const data = await response.json();
-                const categoryKey = filename.replace('.json', '').toLowerCase().replace(/\s+/g, '_');
-                let displayName = categoryDisplayNames[categoryKey] || data.name || categoryKey;
-                let iconUrl = data.icon || `https://cdn-icons-png.flaticon.com/512/1046/1046784.png`;
-                let items = data.items || data.ingredients || data.products || [];
-                if (items && items.length > 0) {
-                    newCategories[categoryKey] = {
-                        name: displayName,
-                        icon: iconUrl,
-                        items: items.map(item => {
-                            if (typeof item === 'string') return { name: item, qty: "as needed" };
-                            return { name: item.name || item, qty: item.qty || item.quantity ||
-                                    "to taste" };
-                        })
-                    };
-                    loadedCount++;
-                } else { failedCount++; }
-            } catch (e) { 
-                console.log(`Error loading ${filename}:`, e);
-                failedCount++; 
             }
+
+            if (loadedCount === 0) {
+                newCategories["vegetables"] = {
+                    name: "🥬 Vegetables",
+                    icon: "https://cdn-icons-png.flaticon.com/512/2398/2398841.png",
+                    items: [{ name: "Carrot", qty: "100g" }, { name: "Onion", qty: "1pc" }, { name: "Garlic",
+                        qty: "3 cloves" }]
+                };
+                newCategories["beef"] = {
+                    name: "🥩 Beef",
+                    icon: "https://cdn-icons-png.flaticon.com/512/2964/2964743.png",
+                    items: [{ name: "Beef Ribeye", qty: "200g" }, { name: "Beef Stock", qty: "300ml" },
+                    { name: "Beef Fillet", qty: "200g" }, { name: "Beef Shoulder", qty: "200g" }]
+                };
+                loadedCount = 2;
+            }
+
+            categories = newCategories;
+            currentCategory = Object.keys(categories)[0] || "";
+            renderCategories();
+            renderIngredientList();
+            document.getElementById('loadStatus').innerHTML =
+                `<i class="fas fa-check-circle"></i> ${loadedCount} categories loaded | Firebase ${firebaseInitialized ? '✓' : '✗'}`;
+            document.getElementById('debugInfo').innerHTML =
+                `<i class="fas fa-folder"></i> /datas/ folder: ${loadedCount} loaded, ${failedCount} failed. Click on any ingredient to add to recipe.`;
         }
-    
-        if (loadedCount === 0) {
-            newCategories["vegetables"] = { name: "🥬 Vegetables", icon: "https://cdn-icons-png.flaticon.com/512/2398/2398841.png",
-                items: [{ name: "Carrot", qty: "100g" }, { name: "Onion", qty: "1pc" }, { name: "Garlic",
-                    qty: "3 cloves" }] };
-            newCategories["beef"] = { name: "🥩 Beef", icon: "https://cdn-icons-png.flaticon.com/512/2964/2964743.png",
-                items: [{ name: "Beef Ribeye", qty: "200g" }, { name: "Beef Stock", qty: "300ml" },
-                { name: "Beef Fillet", qty: "200g" }, { name: "Beef Shoulder", qty: "200g" }] };
-            loadedCount = 2;
-        }
-    
-        categories = newCategories;
-        currentCategory = Object.keys(categories)[0] || "";
-        renderCategories();
-        renderIngredientList();
-        document.getElementById('loadStatus').innerHTML =
-            `<i class="fas fa-check-circle"></i> ${loadedCount} categories loaded | Firebase ${firebaseInitialized ? '✓' : '✗'}`;
-        document.getElementById('debugInfo').innerHTML =
-            `<i class="fas fa-folder"></i> /datas/ folder: ${loadedCount} loaded, ${failedCount} failed. Click on any ingredient to add to recipe.`;
-    }
-    
-            function renderCategories() {
-                const container = document.getElementById('categoriesGrid');
-                if (!container) return;
-                container.innerHTML = '';
-                for (const [key, cat] of Object.entries(categories)) {
-                    container.innerHTML += `<div class="category-item ${currentCategory === key ? 'active' : ''}" onclick="setCategory('${key}')">
+
+        function renderCategories() {
+            const container = document.getElementById('categoriesGrid');
+            if (!container) return;
+            container.innerHTML = '';
+            for (const [key, cat] of Object.entries(categories)) {
+                container.innerHTML += `<div class="category-item ${currentCategory === key ? 'active' : ''}" onclick="setCategory('${key}')">
                         <img class="category-icon" src="${cat.icon}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1046/1046784.png'">
                         <div class="category-info"><div class="category-name">${escapeHtml(cat.name)}</div><div class="category-count">${cat.items.length} items</div></div>
                     </div>`;
-                }
             }
-    
-            window.setCategory = function(cat) { currentCategory = cat;
-                renderCategories();
-                renderIngredientList(); };
+        }
+
+        window.setCategory = function(cat) {
+            currentCategory = cat;
+            renderCategories();
+            renderIngredientList();
+        };
 
         function renderIngredientList() {
             const container = document.getElementById('ingredientList');
@@ -1312,7 +1318,35 @@
             `).join('');
         }
 
-        // update qty from input
+        document.getElementById('addCustomIngredientBtn').addEventListener('click', function() {
+            const nameInput = document.getElementById('customIngredientName');
+            const qtyInput = document.getElementById('customIngredientQty');
+            const name = nameInput.value.trim();
+            const qty = qtyInput.value.trim() || 'as needed';
+            if (!name) { alert('Please enter an ingredient name.'); return; }
+            selectedIngredients.push({ name, qty });
+            renderSelectedList();
+            renderIngredientList();
+            nameInput.value = '';
+            qtyInput.value = '';
+            nameInput.focus();
+        });
+
+        // Keyboard shortcuts for custom adder
+        document.getElementById('customIngredientQty').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('addCustomIngredientBtn').click();
+            }
+        });
+
+        document.getElementById('customIngredientName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                document.getElementById('customIngredientQty').focus();
+            }
+        });
+
         window.updateQty = function(index, newQty) {
             if (index >= 0 && index < selectedIngredients.length) {
                 selectedIngredients[index].qty = newQty;
@@ -1325,10 +1359,14 @@
             renderIngredientList();
         };
 
-        function dragStart(e, i) { dragIndex = i;
-            e.dataTransfer.effectAllowed = 'move'; }
+        function dragStart(e, i) {
+            dragIndex = i;
+            e.dataTransfer.effectAllowed = 'move';
+        }
 
-        function dragOver(e) { e.preventDefault(); }
+        function dragOver(e) {
+            e.preventDefault();
+        }
 
         function drop(e, target) {
             e.preventDefault();
@@ -1341,7 +1379,9 @@
             }
         }
 
-        function dragEnd(e) { dragIndex = null; }
+        function dragEnd(e) {
+            dragIndex = null;
+        }
         window.dragStart = dragStart;
         window.dragOver = dragOver;
         window.drop = drop;
@@ -1356,26 +1396,26 @@
         function renderAllergens() {
             document.getElementById('allergensGroup').innerHTML = allergensList.map(a =>
                 `<span class="badge ${selectedAllergens.includes(a) ? 'selected' : ''}" onclick="toggleAllergen('${a}')">⚠️ ${a}</span>`
-                ).join('');
+            ).join('');
         }
 
         function renderFoodTypes() {
             document.getElementById('foodTypesGroup').innerHTML = foodTypesList.map(f =>
                 `<span class="badge ${selectedFoodTypes.includes(f) ? 'selected' : ''}" onclick="toggleFoodType('${f}')">🍽️ ${f}</span>`
-                ).join('');
+            ).join('');
         }
 
         function renderSpiceLevels() {
             document.getElementById('spiceGroup').innerHTML = spiceLevelsList.map(s =>
                 `<span class="badge ${selectedSpice === s ? 'selected' : ''}" onclick="setSpice('${s}')">🌶️ ${s}</span>`
-                ).join('');
+            ).join('');
             updateInfoDisplay();
         }
 
         function renderGarnishes() {
             document.getElementById('garnishGroup').innerHTML = garnishesList.map(g =>
                 `<span class="badge ${selectedGarnishes.includes(g) ? 'selected' : ''}" onclick="toggleGarnish('${g}')">✨ ${g}</span>`
-                ).join('');
+            ).join('');
         }
 
         window.toggleAllergen = function(a) {
@@ -1402,35 +1442,56 @@
         document.getElementById('prepTimeValue').addEventListener('input', updateInfoDisplay);
         document.getElementById('servingsValue').addEventListener('input', updateInfoDisplay);
 
-        document.getElementById('plateImageUpload').onchange = e => { const f = e.target.files[0]; if (f) { const r =
-                    new FileReader();
-                r.onload = ev => { plateImageData = ev.target.result;
-                    document.getElementById('plateImagePreview').innerHTML = `<img src="${plateImageData}">`; };
-                r.readAsDataURL(f); } };
-        document.getElementById('logo1Upload').onchange = e => { const f = e.target.files[0]; if (f) { const r =
-                    new FileReader();
-                r.onload = ev => { logo1Data = ev.target.result;
-                    document.getElementById('logo1Preview').innerHTML = `<img src="${logo1Data}">`; };
-                r.readAsDataURL(f); } };
-        document.getElementById('logo2Upload').onchange = e => { const f = e.target.files[0]; if (f) { const r =
-                    new FileReader();
-                r.onload = ev => { logo2Data = ev.target.result;
-                    document.getElementById('logo2Preview').innerHTML = `<img src="${logo2Data}">`; };
-                r.readAsDataURL(f); } };
+        document.getElementById('plateImageUpload').onchange = e => {
+            const f = e.target.files[0];
+            if (f) {
+                const r = new FileReader();
+                r.onload = ev => {
+                    plateImageData = ev.target.result;
+                    document.getElementById('plateImagePreview').innerHTML = `<img src="${plateImageData}">`;
+                };
+                r.readAsDataURL(f);
+            }
+        };
+        document.getElementById('logo1Upload').onchange = e => {
+            const f = e.target.files[0];
+            if (f) {
+                const r = new FileReader();
+                r.onload = ev => {
+                    logo1Data = ev.target.result;
+                    document.getElementById('logo1Preview').innerHTML = `<img src="${logo1Data}">`;
+                };
+                r.readAsDataURL(f);
+            }
+        };
+        document.getElementById('logo2Upload').onchange = e => {
+            const f = e.target.files[0];
+            if (f) {
+                const r = new FileReader();
+                r.onload = ev => {
+                    logo2Data = ev.target.result;
+                    document.getElementById('logo2Preview').innerHTML = `<img src="${logo2Data}">`;
+                };
+                r.readAsDataURL(f);
+            }
+        };
 
         document.getElementById('fetchJsonBtn').onclick = async () => {
             const url = document.getElementById('jsonUrlInput').value;
             if (!url) return alert('Enter URL');
             try {
-                const resp = await fetch(url.startsWith('http') ? url : `datas/${url}`);
+                const resp = await fetch(url.startsWith('http') ? url : `./datas/${url}`);
                 const data = await resp.json();
                 const catName = prompt('Category name:', 'Imported');
                 if (catName) {
                     const key = catName.toLowerCase().replace(/\s+/g, '_');
                     let items = data.items || data;
                     if (!Array.isArray(items)) items = [];
-                    categories[key] = { name: catName, icon: 'https://cdn-icons-png.flaticon.com/512/1046/1046784.png',
-                        items: items.map(i => ({ name: i.name || i, qty: i.qty || "as needed" })) };
+                    categories[key] = {
+                        name: catName,
+                        icon: 'https://cdn-icons-png.flaticon.com/512/1046/1046784.png',
+                        items: items.map(i => ({ name: i.name || i, qty: i.qty || "as needed" }))
+                    };
                     renderCategories();
                     alert(`Imported ${items.length} items`);
                 }
@@ -1449,9 +1510,11 @@
                             const key = catName.toLowerCase().replace(/\s+/g, '_');
                             let items = data.items || data;
                             if (!Array.isArray(items)) items = [];
-                            categories[key] = { name: catName,
+                            categories[key] = {
+                                name: catName,
                                 icon: 'https://cdn-icons-png.flaticon.com/512/1046/1046784.png',
-                                items: items.map(i => ({ name: i.name || i, qty: i.qty || "as needed" })) };
+                                items: items.map(i => ({ name: i.name || i, qty: i.qty || "as needed" }))
+                            };
                             renderCategories();
                             alert(`Imported ${items.length} items to "${catName}"`);
                         }
@@ -1460,21 +1523,6 @@
                 reader.readAsText(file);
             }
         };
-
-        // custom ingredient adder
-        document.getElementById('addCustomIngredientBtn').addEventListener('click', function() {
-            const nameInput = document.getElementById('customIngredientName');
-            const qtyInput = document.getElementById('customIngredientQty');
-            const name = nameInput.value.trim();
-            const qty = qtyInput.value.trim() || 'as needed';
-            if (!name) { alert('Please enter an ingredient name.'); return; }
-            // avoid duplicates? we allow duplicates but we can warn
-            selectedIngredients.push({ name, qty });
-            renderSelectedList();
-            renderIngredientList();
-            nameInput.value = '';
-            qtyInput.value = '';
-        });
 
         function generateAndPreview() {
             const recipeName = document.getElementById('recipeTitle').value;
@@ -1532,13 +1580,20 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
             try {
                 await new Promise(r => setTimeout(r, 200));
-                const opt = { margin: [0.2, 0.2, 0.2, 0.2], filename: `${document.getElementById('recipeTitle').value}_THE_CHEDI.pdf`,
-                    image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2.8, useCORS: true,
-                        backgroundColor: '#fffef7' }, jsPDF: { unit: 'in', format: 'a4',
-                        orientation: 'portrait' } };
+                const opt = {
+                    margin: [0.2, 0.2, 0.2, 0.2],
+                    filename: `${document.getElementById('recipeTitle').value}_THE_CHEDI.pdf`,
+                    image: { type: 'jpeg', quality: 0.98 },
+                    html2canvas: { scale: 2.8, useCORS: true,
+                        backgroundColor: '#fffef7' },
+                    jsPDF: { unit: 'in', format: 'a4',
+                        orientation: 'portrait' }
+                };
                 await html2pdf().set(opt).from(card).save();
-            } catch (err) { alert('PDF error: ' + err.message); } finally { btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-file-pdf"></i> Export PDF'; }
+            } catch (err) { alert('PDF error: ' + err.message); } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-file-pdf"></i> Export PDF';
+            }
         }
 
         async function saveToFirebase() {
@@ -1561,20 +1616,28 @@
                 garnishes: selectedGarnishes,
                 createdAt: new Date()
             };
-            try { await db.collection('signature_recipes').add(recipe);
+            try {
+                await db.collection('signature_recipes').add(recipe);
                 alert('Recipe saved to cloud!');
-                loadFromFirebase(); } catch (e) { alert('Error saving: ' + e.message); }
+                loadFromFirebase();
+            } catch (e) { alert('Error saving: ' + e.message); }
         }
 
         async function loadFromFirebase() {
-            if (!firebaseInitialized || !db) { document.getElementById('savedRecipesContainer').innerHTML =
-                    '<div class="empty-state">Firebase unavailable</div>'; return; }
+            if (!firebaseInitialized || !db) {
+                document.getElementById('savedRecipesContainer').innerHTML =
+                    '<div class="empty-state">Firebase unavailable</div>';
+                return;
+            }
             const container = document.getElementById('savedRecipesContainer');
             container.innerHTML = '<div class="empty-state"><div class="loading-spinner"></div> Loading recipes...</div>';
             try {
                 const snap = await db.collection('signature_recipes').orderBy('createdAt', 'desc').limit(20).get();
-                if (snap.empty) { container.innerHTML =
-                        '<div class="empty-state">No saved recipes found. Create one and save it!</div>'; return; }
+                if (snap.empty) {
+                    container.innerHTML =
+                        '<div class="empty-state">No saved recipes found. Create one and save it!</div>';
+                    return;
+                }
                 container.innerHTML = '';
                 snap.forEach(doc => {
                     const r = doc.data();
@@ -1595,7 +1658,7 @@
                         document.getElementById('servingsValue').value = r.servings || '';
                         document.getElementById('restaurantNameInput').value = r.restaurantName || '';
                         if (r.restaurantColor) document.getElementById('restaurantColor').value = r
-                        .restaurantColor;
+                            .restaurantColor;
                         if (r.cardAccentColor) document.getElementById('cardAccentColor').value = r
                             .cardAccentColor;
                         if (r.headerOverlayColor) document.getElementById('headerOverlayColor').value = r
@@ -1621,7 +1684,7 @@
                     }
                 }));
                 document.querySelectorAll('.deleteCloudBtn').forEach(btn => btn.addEventListener('click', async (
-                e) => {
+                    e) => {
                     if (confirm('Delete this recipe?')) {
                         const id = btn.getAttribute('data-id');
                         await db.collection('signature_recipes').doc(id).delete();
@@ -1629,13 +1692,21 @@
                         alert('Recipe deleted');
                     }
                 }));
-            } catch (e) { container.innerHTML = '<div class="empty-state">Error loading recipes</div>'; }
+            } catch (e) {
+                container.innerHTML = '<div class="empty-state">Error loading recipes</div>';
+            }
         }
 
-        function clearAll() { if (confirm('Reset all changes? This will clear your current recipe.')) location.reload(); }
+        function clearAll() {
+            if (confirm('Reset all changes? This will clear your current recipe.')) location.reload();
+        }
 
-        function escapeHtml(str) { if (!str) return ''; const div = document.createElement('div');
-            div.textContent = str; return div.innerHTML; }
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
 
         const themeToggle = document.getElementById('themeToggle');
         themeToggle.addEventListener('click', () => {
