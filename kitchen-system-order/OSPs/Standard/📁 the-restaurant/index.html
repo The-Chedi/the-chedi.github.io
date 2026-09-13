@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menu · The Chedi</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #f5f0ea;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1.5rem;
+      color: #1e1e1e;
+    }
+
+    .menu-card {
+      max-width: 720px;
+      width: 100%;
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06), 0 4px 10px rgba(0, 0, 0, 0.03);
+      padding: 2.25rem 2rem;
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.15rem;
+      color: #1a1a1a;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #8b7a6b;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #ede8e2;
+      padding-bottom: 0.9rem;
+    }
+
+    .items-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+
+    /* Each recipe item */
+    .items-list a {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      border-radius: 14px;
+      background: #faf7f4;
+      border: 1px solid #ede8e2;
+      text-decoration: none;
+      color: #1a1a1a;
+      transition: all 0.2s ease;
+    }
+
+    .items-list a:hover {
+      background: #f0eae4;
+      border-color: #c17e4b;
+      transform: translateX(4px);
+    }
+
+    /* Thumbnail */
+    .thumb {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #ede8e2;
+    }
+
+    /* Text inside the link */
+    .item-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      min-width: 0;
+    }
+
+    .item-name {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .item-desc {
+      font-size: 0.85rem;
+      color: #8b7a6b;
+    }
+
+    .arrow {
+      color: #c17e4b;
+      font-weight: 600;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    /* Mobile */
+    @media (max-width: 520px) {
+      .menu-card { padding: 1.75rem 1.25rem; }
+      h1 { font-size: 1.6rem; }
+      .thumb { width: 52px; height: 52px; border-radius: 10px; }
+      .item-name { font-size: 0.98rem; }
+      .item-desc { font-size: 0.78rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="menu-card">
+    <h1>Menu</h1>
+    <div class="subtitle">The Chedi · September 7, 2026</div>
+
+    <ul class="items-list">
+
+      <!-- Recipe 1 -->
+      <li>
+        <a href="tuna-toasted.html">
+          <img src="1.jpeg" alt="Tuna Toasted" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Tuna Toasted</span>
+            <span class="item-desc">Pan-seared toast, avocado, grilled tuna, tobiko</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- Recipe 2 -->
+      <li>
+        <a href="recipe2.html">
+          <img src="2.jpeg" alt="Grilled Salmon" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Grilled Salmon</span>
+            <span class="item-desc">Lemon butter, seasonal vegetables</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- Recipe 3 -->
+      <li>
+        <a href="recipe3.html">
+          <img src="3.jpeg" alt="Beef Carpaccio" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Beef Carpaccio</span>
+            <span class="item-desc">Thin-sliced beef, arugula, parmesan</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- Recipe 4 -->
+      <li>
+        <a href="recipe4.html">
+          <img src="4.jpeg" alt="Caesar Salad" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Caesar Salad</span>
+            <span class="item-desc">Romaine, croutons, creamy dressing</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- Add more items here -->
+
+    </ul>
+  </main>
+</body>
+</html>
