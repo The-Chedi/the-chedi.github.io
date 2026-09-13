@@ -2,26 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="theme-color" content="#f5f0ea">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Tuna Toasted · The Chedi</title>
   <style>
     /* ---------- Reset ---------- */
     * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    html { -webkit-text-size-adjust: 100%; }
 
     body {
       background: #f5f0ea;
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       display: flex;
       justify-content: center;
-      align-items: flex-start;
+      align-items: center;
       min-height: 100vh;
-      min-height: 100dvh; /* better on mobile browsers */
       padding: 1.5rem;
       color: #1e1e1e;
-      -webkit-font-smoothing: antialiased;
     }
 
     /* ---------- Card ---------- */
@@ -95,9 +90,9 @@
       margin-right: 0.1rem;
     }
 
-    /* Image on the right */
+    /* Image fills the empty area on the right */
     .steps-image {
-      flex: 0 0 240px;
+      flex: 0 0 240px;      /* fixed width on the right */
       display: flex;
       align-items: center;
       justify-content: center;
@@ -148,19 +143,11 @@
       border-bottom: 1px dashed #f0eae4;
       padding-bottom: 0.4rem;
       color: #2c2c2c;
-      gap: 0.5rem;
-    }
-
-    .ingredients li span:first-child {
-      min-width: 0;
-      overflow-wrap: anywhere;
     }
 
     .ingredients li span:last-child {
       font-weight: 500;
       color: #1e1e1e;
-      white-space: nowrap;
-      flex-shrink: 0;
     }
 
     .meta-details {
@@ -303,100 +290,18 @@
       margin-right: 0.2rem;
     }
 
-    /* ---------- Tablet & Mobile ---------- */
-    @media (max-width: 640px) {
-      body {
-        padding: 0.75rem;
-      }
-
-      .recipe-card {
-        padding: 1.75rem 1.25rem;
-        border-radius: 20px;
-      }
-
+    /* ---------- Responsive ---------- */
+    @media (max-width: 520px) {
+      .recipe-card { padding: 1.75rem 1.25rem; }
       h1 { font-size: 1.6rem; }
+      .info-grid { flex-direction: column; gap: 1.5rem; }
+      .badge { padding: 0.35rem 0.8rem 0.35rem 0.7rem; font-size: 0.8rem; }
+      .cat { padding: 0.4rem 0.9rem; font-size: 0.8rem; }
 
-      /* Stack steps and image vertically on mobile */
-      .steps-row {
-        flex-direction: column;
-        gap: 1.2rem;
-        margin: 1.2rem 0 1.6rem 0;
-      }
-
-      .steps-image {
-        flex: 0 0 auto;
-        width: 100%;
-      }
-
-      .steps-image img {
-        max-height: 260px;
-        width: 100%;
-        object-fit: cover;
-      }
-
-      .steps li {
-        font-size: 0.96rem;
-      }
-
-      /* Ingredients + meta become full width */
-      .info-grid {
-        flex-direction: column;
-        gap: 1.5rem;
-        padding-top: 1.5rem;
-      }
-
-      .ingredients,
-      .meta-details {
-        min-width: 0;
-        width: 100%;
-      }
-
-      .meta-details {
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 1.5rem 2rem;
-      }
-
-      .meta-item { min-width: 100px; }
-
-      /* Badges smaller */
-      .badge {
-        padding: 0.4rem 0.85rem 0.4rem 0.75rem;
-        font-size: 0.82rem;
-      }
-
-      .cat {
-        padding: 0.45rem 1rem;
-        font-size: 0.82rem;
-      }
-
-      .allergen-section {
-        padding-top: 1.25rem;
-      }
-
-      .garnish-note {
-        font-size: 0.85rem;
-        padding: 0.85rem 1rem;
-      }
-    }
-
-    /* ---------- Very small screens (iPhone SE, etc.) ---------- */
-    @media (max-width: 380px) {
-      .recipe-card { padding: 1.4rem 1rem; }
-      h1 { font-size: 1.4rem; }
-
-      .steps li {
-        font-size: 0.92rem;
-      }
-
-      .badge,
-      .cat {
-        font-size: 0.78rem;
-        padding: 0.35rem 0.75rem;
-      }
-
-      .badge .warn { width: 1rem; height: 1rem; }
-      .badge .warn::after { font-size: 0.55rem; }
+      /* On small screens, stack the image below the steps */
+      .steps-row { flex-direction: column; gap: 1.2rem; }
+      .steps-image { flex: 0 0 auto; width: 100%; }
+      .steps-image img { max-height: 220px; }
     }
 
     /* ---------- Print ---------- */
@@ -404,7 +309,6 @@
       body { background: white; padding: 0.5in; }
       .recipe-card { box-shadow: none; border-radius: 0; padding: 0; }
       .badge, .cat { border: 1px solid #ccc; }
-      .steps-row { flex-direction: row; }
     }
   </style>
 </head>
@@ -416,7 +320,7 @@
 
     <!-- Steps + Image side-by-side -->
     <div class="steps-row">
-      <!-- Steps -->
+      <!-- Steps (left) -->
       <div class="steps">
         <ol>
           <li>Pan-sear the sliced toast until golden brown and crispy.</li>
@@ -430,7 +334,7 @@
         </ol>
       </div>
 
-      <!-- Image -->
+      <!-- Image (right, in the red box area) -->
       <div class="steps-image">
         <img src="1.jpeg" alt="Tuna Toasted dish">
       </div>
