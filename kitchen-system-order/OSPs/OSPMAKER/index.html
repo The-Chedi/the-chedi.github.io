@@ -658,19 +658,21 @@
             z-index: -2;
         }
 
-        .card-header {
+         .card-header {
             position: relative;
+            width: 100%;
             height: 260px;
             overflow: hidden;
             flex-shrink: 0;
             border-radius: 28px 28px 0 0;
         }
-        /* ===== IMAGE SIZE RESTORED TO PREVIOUS SPEC ===== */
         .card-header img {
-            width: 1000px;
+            display: block;
+            width: 100%;
             height: 260px;
             object-fit: cover;
-        }
+            object-position: center;
+         }
 
         .header-overlay {
             position: absolute;
