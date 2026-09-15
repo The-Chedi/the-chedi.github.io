@@ -4,10 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>The Chedi | Signature Recipe Studio</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js">
+    </script>
     <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js">
+    </script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js">
+    </script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;400;500;600;700;800&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900&family=Great+Vibes&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
@@ -660,19 +663,25 @@
 
         .card-header {
             position: relative;
-            width: 100%;
             height: 260px;
             overflow: hidden;
             flex-shrink: 0;
             border-radius: 28px 28px 0 0;
         }
         .card-header img {
-            display: block;
             width: 100%;
             height: 100%;
             object-fit: cover;
-            object-position: center;
         }
+
+        .header-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 35px 16px;
+        }
+
         .recipe-title {
             font-family: 'Playfair Display', serif;
             font-size: 38px;
@@ -950,37 +959,6 @@
         .custom-adder button:hover {
             filter: brightness(1.05);
         }
-
-        /* custom badge adder */
-        .badge-adder {
-            display: flex;
-            gap: 6px;
-            margin-top: 8px;
-            align-items: center;
-        }
-        .badge-adder input {
-            flex: 1;
-            padding: 6px 10px;
-            border-radius: 20px;
-            border: 1px solid var(--border-color);
-            background: var(--input-bg);
-            color: var(--text-primary);
-            font-size: 11px;
-        }
-        .badge-adder button {
-            padding: 6px 12px;
-            border-radius: 20px;
-            border: none;
-            background: var(--accent);
-            color: #0a0a0a;
-            font-weight: 600;
-            font-size: 11px;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-        .badge-adder button:hover {
-            filter: brightness(1.05);
-        }
     </style>
 </head>
 <body>
@@ -1024,7 +1002,7 @@
                     <div class="row-2" style="margin-bottom: 20px;">
                         <div><label class="form-label"><i class="fas fa-utensils"></i> DISH NAME</label><input type="text" id="recipeTitle" class="recipe-title-input" value=""></div>
                         <div><label class="form-label"><i class="fas fa-clock"></i> PREP & SERVINGS</label>
-                            <div class="row-2" style="gap: 12px;"><input type="text" id="prepTimeValue" value="10 min"><input type="text" id="servingsValue" value="1 guests"></div>
+                            <div class="row-2" style="gap: 12px;"><input type="text" id="prepTimeValue" value="25 min"><input type="text" id="servingsValue" value="4 guests"></div>
                         </div>
                     </div>
 
@@ -1052,18 +1030,11 @@
                         <div class="selected-list" id="selectedItemsList"></div>
                     </div>
 
-                    <!-- ALLERGENS with custom adder -->
                     <div class="row-2" style="gap: 20px; margin-bottom: 20px;">
-                        <div>
-                            <label class="form-label">ALLERGENS</label>
+                        <div><label class="form-label">ALLERGENS</label>
                             <div class="badges-group" id="allergensGroup"></div>
-                            <div class="badge-adder">
-                                <input type="text" id="customAllergenInput" placeholder="Custom allergen (e.g. Lupin)">
-                                <button id="addCustomAllergenBtn"><i class="fas fa-plus"></i> Add</button>
-                            </div>
                         </div>
-                        <div>
-                            <label class="form-label">FOOD TYPE</label>
+                        <div><label class="form-label">FOOD TYPE</label>
                             <div class="badges-group" id="foodTypesGroup"></div>
                         </div>
                     </div>
@@ -1071,13 +1042,8 @@
                         <div><label class="form-label">SPICE LEVEL</label>
                             <div class="badges-group" id="spiceGroup"></div>
                         </div>
-                        <div>
-                            <label class="form-label">GARNISH</label>
+                        <div><label class="form-label">GARNISH</label>
                             <div class="badges-group" id="garnishGroup"></div>
-                            <div class="badge-adder">
-                                <input type="text" id="customGarnishInput" placeholder="Custom garnish (e.g. Gold leaf)">
-                                <button id="addCustomGarnishBtn"><i class="fas fa-plus"></i> Add</button>
-                            </div>
                         </div>
                     </div>
 
@@ -1090,7 +1056,7 @@
                     <div class="restaurant-panel">
                         <label class="form-label">RESTAURANT IDENTITY</label>
                         <div class="style-controls">
-                            <input type="text" id="restaurantNameInput" value="">
+                            <input type="text" id="restaurantNameInput" value="THE CHEDI">
                             <input type="color" id="restaurantColor" value="#c6a858">
                             <select id="restaurantFont">
                                 <option value="'Playfair Display', serif">Playfair Display</option>
@@ -1109,7 +1075,6 @@
                             <div class="color-item"><label><i class="fas fa-fill-drip"></i> Header Overlay</label><input type="color" id="headerOverlayColor" value="#000000"></div>
                             <div class="color-item"><label><i class="fas fa-square"></i> Method Card BG</label><input type="color" id="methodCardBgColor" value="#1a1a2e"></div>
                             <div class="color-item"><label><i class="fas fa-font"></i> Method Text</label><input type="color" id="methodTextColor" value="#f7f1e3"></div>
-                            <div class="color-item"><label><i class="fas fa-heading"></i> Dish Name Color</label><input type="color" id="dishNameColor" value="#e8d5a3"></div>
                         </div>
                     </div>
 
@@ -1165,29 +1130,27 @@
         let categories = {};
         let currentCategory = "";
         let selectedIngredients = [];
-        let selectedAllergens = [];
-        let selectedFoodTypes = [];
-        let selectedSpice = "";
-        let selectedGarnishes = [];
+        let selectedAllergens = ["Gluten", "Dairy", "Nuts"];
+        let selectedFoodTypes = ["Main Course"];
+        let selectedSpice = "Extra Hot";
+        let selectedGarnishes = ["Beef bacon crumble", "Parsley gel", "Confit tomatoes"];
         let plateImageData = null,
             logo1Data = null,
             logo2Data = null,
             dragIndex = null;
 
-        // Default lists (will be extended by custom additions)
-        let allergensList = ["Gluten", "Dairy", "Nuts", "Eggs", "Shellfish", "Soy", "Sesame", "Sulfites", "Mustard", "Celery",
+        const allergensList = ["Gluten", "Dairy", "Nuts", "Eggs", "Shellfish", "Soy", "Sesame", "Sulfites", "Mustard", "Celery",
             "Fish", "Peanuts"
         ];
         const foodTypesList = ["Main Course", "Starter", "Salad", "Seafood", "Vegetarian", "Grill", "Pasta", "Soup",
             "Dessert", "Breakfast", "Appetizer", "Side Dish", "Bread", "Tapas", "BBQ", "Stew", "Curry"
         ];
         const spiceLevelsList = ["Mild", "Medium", "Hot", "Extra Hot"];
-        let garnishesList = ["Beef bacon crumble", "Parsley gel", "Confit tomatoes", "Pumpkin seed", "tuile", "Pickled red onion slivers", "Crispy fried capers",
-            "Pea shoot microgreens", "Lemon zest powder", "Smoked paprika oil", "Charred corn kernels",
-            "Pickled mustard seeds", "Fried garlic chips", "Shaved parmesan crisps",
-            "Microgreens", "Fresh herbs", "Micro cilantro",
-            "Balsamic glaze pearls", "Toasted hazelnut crumble", "Edible flower petals"
-        ];
+        const garnishesList = ["Beef bacon crumble", "Parsley gel", "Confit tomatoes", "Pumpkin seed" ,"tuile", "Pickled red onion slivers", "Crispy fried capers",
+                               "Pea shoot microgreens", "Lemon zest powder", "Smoked paprika oil", "Charred corn kernels",
+                                "Pickled mustard seeds", "Fried garlic chips", "Shaved parmesan crisps",
+                               "Microgreens","Fresh herbs","Micro cilantro", 
+                               "Balsamic glaze pearls", "Toasted hazelnut crumble", "Edible flower petals"];
 
         const allJsonFiles = ["beef.json", "chocolate.json", "dairy.json", "Desserts.json", "food_colors.json",
             "frozen.json", "grains.json", "ice_cream.json", "jams.json", "juices.json", "nuts_dried.json",
@@ -1217,15 +1180,6 @@
             "vegetables": "🥬 Vegetables"
         };
 
-        // ✅ NEW: Sanitizer for hex colors (prevents html2canvas CanvasGradient error)
-        function safeHex(val, fallback) {
-            if (!val || typeof val !== 'string') return fallback;
-            let c = val.trim();
-            if (c.charAt(0) !== '#') c = '#' + c;
-            if (/^#([0-9a-fA-F]{3}){1,2}$/.test(c)) return c;
-            return fallback;
-        }
-
         async function autoLoadAllJsonFiles() {
             const grid = document.getElementById('categoriesGrid');
             if (grid) grid.innerHTML = '<div class="loading-spinner"></div> Loading JSON files...';
@@ -1233,6 +1187,7 @@
                 failedCount = 0;
             const newCategories = {};
 
+            // Use a simple relative path that always works
             const dataPath = './datas/';
 
             for (const filename of allJsonFiles) {
@@ -1483,56 +1438,6 @@
             renderGarnishes();
         };
 
-        // Custom allergen adder
-        document.getElementById('addCustomAllergenBtn').addEventListener('click', function() {
-            const input = document.getElementById('customAllergenInput');
-            const newAllergen = input.value.trim();
-            if (!newAllergen) { alert('Please enter an allergen name.'); return; }
-            if (allergensList.includes(newAllergen)) {
-                alert('This allergen already exists in the list.');
-                input.value = '';
-                return;
-            }
-            allergensList.push(newAllergen);
-            // Auto-select the newly added allergen
-            if (!selectedAllergens.includes(newAllergen)) selectedAllergens.push(newAllergen);
-            renderAllergens();
-            input.value = '';
-            input.focus();
-        });
-
-        document.getElementById('customAllergenInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                document.getElementById('addCustomAllergenBtn').click();
-            }
-        });
-
-        // Custom garnish adder
-        document.getElementById('addCustomGarnishBtn').addEventListener('click', function() {
-            const input = document.getElementById('customGarnishInput');
-            const newGarnish = input.value.trim();
-            if (!newGarnish) { alert('Please enter a garnish name.'); return; }
-            if (garnishesList.includes(newGarnish)) {
-                alert('This garnish already exists in the list.');
-                input.value = '';
-                return;
-            }
-            garnishesList.push(newGarnish);
-            // Auto-select the newly added garnish
-            if (!selectedGarnishes.includes(newGarnish)) selectedGarnishes.push(newGarnish);
-            renderGarnishes();
-            input.value = '';
-            input.focus();
-        });
-
-        document.getElementById('customGarnishInput').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                document.getElementById('addCustomGarnishBtn').click();
-            }
-        });
-
         document.getElementById('prepTimeValue').addEventListener('input', updateInfoDisplay);
         document.getElementById('servingsValue').addEventListener('input', updateInfoDisplay);
 
@@ -1624,15 +1529,13 @@
             const prep = document.getElementById('prepTimeValue').value;
             const servings = document.getElementById('servingsValue').value;
             let restName = document.getElementById('restaurantNameInput').value;
-            // ✅ Sanitize colors to prevent html2canvas gradient errors
-            const restColor           = safeHex(document.getElementById('restaurantColor').value,    '#c6a858');
-            const font                = document.getElementById('restaurantFont').value;
-            const format              = document.getElementById('restaurantFormat').value;
-            const cardAccentColor     = safeHex(document.getElementById('cardAccentColor').value,     '#c6a858');
-            const headerOverlayColor  = safeHex(document.getElementById('headerOverlayColor').value,  '#000000');
-            const methodCardBgColor   = safeHex(document.getElementById('methodCardBgColor').value,   '#1a1a2e');
-            const methodTextColor     = safeHex(document.getElementById('methodTextColor').value,     '#f7f1e3');
-            const dishNameColor       = safeHex(document.getElementById('dishNameColor').value,       '#e8d5a3');
+            const restColor = document.getElementById('restaurantColor').value;
+            const font = document.getElementById('restaurantFont').value;
+            const format = document.getElementById('restaurantFormat').value;
+            const cardAccentColor = document.getElementById('cardAccentColor').value;
+            const headerOverlayColor = document.getElementById('headerOverlayColor').value;
+            const methodCardBgColor = document.getElementById('methodCardBgColor').value;
+            const methodTextColor = document.getElementById('methodTextColor').value;
 
             if (format === 'uppercase') restName = restName.toUpperCase();
             if (format === 'capitalize') restName = restName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)
@@ -1647,7 +1550,7 @@
             const overlayGradient = `linear-gradient(0deg, ${headerOverlayColor}dd 0%, ${headerOverlayColor}00 100%)`;
 
             const previewHtml = `<div class="recipe-card" id="masterRecipeCard">
-                <div class="card-header" style="background: ${methodCardBgColor};"><img src="${hero}" alt="${escapeHtml(recipeName)}" crossorigin="anonymous"><div class="header-overlay" style="background: ${overlayGradient};"><div class="recipe-title" style="color: ${dishNameColor};">${escapeHtml(recipeName)}</div></div></div>
+                <div class="card-header" style="background: ${methodCardBgColor};"><img src="${hero}" alt="${escapeHtml(recipeName)}" crossorigin="anonymous"><div class="header-overlay" style="background: ${overlayGradient};"><div class="recipe-title">${escapeHtml(recipeName)}</div></div></div>
                 <div class="card-body"><div class="two-columns">
                     <div class="left-panel"><div class="section-emblem" style="color: ${cardAccentColor}; border-bottom-color: ${cardAccentColor};">INGREDIENTS</div>
                     <ul class="ingredient-list">${selectedIngredients.map(i => `<li><span>${escapeHtml(i.name)}</span><span style="color:${cardAccentColor};">${escapeHtml(i.qty)}</span></li>`).join('')}</ul>
@@ -1706,7 +1609,6 @@
                 headerOverlayColor: document.getElementById('headerOverlayColor').value,
                 methodCardBgColor: document.getElementById('methodCardBgColor').value,
                 methodTextColor: document.getElementById('methodTextColor').value,
-                dishNameColor: document.getElementById('dishNameColor').value,
                 allergens: selectedAllergens,
                 foodTypes: selectedFoodTypes,
                 spice: selectedSpice,
@@ -1764,29 +1666,11 @@
                             .methodCardBgColor;
                         if (r.methodTextColor) document.getElementById('methodTextColor').value = r
                             .methodTextColor;
-                        if (r.dishNameColor) document.getElementById('dishNameColor').value = r.dishNameColor;
                         selectedIngredients = r.ingredients || [];
-                        // Load allergens, but also extend the default list if needed
-                        if (r.allergens && Array.isArray(r.allergens)) {
-                            selectedAllergens = r.allergens;
-                            // Add any missing custom allergens to the master list
-                            r.allergens.forEach(a => {
-                                if (!allergensList.includes(a)) allergensList.push(a);
-                            });
-                        } else {
-                            selectedAllergens = [];
-                        }
+                        selectedAllergens = r.allergens || ["Gluten", "Dairy"];
                         selectedFoodTypes = r.foodTypes || ["Main Course"];
-                        selectedSpice = r.spice || "Medium";
-                        // Load garnishes, but also extend the default list if needed
-                        if (r.garnishes && Array.isArray(r.garnishes)) {
-                            selectedGarnishes = r.garnishes;
-                            r.garnishes.forEach(g => {
-                                if (!garnishesList.includes(g)) garnishesList.push(g);
-                            });
-                        } else {
-                            selectedGarnishes = [];
-                        }
+                        selectedSpice = r.spice || "Extra Hot";
+                        selectedGarnishes = r.garnishes || [];
                         renderSelectedList();
                         renderIngredientList();
                         renderAllergens();
@@ -1847,7 +1731,6 @@
         document.getElementById('searchInput').onkeyup = () => renderIngredientList();
         document.getElementById('refreshCategoriesBtn').onclick = () => autoLoadAllJsonFiles();
 
-        // Initial render
         renderAllergens();
         renderFoodTypes();
         renderSpiceLevels();
