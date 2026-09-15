@@ -1217,6 +1217,15 @@
             "vegetables": "🥬 Vegetables"
         };
 
+        // ✅ NEW: Sanitizer for hex colors (prevents html2canvas CanvasGradient error)
+        function safeHex(val, fallback) {
+            if (!val || typeof val !== 'string') return fallback;
+            let c = val.trim();
+            if (c.charAt(0) !== '#') c = '#' + c;
+            if (/^#([0-9a-fA-F]{3}){1,2}$/.test(c)) return c;
+            return fallback;
+        }
+
         async function autoLoadAllJsonFiles() {
             const grid = document.getElementById('categoriesGrid');
             if (grid) grid.innerHTML = '<div class="loading-spinner"></div> Loading JSON files...';
@@ -1615,14 +1624,15 @@
             const prep = document.getElementById('prepTimeValue').value;
             const servings = document.getElementById('servingsValue').value;
             let restName = document.getElementById('restaurantNameInput').value;
-            const restColor = document.getElementById('restaurantColor').value;
-            const font = document.getElementById('restaurantFont').value;
-            const format = document.getElementById('restaurantFormat').value;
-            const cardAccentColor = document.getElementById('cardAccentColor').value;
-            const headerOverlayColor = document.getElementById('headerOverlayColor').value;
-            const methodCardBgColor = document.getElementById('methodCardBgColor').value;
-            const methodTextColor = document.getElementById('methodTextColor').value;
-            const dishNameColor = document.getElementById('dishNameColor').value;
+            // ✅ Sanitize colors to prevent html2canvas gradient errors
+            const restColor           = safeHex(document.getElementById('restaurantColor').value,    '#c6a858');
+            const font                = document.getElementById('restaurantFont').value;
+            const format              = document.getElementById('restaurantFormat').value;
+            const cardAccentColor     = safeHex(document.getElementById('cardAccentColor').value,     '#c6a858');
+            const headerOverlayColor  = safeHex(document.getElementById('headerOverlayColor').value,  '#000000');
+            const methodCardBgColor   = safeHex(document.getElementById('methodCardBgColor').value,   '#1a1a2e');
+            const methodTextColor     = safeHex(document.getElementById('methodTextColor').value,     '#f7f1e3');
+            const dishNameColor       = safeHex(document.getElementById('dishNameColor').value,       '#e8d5a3');
 
             if (format === 'uppercase') restName = restName.toUpperCase();
             if (format === 'capitalize') restName = restName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)
