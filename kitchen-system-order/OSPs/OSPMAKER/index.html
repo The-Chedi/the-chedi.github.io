@@ -1115,6 +1115,7 @@
                             <div class="color-item"><label><i class="fas fa-fill-drip"></i> Header Overlay</label><input type="color" id="headerOverlayColor" value="#000000"></div>
                             <div class="color-item"><label><i class="fas fa-square"></i> Method Card BG</label><input type="color" id="methodCardBgColor" value="#1a1a2e"></div>
                             <div class="color-item"><label><i class="fas fa-font"></i> Method Text</label><input type="color" id="methodTextColor" value="#f7f1e3"></div>
+                            <div class="color-item"><label><i class="fas fa-heading"></i> Dish Name Color</label><input type="color" id="dishNameColor" value="#e8d5a3"></div>
                         </div>
                     </div>
 
@@ -1172,7 +1173,7 @@
         let selectedIngredients = [];
         let selectedAllergens = [];
         let selectedFoodTypes = [];
-        let selectedSpice = "Medium";
+        let selectedSpice = "";
         let selectedGarnishes = [];
         let plateImageData = null,
             logo1Data = null,
@@ -1627,6 +1628,7 @@
             const headerOverlayColor = document.getElementById('headerOverlayColor').value;
             const methodCardBgColor = document.getElementById('methodCardBgColor').value;
             const methodTextColor = document.getElementById('methodTextColor').value;
+            const dishNameColor = document.getElementById('dishNameColor').value;
 
             if (format === 'uppercase') restName = restName.toUpperCase();
             if (format === 'capitalize') restName = restName.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)
@@ -1641,7 +1643,7 @@
             const overlayGradient = `linear-gradient(0deg, ${headerOverlayColor}dd 0%, ${headerOverlayColor}00 100%)`;
 
             const previewHtml = `<div class="recipe-card" id="masterRecipeCard">
-                <div class="card-header" style="background: ${methodCardBgColor};"><img src="${hero}" alt="${escapeHtml(recipeName)}" crossorigin="anonymous"><div class="header-overlay" style="background: ${overlayGradient};"><div class="recipe-title">${escapeHtml(recipeName)}</div></div></div>
+                <div class="card-header" style="background: ${methodCardBgColor};"><img src="${hero}" alt="${escapeHtml(recipeName)}" crossorigin="anonymous"><div class="header-overlay" style="background: ${overlayGradient};"><div class="recipe-title" style="color: ${dishNameColor};">${escapeHtml(recipeName)}</div></div></div>
                 <div class="card-body"><div class="two-columns">
                     <div class="left-panel"><div class="section-emblem" style="color: ${cardAccentColor}; border-bottom-color: ${cardAccentColor};">INGREDIENTS</div>
                     <ul class="ingredient-list">${selectedIngredients.map(i => `<li><span>${escapeHtml(i.name)}</span><span style="color:${cardAccentColor};">${escapeHtml(i.qty)}</span></li>`).join('')}</ul>
@@ -1700,6 +1702,7 @@
                 headerOverlayColor: document.getElementById('headerOverlayColor').value,
                 methodCardBgColor: document.getElementById('methodCardBgColor').value,
                 methodTextColor: document.getElementById('methodTextColor').value,
+                dishNameColor: document.getElementById('dishNameColor').value,
                 allergens: selectedAllergens,
                 foodTypes: selectedFoodTypes,
                 spice: selectedSpice,
@@ -1757,6 +1760,7 @@
                             .methodCardBgColor;
                         if (r.methodTextColor) document.getElementById('methodTextColor').value = r
                             .methodTextColor;
+                        if (r.dishNameColor) document.getElementById('dishNameColor').value = r.dishNameColor;
                         selectedIngredients = r.ingredients || [];
                         // Load allergens, but also extend the default list if needed
                         if (r.allergens && Array.isArray(r.allergens)) {
