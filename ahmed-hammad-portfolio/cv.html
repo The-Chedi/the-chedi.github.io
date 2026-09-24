@@ -4,116 +4,192 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>CV — Ahmed Hammad</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&family=Great+Vibes&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Caveat:wght@700&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <nav class="nav">
-  <a href="index.html" class="logo">
-    <div class="logo-top">CHEF</div>
-    <div class="logo-bottom">HAMMAD</div>
-  </a>
-  <ul class="nav-links">
-    <li><a href="index.html">Home</a></li>
-    <li><a href="cv.html" class="active">CV</a></li>
-    <li><a href="plates.html">Plates</a></li>
-    <li><a href="lifestyle.html">Lifestyle</a></li>
-    <li><a href="contact.html" class="nav-cta">Book Me</a></li>
-  </ul>
-  <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
-</nav>
+  <!-- TICKER -->
+  <div class="ticker">
+    <div class="ticker-track">
+      <span>★ SOUS CHEF</span><span>THE CHEDI EL GOUNA</span><span>20+ YEARS</span>
+      <span>SILVER MEDAL 2015</span><span>BRONZE MEDAL 2013</span><span>HACCP CERTIFIED</span>
+      <span>★ SOUS CHEF</span><span>THE CHEDI EL GOUNA</span><span>20+ YEARS</span>
+      <span>SILVER MEDAL 2015</span><span>BRONZE MEDAL 2013</span><span>HACCP CERTIFIED</span>
+    </div>
+  </div>
 
-  <header class="page-header">
-    <h1>The CV</h1>
-    <p>Two decades in world-class kitchens.</p>
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="index.html" class="logo">
+      <div class="logo-top">CHEF</div>
+      <div class="logo-bottom">HAMMAD</div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="cv.html" class="active">CV</a></li>
+      <li><a href="plates.html">Plates</a></li>
+      <li><a href="lifestyle.html">Lifestyle</a></li>
+      <li><a href="contact.html" class="nav-cta">Book Me</a></li>
+    </ul>
+    <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+  </nav>
+
+  <!-- PAGE HERO -->
+  <header class="page-hero">
+    <div class="page-hero-inner">
+      <div>
+        <div class="eyebrow">— THE FULL STORY</div>
+        <h1>The <em>CV</em></h1>
+      </div>
+      <div class="page-desc">
+        Two decades. Ten five-star kitchens. Three countries.
+        A career built <strong>one plate at a time</strong>.
+      </div>
+    </div>
   </header>
 
   <main class="container">
 
+    <!-- INTRO + STATS -->
+    <section class="cv-intro">
+      <div class="cv-intro-text">
+        <div class="section-label">— WHO I AM</div>
+        <h2>
+          Professional <em>Sous Chef</em> with over 20 years
+          cooking in the finest kitchens of Egypt and the UAE.
+        </h2>
+        <p>
+          From Sharm El Sheikh to Dubai to El Gouna — I've built teams,
+          developed menus, controlled costs, and passed every food-safety audit.
+        </p>
+      </div>
+      <div class="cv-intro-stats">
+        <div class="cv-stat"><div class="cv-stat-num">20+</div><div class="cv-stat-label">Years</div></div>
+        <div class="cv-stat"><div class="cv-stat-num">10</div><div class="cv-stat-label">Kitchens</div></div>
+        <div class="cv-stat"><div class="cv-stat-num">2</div><div class="cv-stat-label">Medals</div></div>
+        <div class="cv-stat"><div class="cv-stat-num">3</div><div class="cv-stat-label">Countries</div></div>
+      </div>
+    </section>
+
     <!-- CURRENT -->
-    <section class="cv-section">
-      <h2>Current Position</h2>
-      <div class="cv-card highlight">
-        <div class="cv-head">
-          <h3>Sous Chef</h3>
-          <span class="cv-date">2022 — Present</span>
-        </div>
-        <p class="cv-place">The Chedi El Gouna · El Gouna, Egypt</p>
+    <section class="cv-block">
+      <div class="cv-block-header">
+        <h3>Current Position</h3>
+        <span class="counter">2022 — PRESENT</span>
+      </div>
+      <div class="cv-current">
+        <h4>Sous Chef</h4>
+        <div class="cv-place">The Chedi El Gouna · El Gouna, Egypt</div>
+        <div class="cv-date">10/2022 — Present</div>
         <ul>
           <li>Lead daily operations of the hot kitchen section</li>
-          <li>Plan, prepare and execute menu items to five-star standards</li>
-          <li>Assist in menu development and seasonal dish creation</li>
-          <li>Conduct stock-taking and enforce strict food-cost controls</li>
-          <li>Train and supervise junior kitchen staff</li>
-          <li>Maintain HACCP hygiene and cleanliness protocols</li>
+          <li>Plan, prepare & execute dishes to five-star standards</li>
+          <li>Assist in menu development & seasonal creations</li>
+          <li>Stock-taking & strict food-cost controls</li>
+          <li>Train & supervise junior kitchen staff</li>
+          <li>Maintain HACCP hygiene protocols</li>
         </ul>
       </div>
     </section>
 
     <!-- EXPERIENCE -->
-    <section class="cv-section">
-      <h2>Experience</h2>
-      <div class="timeline">
-        <div class="t-item"><div class="t-dot"></div><div class="t-body"><span>10/2022 – Present</span><h3>Sous Chef</h3><p>The Chedi El Gouna · Egypt</p></div></div>
-        <div class="t-item"><div class="t-dot"></div><div class="t-body"><span>01/2021 – 05/2022</span><h3>Junior Sous Chef</h3><p>Crowne Plaza Sheikh Zayed Road · Dubai, UAE</p></div></div>
-        <div class="t-item"><div class="t-dot"></div><div class="t-body"><span>04/2019 – 06/2020</span><h3>Junior Sous Chef</h3><p>Mövenpick Grand Al Bustan · Dubai, UAE</p></div></div>
-        <div class="t-item"><div class="t-dot"></div><div class="t-body"><span>01/2017 – 04/2019</span><h3>Chef de Partie</h3><p>Roda Al Bustan · Dubai, UAE</p></div></div>
-        <div class="t-item"><div class="t-dot"></div><div class="t-body"><span>12/2011 – 12/2016</span><h3>Chef de Partie</h3><p>Al Bustan Rotana · Dubai, UAE</p></div></div>
-        <div class="t-item"><div class="t-dot"></div><div class="t-body"><span>10/2010 – 11/2011</span><h3>First Commis → Demi Chef de Partie</h3><p>Dusit Thani Lakeview · Cairo, Egypt</p></div></div>
-        <div class="t-item"><div class="t-dot"></div><div class="t-body"><span>11/2009 – 10/2010</span><h3>First Commis</h3><p>Stella Di Mare Beach Hotel & Spa · Sharm El Sheikh</p></div></div>
-        <div class="t-item"><div class="t-dot"></div><div class="t-body"><span>11/2008 – 10/2009</span><h3>First Commis</h3><p>Savoy Hotel · Sharm El Sheikh, Egypt</p></div></div>
-        <div class="t-item"><div class="t-dot"></div><div class="t-body"><span>08/2007 – 11/2008</span><h3>Second Commis</h3><p>Hilton Hotel Alexandria Green Plaza · Egypt</p></div></div>
-        <div class="t-item"><div class="t-dot"></div><div class="t-body"><span>02/2002 – 08/2007</span><h3>Second Commis</h3><p>Trianon Restaurant · Alexandria, Egypt</p></div></div>
+    <section class="cv-block">
+      <div class="cv-block-header">
+        <h3>Experience</h3>
+        <span class="counter">10 POSITIONS</span>
+      </div>
+      <div class="funky-timeline">
+        <div class="t-item"><div class="t-dot"></div><div class="t-body"><div class="t-date">10/2022 — Present</div><h4>Sous Chef</h4><p>The Chedi El Gouna · Egypt</p></div></div>
+        <div class="t-item"><div class="t-dot"></div><div class="t-body"><div class="t-date">01/2021 — 05/2022</div><h4>Junior Sous Chef</h4><p>Crowne Plaza Sheikh Zayed Road · Dubai, UAE</p></div></div>
+        <div class="t-item"><div class="t-dot"></div><div class="t-body"><div class="t-date">04/2019 — 06/2020</div><h4>Junior Sous Chef</h4><p>Mövenpick Grand Al Bustan · Dubai, UAE</p></div></div>
+        <div class="t-item"><div class="t-dot"></div><div class="t-body"><div class="t-date">01/2017 — 04/2019</div><h4>Chef de Partie</h4><p>Roda Al Bustan · Dubai, UAE</p></div></div>
+        <div class="t-item"><div class="t-dot"></div><div class="t-body"><div class="t-date">12/2011 — 12/2016</div><h4>Chef de Partie</h4><p>Al Bustan Rotana · Dubai, UAE</p></div></div>
+        <div class="t-item"><div class="t-dot"></div><div class="t-body"><div class="t-date">10/2010 — 11/2011</div><h4>First Commis → Demi Chef de Partie</h4><p>Dusit Thani Lakeview · Cairo, Egypt</p></div></div>
+        <div class="t-item"><div class="t-dot"></div><div class="t-body"><div class="t-date">11/2009 — 10/2010</div><h4>First Commis</h4><p>Stella Di Mare Beach Hotel & Spa · Sharm El Sheikh</p></div></div>
+        <div class="t-item"><div class="t-dot"></div><div class="t-body"><div class="t-date">11/2008 — 10/2009</div><h4>First Commis</h4><p>Savoy Hotel · Sharm El Sheikh, Egypt</p></div></div>
+        <div class="t-item"><div class="t-dot"></div><div class="t-body"><div class="t-date">08/2007 — 11/2008</div><h4>Second Commis</h4><p>Hilton Hotel Alexandria Green Plaza · Egypt</p></div></div>
+        <div class="t-item"><div class="t-dot"></div><div class="t-body"><div class="t-date">02/2002 — 08/2007</div><h4>Second Commis</h4><p>Trianon Restaurant · Alexandria, Egypt</p></div></div>
       </div>
     </section>
 
     <!-- AWARDS -->
-    <section class="cv-section">
-      <h2>Awards & Certifications</h2>
-      <div class="awards-grid">
-        <div class="award-card gold"><div class="medal">🥈</div><h4>Silver Medal</h4><p>Emirates Culinary Guild · Live Cooking · 2015</p></div>
-        <div class="award-card gold"><div class="medal">🥉</div><h4>Bronze Medal</h4><p>Emirates Culinary Guild · Live Cooking · 2013</p></div>
-        <div class="award-card"><div class="medal">✓</div><h4>HACCP</h4><p>Elementary Food Hygiene International Certificate · 2012</p></div>
-        <div class="award-card"><div class="medal">✓</div><h4>PIC Certificate</h4><p>Approved by Dubai Municipality</p></div>
-        <div class="award-card"><div class="medal">✓</div><h4>Fire & Safety</h4><p>Professional training certified</p></div>
-        <div class="award-card"><div class="medal">✓</div><h4>Leadership</h4><p>Destination Leadership Training</p></div>
+    <section class="cv-block">
+      <div class="cv-block-header">
+        <h3>Awards & Certifications</h3>
+        <span class="counter">06 TOTAL</span>
+      </div>
+      <div class="awards-funky">
+        <div class="award-funky gold"><span class="a-medal">🥈</span><h4>Silver Medal</h4><p>Emirates Culinary Guild · Live Cooking · 2015</p></div>
+        <div class="award-funky coral"><span class="a-medal">🥉</span><h4>Bronze Medal</h4><p>Emirates Culinary Guild · Live Cooking · 2013</p></div>
+        <div class="award-funky"><span class="a-medal">✓</span><h4>HACCP</h4><p>Elementary Food Hygiene International Certificate · 2012</p></div>
+        <div class="award-funky dark"><span class="a-medal">✓</span><h4>PIC Certified</h4><p>Approved by Dubai Municipality</p></div>
+        <div class="award-funky"><span class="a-medal">✓</span><h4>Fire & Safety</h4><p>Professional training certified</p></div>
+        <div class="award-funky"><span class="a-medal">✓</span><h4>Leadership</h4><p>Destination Leadership Training</p></div>
       </div>
     </section>
 
     <!-- SKILLS -->
-    <section class="cv-section">
-      <h2>Skills</h2>
-      <div class="skills-grid">
-        <div class="skill">Menu Development & Planning</div>
-        <div class="skill">Food Cost Control</div>
-        <div class="skill">HACCP & Food Hygiene</div>
-        <div class="skill">Team Leadership</div>
-        <div class="skill">Problem Solving</div>
-        <div class="skill">Critical Thinking</div>
-        <div class="skill">Time Management</div>
-        <div class="skill">Communication & Teamwork</div>
-        <div class="skill">Emotional Intelligence</div>
-        <div class="skill">Attention to Detail</div>
-        <div class="skill">Administration</div>
-        <div class="skill">MS Office (Word, PowerPoint)</div>
+    <section class="cv-block">
+      <div class="cv-block-header">
+        <h3>Skills</h3>
+        <span class="counter">12 CORE</span>
+      </div>
+      <div class="skills-funky">
+        <span class="skill-pill">Menu Development</span>
+        <span class="skill-pill">Food Cost Control</span>
+        <span class="skill-pill">HACCP & Hygiene</span>
+        <span class="skill-pill">Team Leadership</span>
+        <span class="skill-pill">Problem Solving</span>
+        <span class="skill-pill">Critical Thinking</span>
+        <span class="skill-pill">Time Management</span>
+        <span class="skill-pill">Communication</span>
+        <span class="skill-pill">Emotional Intelligence</span>
+        <span class="skill-pill">Attention to Detail</span>
+        <span class="skill-pill">Administration</span>
+        <span class="skill-pill">MS Office</span>
       </div>
     </section>
 
     <!-- EDUCATION -->
-    <section class="cv-section">
-      <h2>Education</h2>
-      <div class="cv-card">
-        <h3>Bachelor of Tourism and Hotels</h3>
-        <p class="cv-place">Department of Kitchen</p>
-        <p class="cv-date">Graduated 2002</p>
+    <section class="cv-block">
+      <div class="cv-block-header">
+        <h3>Education</h3>
+        <span class="counter">2002</span>
+      </div>
+      <div class="edu-card">
+        <h4>Bachelor of Tourism & Hotels</h4>
+        <div class="edu-dept">Department of Kitchen</div>
+        <div class="edu-year">GRADUATED 2002</div>
       </div>
     </section>
 
   </main>
 
   <footer class="footer">
-    <p>© <span id="year"></span> Ahmed Hammad · Sous Chef · The Chedi El Gouna</p>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="footer-logo">CHEF<br><span>HAMMAD</span></div>
+        <p>The Chedi El Gouna · Alexandria, Egypt</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Explore</strong>
+          <a href="cv.html">CV</a>
+          <a href="plates.html">Plates</a>
+          <a href="lifestyle.html">Lifestyle</a>
+        </div>
+        <div>
+          <strong>Contact</strong>
+          <a href="tel:01287633200">01287633200</a>
+          <a href="mailto:Chef10182@gmail.com">Email</a>
+          <a href="https://wa.me/201287633200">WhatsApp</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">© <span id="year"></span> Ahmed Hammad · Crafted with 🔥</div>
   </footer>
 
   <script src="script.js"></script>
