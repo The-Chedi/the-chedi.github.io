@@ -1,24 +1,31 @@
-// Auto copyright year
-document.querySelectorAll('#year').forEach(el => {
-  el.textContent = new Date().getFullYear();
-});
+/* Year */
+document.querySelectorAll('#year').forEach(el => el.textContent = new Date().getFullYear());
 
-// Page fade-in on load
-document.body.style.opacity = '0';
-document.body.style.transition = 'opacity 0.5s ease';
-window.addEventListener('load', () => {
-  document.body.style.opacity = '1';
-});
-
-// Smooth scroll for anchor links
-document.querySelectorAll('a[href^="#"]').forEach(a => {
-  a.addEventListener('click', function (e) {
-    const id = this.getAttribute('href');
-    if (id === '#') return;
-    const target = document.querySelector(id);
-    if (target) {
-      e.preventDefault();
-      target.scrollIntoView({ behavior: 'smooth' });
+/* Scroll reveal */
+const io = new IntersectionObserver((entries) => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.classList.add('visible');
+      io.unobserve(e.target);
     }
+  });
+}, { threshold: 0.12, rootMargin: '0px 0px -60px 0px' });
+
+document.querySelectorAll(
+  '.intro, .intro-label, .intro-title, .intro-body, .grid-header, .grid-card, .quote-text, .quote-author, .stat, .footer-inner'
+).forEach(el => {
+  el.classList.add('reveal');
+  io.observe(el);
+});
+
+/* Stagger grid cards */
+document.querySelectorAll('.grid-card').forEach((card, i) => {
+  card.style.transitionDelay = (i * 0.08) + 's';
+});
+
+/* Mobile nav close on link click */
+document.querySelectorAll('.nav-links a').forEach(a => {
+  a.addEventListener('click', () => {
+    document.querySelector('.nav-links').classList.remove('open');
   });
 });
