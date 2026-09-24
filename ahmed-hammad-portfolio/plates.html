@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plates — Ahmed Hammad</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&family=Great+Vibes&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <nav class="topnav">
+    <div class="topnav-inner">
+      <a href="index.html" class="brand">
+        <span class="brand-line1">CHEF</span><span class="brand-line2">AHMED</span>
+        <span class="brand-tag">Portfolio</span>
+      </a>
+      <ul class="topnav-links">
+        <li><a href="index.html"><span>🏠</span> Home</a></li>
+        <li><a href="cv.html"><span>📄</span> CV</a></li>
+        <li><a href="plates.html" class="active"><span>🍽️</span> Plates</a></li>
+        <li><a href="lifestyle.html"><span>✨</span> Lifestyle</a></li>
+        <li><a href="contact.html"><span>✉️</span> Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <header class="page-header">
+    <h1>Plates</h1>
+    <p>A gallery of signature dishes and kitchen moments.</p>
+  </header>
+
+  <main class="container">
+
+    <div class="plates-grid">
+      <!-- Replace image src with your own files in images/ -->
+      <div class="plate-item">
+        <img src="images/plate-1.jpg" alt="Signature dish 1" onerror="this.parentElement.classList.add('placeholder');">
+        <div class="plate-caption">Signature Main</div>
+      </div>
+      <div class="plate-item">
+        <img src="images/plate-2.jpg" alt="Signature dish 2" onerror="this.parentElement.classList.add('placeholder');">
+        <div class="plate-caption">Seafood Special</div>
+      </div>
+      <div class="plate-item">
+        <img src="images/plate-3.jpg" alt="Signature dish 3" onerror="this.parentElement.classList.add('placeholder');">
+        <div class="plate-caption">Dessert Art</div>
+      </div>
+      <div class="plate-item">
+        <img src="images/plate-4.jpg" alt="Signature dish 4" onerror="this.parentElement.classList.add('placeholder');">
+        <div class="plate-caption">Live Cooking</div>
+      </div>
+      <div class="plate-item">
+        <img src="images/plate-5.jpg" alt="Signature dish 5" onerror="this.parentElement.classList.add('placeholder');">
+        <div class="plate-caption">Plated Starter</div>
+      </div>
+      <div class="plate-item">
+        <img src="images/plate-6.jpg" alt="Signature dish 6" onerror="this.parentElement.classList.add('placeholder');">
+        <div class="plate-caption">Mediterranean</div>
+      </div>
+    </div>
+
+    <p class="plates-note">📸 Add your own photos inside the <code>images/</code> folder — name them <code>plate-1.jpg</code>, <code>plate-2.jpg</code>, etc.</p>
+
+  </main>
+
+  <footer class="footer">
+    <p>© <span id="year"></span> Ahmed Hammad · Sous Chef · The Chedi El Gouna</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
