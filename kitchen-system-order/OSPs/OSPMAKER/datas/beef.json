@@ -1,0 +1,17 @@
+{
+    "name": "🥩 Beef & Meat",
+    "icon": "https://cdn-icons-png.flaticon.com/512/1998/1998626.png",
+    "items": [
+      { "name": "Beef Shoulder", "qty": "200g" },
+      { "name": "Beef Fillet", "qty": "200g" },
+      { "name": "Beef Rib Eye", "qty": "200g" },
+      { "name": "Beef Tenderloin", "qty": "200g" },
+      { "name": "Beef Bacon Smoked Sliced", "qty": "50g" },
+      { "name": "Beef Sausage", "qty": "2 pieces" },
+      { "name": "Beef Cold Cut", "qty": "100g" },
+      { "name": "Beef Salami", "qty": "100g" },
+      { "name": "Lamb Rack", "qty": "250g" },
+      { "name": "Lamb Shank", "qty": "300g" }
+    ]
+  }
+

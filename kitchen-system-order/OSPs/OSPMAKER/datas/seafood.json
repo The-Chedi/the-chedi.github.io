@@ -1,0 +1,18 @@
+{
+  "name": "🐟 Seafood & Fish",
+  "icon": "https://cdn-icons-png.flaticon.com/512/3094/3094790.png",
+  "items": [
+    { "name": "Fish Fillet Seabass", "qty": "200g" },
+    { "name": "Calamari", "qty": "150g" },
+    { "name": "Salmon Fillet", "qty": "200g" },
+    { "name": "Sea Scallop", "qty": "100g" },
+    { "name": "Mussels", "qty": "200g" },
+    { "name": "Shrimps Large", "qty": "150g" },
+    { "name": "Tuna Saku", "qty": "200g" },
+    { "name": "Shrimps Meat", "qty": "150g" },
+    { "name": "Crabs", "qty": "200g" },
+    { "name": "Smoked Salmon", "qty": "100g" },
+    { "name": "Crab Steaks", "qty": "150g" },
+    { "name": "Smoked Eel", "qty": "150g" }
+  ]
+}

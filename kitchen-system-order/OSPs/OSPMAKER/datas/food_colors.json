@@ -1,0 +1,11 @@
+{
+  "name": "🎨 Food Colors",
+  "icon": "https://cdn-icons-png.flaticon.com/512/1802/1802985.png",
+  "items": [
+    { "name": "Blue Color Powder", "qty": "0.5g" },
+    { "name": "Green Color Powder", "qty": "0.5g" },
+    { "name": "Red Color Powder", "qty": "0.5g" },
+    { "name": "Red Raspberry Color", "qty": "0.5g" },
+    { "name": "Yellow Color Powder", "qty": "0.5g" }
+  ]
+}

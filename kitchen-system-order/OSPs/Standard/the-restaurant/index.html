@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Menu · The Chedi</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #f5f0ea;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1.5rem;
+      color: #1e1e1e;
+    }
+
+    .menu-card {
+      max-width: 720px;
+      width: 100%;
+      background: #ffffff;
+      border-radius: 24px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06), 0 4px 10px rgba(0, 0, 0, 0.03);
+      padding: 2.25rem 2rem;
+    }
+
+    /* --- Top bar: back / recipes shortcut --- */
+    .top-bar {
+      display: flex;
+      justify-content: flex-end;
+      margin-bottom: 1rem;
+    }
+
+    .recipes-link {
+      display: inline-flex;
+      align-items: center;
+      gap: .4rem;
+      font-size: .85rem;
+      color: #8b7a6b;
+      text-decoration: none;
+      letter-spacing: .05em;
+      text-transform: uppercase;
+      font-weight: 500;
+      padding: .45rem .9rem;
+      border-radius: 100px;
+      background: #faf7f4;
+      border: 1px solid #ede8e2;
+      transition: all .2s ease;
+    }
+
+    .recipes-link:hover {
+      background: #f0eae4;
+      border-color: #c17e4b;
+      color: #c17e4b;
+      transform: translateX(2px);
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.15rem;
+      color: #1a1a1a;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #8b7a6b;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid #ede8e2;
+      padding-bottom: 0.9rem;
+    }
+
+    .section-title {
+      font-size: 0.78rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: #c17e4b;
+      font-weight: 700;
+      margin: 2rem 0 0.9rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px dashed #ede8e2;
+    }
+    .section-title:first-of-type { margin-top: 0; }
+
+    .items-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.7rem;
+    }
+
+    .items-list a {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.75rem 1rem;
+      border-radius: 14px;
+      background: #faf7f4;
+      border: 1px solid #ede8e2;
+      text-decoration: none;
+      color: #1a1a1a;
+      transition: all 0.2s ease;
+    }
+
+    .items-list a:hover {
+      background: #f0eae4;
+      border-color: #c17e4b;
+      transform: translateX(4px);
+    }
+
+    .thumb {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      object-fit: cover;
+      flex-shrink: 0;
+      background: #ede8e2;
+    }
+
+    .item-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      min-width: 0;
+    }
+
+    .item-name {
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: #1a1a1a;
+    }
+
+    .item-desc {
+      font-size: 0.85rem;
+      color: #8b7a6b;
+    }
+
+    .arrow {
+      color: #c17e4b;
+      font-weight: 600;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+    }
+
+    @media (max-width: 520px) {
+      .menu-card { padding: 1.75rem 1.25rem; }
+      h1 { font-size: 1.6rem; }
+      .thumb { width: 52px; height: 52px; border-radius: 10px; }
+      .item-name { font-size: 0.98rem; }
+      .item-desc { font-size: 0.78rem; }
+    }
+  </style>
+</head>
+<body>
+  <main class="menu-card">
+
+    <!-- Top: View Recipes button -->
+    <div class="top-bar">
+      <a class="recipes-link" href="recipes.html">📖 View Recipes</a>
+    </div>
+
+    <h1>Menu</h1>
+    <div class="subtitle">The Chedi · September 7, 2026</div>
+
+    <!-- ==================== SALADS & STARTERS ==================== -->
+    <div class="section-title">Salads &amp; Starters</div>
+    <ul class="items-list">
+
+      <!-- 1 -->
+      <li>
+        <a href="tuna-toasted.html">
+          <img src="1.jpeg" alt="Tuna Toasted" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Tuna Toasted</span>
+            <span class="item-desc">Pan-seared toast, avocado, grilled tuna, tobiko</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- 2 -->
+      <li>
+        <a href="grilled-salmon.html">
+          <img src="2.jpeg" alt="Grilled Salmon" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Grilled Salmon</span>
+            <span class="item-desc">Lemon butter, seasonal vegetables</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- 3 -->
+      <li>
+        <a href="beef-carpaccio.html">
+          <img src="3.jpeg" alt="Beef Carpaccio" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Beef Carpaccio</span>
+            <span class="item-desc">Thin-sliced beef, arugula, parmesan</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- 4 -->
+      <li>
+        <a href="caesar-salad.html">
+          <img src="4.jpeg" alt="Caesar Salad" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Caesar Salad</span>
+            <span class="item-desc">Romaine, croutons, creamy dressing</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- 5 -->
+      <li>
+        <a href="nagel-fish.html">
+          <img src="5.jpeg" alt="Nagel Fish with Freekeh" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Nagel Fish with Freekeh</span>
+            <span class="item-desc">Roasted Nagel fish, freekeh, roasted peppers</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- 6 -->
+      <li>
+        <a href="salmon-tartar.html">
+          <img src="6.jpeg" alt="Salmon Tartar" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Salmon Tartar</span>
+            <span class="item-desc">Sriracha, soy, ginger, Ikora caviar</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- 7 -->
+      <li>
+        <a href="seabass-habanero.html">
+          <img src="7.jpeg" alt="Seabass with Green Habanero" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Seabass with Green Habanero</span>
+            <span class="item-desc">Habanero cream, pickled ginger &amp; onion</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- 8 -->
+      <li>
+        <a href="seafood-bisque.html">
+          <img src="8.jpeg" alt="Seafood Bisque" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Seafood Bisque</span>
+            <span class="item-desc">Shrimp, mussels, fish, Hondashi cream</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- 9 -->
+      <li>
+        <a href="tabbouleh.html">
+          <img src="9.jpeg" alt="Tabbouleh Salad" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Tabbouleh Salad</span>
+            <span class="item-desc">Parsley, mint, tomato, burrata, molasses</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- 10 -->
+      <li>
+        <a href="beetroot-goat.html">
+          <img src="10.jpeg" alt="Beetroot & Goat Cheese Salad" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Beetroot &amp; Goat Cheese Salad</span>
+            <span class="item-desc">Baby beetroot, watercress, hazelnuts</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- 11 -->
+      <li>
+        <a href="burrata-salad.html">
+          <img src="11.jpeg" alt="Burrata Salad" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Burrata Salad</span>
+            <span class="item-desc">Cherry tomatoes, basil vinaigrette, burrata</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- 12 -->
+      <li>
+        <a href="chicken-pineapple.html">
+          <img src="12.jpeg" alt="Chicken Pineapple Salad" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Chicken Pineapple Salad</span>
+            <span class="item-desc">Grilled chicken, pineapple, gem lettuce</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- 13 -->
+      <li>
+        <a href="beef-bowl.html">
+          <img src="13.jpeg" alt="Beef Bowl" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Beef Bowl (Fat Tarb Wrapped)</span>
+            <span class="item-desc">Grilled beef, green hummus, basil oil</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- 14 -->
+      <li>
+        <a href="crab-salad.html">
+          <img src="14.jpeg" alt="Crab Salad" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Crab Salad</span>
+            <span class="item-desc">Crispy tempura crab, dynamite sauce, tobiko</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- 15 -->
+      <li>
+        <a href="molokhia-quail.html">
+          <img src="15.jpeg" alt="Creamy Molokhia & Grilled Quail" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Creamy Molokhia &amp; Grilled Quail</span>
+            <span class="item-desc">Molokhia purée, porcini, garlic-tomato sauce</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- 16 -->
+      <li>
+        <a href="fattoush.html">
+          <img src="16.jpeg" alt="Fattoush Salad" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Fattoush Salad</span>
+            <span class="item-desc">Crispy pita, fresh vegetables, sumac dressing</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- 17 -->
+      <li>
+        <a href="lobster-keshk.html">
+          <img src="17.jpeg" alt="Lobster Keshk" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Lobster Keshk</span>
+            <span class="item-desc">Grilled lobster, shrimp, bisque foam</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- 18 -->
+      <li>
+        <a href="pumpkin-soup.html">
+          <img src="18.jpeg" alt="Pumpkin Soup" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Pumpkin Soup</span>
+            <span class="item-desc">Roasted pumpkin, coconut cream, truffle oil</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- 19 -->
+      <li>
+        <a href="beetroot-quinoa-tabbouleh.html">
+          <img src="19.jpeg" alt="Beetroot & Quinoa Tabbouleh" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Beetroot &amp; Quinoa Tabbouleh Salad</span>
+            <span class="item-desc">Red &amp; white quinoa, beetroot, avocado</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- 20 -->
+      <li>
+        <a href="rocket-salad.html">
+          <img src="20.jpeg" alt="Rocket Salad" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Rocket Salad</span>
+            <span class="item-desc">Rocket, cherry tomato, avocado, pine nuts</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- 22 -->
+      <li>
+        <a href="veal-tonnato.html">
+          <img src="22.jpeg" alt="Veal Tonnato" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Veal Tonnato</span>
+            <span class="item-desc">Veal, tuna cream, capers, pastrami powder</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- 23 -->
+      <li>
+        <a href="beef-tartare.html">
+          <img src="23.jpeg" alt="Beef Tartare" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Beef Tartare</span>
+            <span class="item-desc">Beef fillet, wasabi cream, egg yolk</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- 24 -->
+      <li>
+        <a href="beef-croquette.html">
+          <img src="24.jpeg" alt="Beef Croquette" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Beef Croquette</span>
+            <span class="item-desc">Veal, béchamel, panko, tomato pepper sauce</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+      <!-- Spicy Burrata -->
+      <li>
+        <a href="Spicy-Burrata-Sala.html">
+          <img src="31.jpeg" alt="Spicy Burrata Sala" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Spicy Burrata Sala</span>
+            <span class="item-desc">Cherry tomatoes, basil vinaigrette, fried onion, burrata</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+    </ul>
+
+    <!-- ==================== COLD MAZZA ==================== -->
+    <div class="section-title">Cold Mazza</div>
+    <ul class="items-list">
+
+      <!-- 21 -->
+      <li>
+        <a href="muhammara.html">
+          <img src="28.jpeg" alt="Muhammara" class="thumb">
+          <div class="item-info">
+            <span class="item-name">Muhammara</span>
+            <span class="item-desc">Roasted pepper, tahini, walnuts, pomegranate</span>
+          </div>
+          <span class="arrow">→</span>
+        </a>
+      </li>
+
+    </ul>
+
+  </main>
+</body>
+</html>

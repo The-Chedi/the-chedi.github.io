@@ -1,0 +1,15 @@
+{
+  "name": "🍦 Ice Cream",
+  "icon": "https://cdn-icons-png.flaticon.com/512/3059/3059994.png",
+  "items": [
+    { "name": "Black & White Ice Cream", "qty": "100ml" },
+    { "name": "Blackberry Ice Cream", "qty": "100ml" },
+    { "name": "Carmelita Ice Cream", "qty": "100ml" },
+    { "name": "Chocolate Chips Ice Cream", "qty": "100ml" },
+    { "name": "Espresso Ice Cream", "qty": "100ml" },
+    { "name": "Lemon Ice Cream", "qty": "100ml" },
+    { "name": "Mango Ice Cream", "qty": "100ml" },
+    { "name": "Vanilla Ice Cream", "qty": "100ml" },
+    { "name": "Stratcialla Ice Cream", "qty": "100ml" }
+  ]
+}

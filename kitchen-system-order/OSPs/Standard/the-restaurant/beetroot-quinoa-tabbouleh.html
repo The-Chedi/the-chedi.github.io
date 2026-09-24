@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#f5f0ea">
+<title>Beetroot &amp; Quinoa Tabbouleh · The Chedi</title>
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{background:#f5f0ea;font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;display:flex;justify-content:center;align-items:flex-start;min-height:100vh;min-height:100dvh;padding:1.5rem;color:#1e1e1e;-webkit-font-smoothing:antialiased}
+  .recipe-card{max-width:720px;width:100%;background:#fff;border-radius:24px;box-shadow:0 12px 30px rgba(0,0,0,.06),0 4px 10px rgba(0,0,0,.03);padding:2.25rem 2rem}
+  .hero{position:relative;width:100%;height:180px;border-radius:16px;overflow:hidden;background:#1e1e1e;margin-bottom:1.5rem}
+  .hero img{width:100%;height:100%;object-fit:cover;display:block}
+  .hero-title{position:absolute;left:20px;bottom:14px;font-family:Georgia,'Times New Roman',serif;font-size:2.2rem;font-weight:600;color:#f4a15a;letter-spacing:-.01em;text-shadow:0 2px 8px rgba(0,0,0,.55);line-height:1}
+  .content{display:grid;grid-template-columns:1fr 1.05fr;gap:2rem;align-items:start;margin-top:.5rem}
+  .left{min-width:0}
+  .ingredients h2{font-size:.78rem;letter-spacing:.2em;text-transform:uppercase;font-weight:700;color:#c17e4b;margin-bottom:1rem}
+  .ingredients ul{list-style:none;display:flex;flex-direction:column;gap:.7rem}
+  .ingredients li{display:flex;justify-content:space-between;font-size:.95rem;color:#2c2c2c;border-bottom:1px dashed #e8e0d6;padding-bottom:.45rem;gap:.5rem}
+  .ingredients li span:first-child{min-width:0;overflow-wrap:anywhere}
+  .ingredients li span:last-child{font-weight:500;color:#c17e4b;white-space:nowrap;flex-shrink:0}
+  .allergen-section{margin-top:1.6rem;padding-top:1.4rem;border-top:1px solid #ede8e2}
+  .allergen-section h3{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:#c17e4b;font-weight:700;margin-bottom:.85rem}
+  .badge-row{display:flex;flex-wrap:wrap;gap:.55rem;align-items:center;margin-bottom:.9rem}
+  .badge{display:inline-flex;align-items:center;gap:.35rem;padding:.4rem .85rem .4rem .75rem;border-radius:100px;background:#f7f3ef;font-size:.82rem;font-weight:600;color:#2d2d2d;line-height:1;border:1px solid #e6ddd6;white-space:nowrap}
+  .badge .warn{display:inline-block;width:1rem;height:1rem;position:relative;flex-shrink:0}
+  .badge .warn::before{content:"";position:absolute;inset:0;background:#f5a623;clip-path:polygon(50% 0%,0% 100%,100% 100%)}
+  .badge .warn::after{content:"!";position:absolute;left:50%;top:55%;transform:translate(-50%,-50%);font-size:.58rem;font-weight:900;color:#1a1a1a;line-height:1}
+  .category-badges{display:flex;flex-wrap:wrap;gap:.55rem;margin-bottom:.9rem}
+  .cat{display:inline-flex;align-items:center;gap:.4rem;padding:.45rem 1rem;border-radius:100px;font-size:.82rem;font-weight:600;color:#1e1e1e;line-height:1;white-space:nowrap;border:none}
+  .cat.starter,.cat.salad{background:#f9a03f}
+  .cat.mild{background:#8b1e2b;color:#fff}
+  .cat .emoji{font-size:.9rem;line-height:1}
+  .prep-serve{display:flex;justify-content:space-between;align-items:center;background:#faf7f4;border-radius:100px;padding:.6rem 1.1rem;font-size:.82rem;font-weight:600;color:#2c2c2c;margin-bottom:1.4rem}
+  .prep-serve span{display:inline-flex;align-items:center;gap:.4rem}
+  .garnish h3{font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;color:#c17e4b;font-weight:700;margin-bottom:.75rem}
+  .garnish-badges{display:flex;flex-wrap:wrap;gap:.55rem}
+  .garnish-badge{display:inline-flex;align-items:center;gap:.35rem;padding:.4rem .9rem .4rem .8rem;border-radius:100px;background:#f7f3ef;font-size:.82rem;font-weight:500;color:#2d2d2d;line-height:1;border:1px solid #e6ddd6;white-space:nowrap}
+  .garnish-badge .spark{color:#c17e4b;font-size:.9rem;line-height:1}
+  .right{background:#f4f1e4;border-radius:20px;padding:1.75rem 1.5rem 2rem;min-height:100%}
+  .right .brand{font-family:Georgia,'Times New Roman',serif;font-size:1.6rem;font-weight:700;color:#1e3d3a;letter-spacing:-.01em;line-height:1.1;margin-bottom:.2rem}
+  .right .date{font-size:.75rem;color:#8b7a6b;letter-spacing:.03em;border-bottom:1px solid #ded8c8;padding-bottom:.9rem;margin-bottom:1.4rem}
+  .right h2{font-size:.8rem;letter-spacing:.2em;text-transform:uppercase;font-weight:700;color:#c17e4b;margin-bottom:1rem;padding-left:.75rem;border-left:3px solid #c17e4b;line-height:1}
+  .right ol{list-style:none;counter-reset:step-counter;display:flex;flex-direction:column;gap:.85rem}
+  .right li{counter-increment:step-counter;display:flex;align-items:baseline;font-size:.88rem;line-height:1.55;color:#2c2c2c}
+  .right li::before{content:counter(step-counter);font-weight:700;color:#1e3d3a;min-width:1.3rem;margin-right:.4rem;font-size:.88rem}
+  @media (max-width:640px){body{padding:.75rem}.recipe-card{padding:1.5rem 1.15rem;border-radius:20px}.hero{height:150px;border-radius:14px}.hero-title{font-size:1.6rem;left:16px;bottom:12px}.content{grid-template-columns:1fr;gap:1.5rem}.right{padding:1.4rem 1.2rem}.right .brand{font-size:1.35rem}.ingredients li{font-size:.9rem}.right li{font-size:.85rem}.badge,.cat,.garnish-badge{font-size:.75rem;padding:.35rem .7rem}}
+  @media (max-width:380px){.recipe-card{padding:1.2rem .9rem}.hero-title{font-size:1.3rem}.right .brand{font-size:1.15rem}.ingredients li{font-size:.85rem}.right li{font-size:.82rem}}
+  @media print{body{background:#fff;padding:.5in}.recipe-card{box-shadow:none;border-radius:0;padding:0}}
+</style>
+</head>
+<body>
+<main class="recipe-card">
+  <div class="hero">
+    <img src="19.jpeg" alt="Beetroot & Quinoa Tabbouleh">
+    <div class="hero-title">Beetroot &amp; Quinoa</div>
+  </div>
+
+  <div class="content">
+    <div class="left">
+      <div class="ingredients">
+        <h2>Ingredients</h2>
+        <ul>
+          <li><span>Red Quinoa</span><span>50 g</span></li>
+          <li><span>White Quinoa</span><span>50 g</span></li>
+          <li><span>Roasted Grated Beetroot</span><span>80 g</span></li>
+          <li><span>Tomato Brunoise</span><span>50 g</span></li>
+          <li><span>Fresh Parsley (chopped)</span><span>20 g</span></li>
+          <li><span>Avocado (sliced)</span><span>50 g</span></li>
+          <li><span>Mixed Lettuce</span><span>50 g</span></li>
+          <li><span>Cherry Tomato</span><span>40 g</span></li>
+          <li><span>Microgreens</span><span>5 g</span></li>
+          <li><span>Lemon Juice</span><span>15 ml</span></li>
+          <li><span>Olive Oil</span><span>20 ml</span></li>
+          <li><span>Salt</span><span>3 g</span></li>
+          <li><span>Black Pepper</span><span>1 g</span></li>
+        </ul>
+      </div>
+
+      <div class="allergen-section">
+        <h3>⚠ Allergen information</h3>
+        <div class="badge-row"></div>
+        <div class="category-badges">
+          <span class="cat salad"><span class="emoji">🥗</span> Salad</span>
+          <span class="cat starter"><span class="emoji">🍽️</span> Starter</span>
+          <span class="cat mild"><span class="emoji">🌶️</span> Mild</span>
+        </div>
+        <div class="prep-serve">
+          <span>⏱️ Prep: 12 min</span>
+          <span>🍽️ Serves: 1 guest</span>
+        </div>
+      </div>
+
+      <div class="garnish">
+        <h3>✦ Garnish</h3>
+        <div class="garnish-badges">
+          <span class="garnish-badge"><span class="spark">✦</span> Microgreens</span>
+          <span class="garnish-badge"><span class="spark">✦</span> Avocado</span>
+          <span class="garnish-badge"><span class="spark">✦</span> Cherry Tomato</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="right">
+      <div class="brand">The Restaurant</div>
+      <div class="date">September 20, 2026</div>
+      <h2>Method</h2>
+      <ol>
+        <li>Cook the red and white quinoa separately until tender.</li>
+        <li>Drain well and cool completely.</li>
+        <li>Combine the quinoa, roasted beetroot, tomato brunoise and chopped parsley.</li>
+        <li>Add lemon juice, olive oil, salt and black pepper.</li>
+        <li>Mix gently until well combined.</li>
+        <li>Arrange the mixed lettuce on the plate.</li>
+        <li>Add the quinoa mixture and garnish with avocado, cherry tomato and microgreens.</li>
+        <li>Serve chilled.</li>
+      </ol>
+    </div>
+  </div>
+</main>
+</body>
+</html>

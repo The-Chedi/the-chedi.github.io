@@ -1,0 +1,19 @@
+{
+  "name": "🫘 Legumes & Seeds",
+  "icon": "https://cdn-icons-png.flaticon.com/512/2989/2989992.png",
+  "items": [
+    { "name": "Black Lentil", "qty": "60g" },
+    { "name": "Crushed Fava Beans", "qty": "80g" },
+    { "name": "Sesame Seeds", "qty": "10g" },
+    { "name": "Red Quinoa", "qty": "60g" },
+    { "name": "White Quinoa", "qty": "60g" },
+    { "name": "Chickpeas Dry", "qty": "60g" },
+    { "name": "White Beans Dry", "qty": "60g" },
+    { "name": "Yellow Lentil", "qty": "60g" },
+    { "name": "Borgoul", "qty": "60g" },
+    { "name": "Freek", "qty": "60g" },
+    { "name": "Whole Wheat", "qty": "60g" },
+    { "name": "Chia Seeds", "qty": "10g" },
+    { "name": "Pumpkin Seeds", "qty": "15g" }
+  ]
+}

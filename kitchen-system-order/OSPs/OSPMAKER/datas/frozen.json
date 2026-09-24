@@ -1,0 +1,18 @@
+{
+  "name": "🥬 Frozen Vegetables",
+  "icon": "https://cdn-icons-png.flaticon.com/512/2398/2398841.png",
+  "items": [
+    { "name": "Frozen Beans", "qty": "100g" },
+    { "name": "Frozen Broccoli", "qty": "100g" },
+    { "name": "French Fries", "qty": "150g" },
+    { "name": "Frozen Peas", "qty": "80g" },
+    { "name": "Frozen Spinach", "qty": "100g" },
+    { "name": "Frozen Molokia", "qty": "100g" },
+    { "name": "Frozen Okra", "qty": "80g" },
+    { "name": "Mixed Vegetables", "qty": "120g" },
+    { "name": "Mixed Berries", "qty": "100g" },
+    { "name": "Frozen Raspberry", "qty": "80g" },
+    { "name": "Frozen Red Currant", "qty": "80g" },
+    { "name": "Edamame Beans", "qty": "100g" }
+  ]
+}

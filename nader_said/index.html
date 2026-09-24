@@ -1,0 +1,2051 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="format-detection" content="telephone=no">
+<title>Nader Said — Executive Chef</title>
+<meta name="description" content="Nader Said — Executive Chef and Culinary Specialist with 15+ years of experience across Cyprus, Egypt, and Saudi Arabia.">
+<meta name="theme-color" content="#1c1917">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,700;1,9..144,300;1,9..144,400;1,9..144,500&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+    *, *::before, *::after {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+    }
+
+    :root {
+        --canvas: #1c1917;
+        --canvas-2: #262220;
+        --canvas-3: #2e2a27;
+        --rose: #d99a8a;
+        --rose-deep: #b8766a;
+        --gold: #c9a86a;
+        --cream: #f2ebe2;
+        --cream-dim: #b8b0a5;
+        --muted: #7a736b;
+        --line: rgba(242, 235, 226, 0.08);
+
+        --font-display: 'Fraunces', Georgia, serif;
+        --font-body: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        --font-mono: 'JetBrains Mono', 'SF Mono', monospace;
+        --ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+        --pad-x: 44px;
+        --safe-l: env(safe-area-inset-left, 0px);
+        --safe-r: env(safe-area-inset-right, 0px);
+        --safe-b: env(safe-area-inset-bottom, 0px);
+    }
+
+    html {
+        scroll-behavior: smooth;
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+
+    body {
+        font-family: var(--font-body);
+        background: var(--canvas);
+        color: var(--cream);
+        line-height: 1.6;
+        font-size: 15px;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        overflow-x: hidden;
+        width: 100%;
+        max-width: 100vw;
+        padding-left: var(--safe-l);
+        padding-right: var(--safe-r);
+        padding-bottom: var(--safe-b);
+    }
+
+    img {
+        max-width: 100%;
+        height: auto;
+        display: block;
+    }
+
+    /* Prevent zoom on input focus on iOS */
+    input, select, textarea, button {
+        font-size: 16px;
+        font-family: inherit;
+    }
+
+    /* ============================================
+       DROP ZONE
+    ============================================ */
+    .drop-zone {
+        position: relative;
+        transition: all 0.4s var(--ease);
+    }
+
+    .drop-zone.dragover {
+        transform: scale(1.03);
+        box-shadow: 0 0 0 3px var(--rose), 0 30px 80px rgba(217, 154, 138, 0.5) !important;
+        z-index: 20;
+    }
+
+    .drop-zone.dragover::after {
+        content: "⬇ Drop image here";
+        position: absolute;
+        inset: 0;
+        background: rgba(217, 154, 138, 0.9);
+        color: var(--canvas);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        font-weight: 600;
+        border-radius: inherit;
+        z-index: 10;
+        pointer-events: none;
+    }
+
+    /* ============================================
+       NAV
+    ============================================ */
+    .nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        padding: 18px var(--pad-x);
+        padding-top: calc(18px + env(safe-area-inset-top, 0px));
+        padding-left: calc(var(--pad-x) + var(--safe-l));
+        padding-right: calc(var(--pad-x) + var(--safe-r));
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 20px;
+        background: linear-gradient(180deg, rgba(28,25,23,0.92) 0%, rgba(28,25,23,0.6) 70%, transparent 100%);
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+        transition: all 0.35s var(--ease);
+    }
+
+    .nav.scrolled {
+        background: rgba(28,25,23,0.96);
+        border-bottom: 1px solid var(--line);
+        padding-top: calc(14px + env(safe-area-inset-top, 0px));
+        padding-bottom: 14px;
+    }
+
+    .brand-block {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        color: var(--cream-dim);
+        line-height: 1.5;
+        text-decoration: none;
+        transition: color 0.25s var(--ease);
+    }
+
+    .brand-block:hover { color: var(--rose); }
+    .brand-block strong { color: var(--cream); font-weight: 500; letter-spacing: 3px; }
+
+    .nav-menu {
+        display: flex;
+        gap: 6px;
+        list-style: none;
+        align-items: center;
+    }
+
+    .nav-menu a {
+        color: var(--cream-dim);
+        text-decoration: none;
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        padding: 10px 16px;
+        border-radius: 100px;
+        transition: all 0.3s var(--ease);
+        position: relative;
+    }
+
+    .nav-menu a::after {
+        content: "";
+        position: absolute;
+        bottom: 4px;
+        left: 50%;
+        transform: translateX(-50%) scaleX(0);
+        width: 22px;
+        height: 1px;
+        background: var(--rose);
+        transition: transform 0.35s var(--ease);
+    }
+
+    .nav-menu a:hover { color: var(--cream); }
+    .nav-menu a:hover::after { transform: translateX(-50%) scaleX(1); }
+    .nav-menu a.active { color: var(--rose); }
+    .nav-menu a.active::after { transform: translateX(-50%) scaleX(1); }
+
+    .nav-back {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        color: var(--cream-dim);
+        text-decoration: none;
+        transition: color 0.25s var(--ease);
+    }
+
+    .nav-back:hover { color: var(--rose); }
+
+    .nav-toggle {
+        display: none;
+        background: none;
+        border: 1px solid var(--line);
+        color: var(--cream);
+        font-size: 18px;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        cursor: pointer;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s var(--ease);
+        flex-shrink: 0;
+    }
+
+    .nav-toggle:hover {
+        border-color: var(--rose);
+        color: var(--rose);
+    }
+
+    /* ============================================
+       HERO
+    ============================================ */
+    .hero {
+        min-height: 100vh;
+        min-height: 100svh;
+        position: relative;
+        padding: 140px var(--pad-x) 100px var(--pad-x);
+        padding-top: calc(140px + env(safe-area-inset-top, 0px));
+        overflow: hidden;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 80px;
+        align-items: center;
+        max-width: 1600px;
+        margin: 0 auto;
+    }
+
+    .hero-watermark {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        font-family: var(--font-display);
+        font-size: clamp(160px, 26vw, 460px);
+        font-weight: 300;
+        font-style: italic;
+        letter-spacing: -10px;
+        line-height: 0.85;
+        color: var(--rose);
+        opacity: 0.10;
+        pointer-events: none;
+        user-select: none;
+        white-space: nowrap;
+        z-index: 1;
+    }
+
+    .hero-watermark span { font-style: normal; font-weight: 400; }
+
+    .hero-text {
+        position: relative;
+        z-index: 5;
+        max-width: 620px;
+    }
+
+    .hero-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 14px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--rose);
+        font-weight: 500;
+        margin-bottom: 26px;
+    }
+
+    .hero-eyebrow::before {
+        content: "";
+        width: 40px;
+        height: 1px;
+        background: var(--rose);
+    }
+
+    .hero-name {
+        font-family: var(--font-display);
+        font-size: clamp(44px, 6.5vw, 96px);
+        font-weight: 300;
+        line-height: 0.98;
+        letter-spacing: -2.5px;
+        color: var(--cream);
+        margin-bottom: 24px;
+        word-break: break-word;
+    }
+
+    .hero-name em {
+        font-style: italic;
+        color: var(--rose);
+        font-weight: 400;
+    }
+
+    .hero-role {
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 4px;
+        text-transform: uppercase;
+        color: var(--cream-dim);
+        margin-bottom: 30px;
+    }
+
+    .hero-desc {
+        font-size: 15.5px;
+        line-height: 1.75;
+        color: var(--cream-dim);
+        margin-bottom: 40px;
+        max-width: 500px;
+    }
+
+    .hero-desc strong { color: var(--cream); font-weight: 500; }
+
+    .hero-actions {
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+    }
+
+    .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        padding: 14px 28px;
+        min-height: 48px;
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        font-weight: 500;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        text-decoration: none;
+        border-radius: 100px;
+        cursor: pointer;
+        border: 1px solid transparent;
+        transition: all 0.35s var(--ease);
+        white-space: nowrap;
+        user-select: none;
+    }
+
+    .btn-primary {
+        background: var(--rose);
+        color: var(--canvas);
+        border-color: var(--rose);
+    }
+
+    .btn-primary:hover {
+        background: var(--cream);
+        border-color: var(--cream);
+        transform: translateY(-2px);
+        box-shadow: 0 16px 40px rgba(217,154,138,0.35);
+    }
+
+    .btn-ghost {
+        background: transparent;
+        color: var(--cream);
+        border-color: rgba(242,235,226,0.25);
+    }
+
+    .btn-ghost:hover {
+        border-color: var(--rose);
+        color: var(--rose);
+        transform: translateY(-2px);
+    }
+
+    /* PORTRAIT */
+    .hero-portrait-wrap {
+        position: relative;
+        z-index: 5;
+        flex-shrink: 0;
+    }
+
+    .hero-portrait {
+        position: relative;
+        width: 380px;
+        max-width: 100%;
+        aspect-ratio: 3 / 4;
+        border-radius: 6px;
+        overflow: hidden;
+        background: linear-gradient(160deg, var(--canvas-3), var(--canvas-2));
+        cursor: pointer;
+        box-shadow:
+            0 40px 100px rgba(0, 0, 0, 0.55),
+            0 0 0 1px rgba(217, 154, 138, 0.15);
+        transition: all 0.7s var(--ease);
+    }
+
+    .hero-portrait:hover {
+        transform: translateY(-8px);
+        box-shadow:
+            0 55px 120px rgba(0, 0, 0, 0.7),
+            0 0 0 1px rgba(217, 154, 138, 0.4);
+    }
+
+    .hero-portrait img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    .hero-portrait .ph {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        color: var(--rose);
+        text-align: center;
+        padding: 30px;
+        pointer-events: none;
+        background:
+            radial-gradient(circle at 50% 30%, rgba(217,154,138,0.06) 0%, transparent 70%),
+            linear-gradient(160deg, rgba(217,154,138,0.04), transparent);
+    }
+
+    .hero-portrait .ph-icon { font-size: 90px; opacity: 0.35; line-height: 1; }
+
+    .hero-portrait .ph-label {
+        font-family: var(--font-display);
+        font-size: 22px;
+        font-style: italic;
+        font-weight: 300;
+        color: var(--cream);
+        opacity: 0.7;
+    }
+
+    .hero-portrait .ph-sub {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        opacity: 0.5;
+    }
+
+    .hero-portrait .ph-hint {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        padding: 8px 16px;
+        border: 1px dashed rgba(217,154,138,0.4);
+        border-radius: 100px;
+        margin-top: 8px;
+        opacity: 0.7;
+    }
+
+    .hero-portrait-wrap::before {
+        content: "";
+        position: absolute;
+        inset: -18px -18px 30px 30px;
+        border: 1px solid rgba(217, 154, 138, 0.22);
+        border-radius: 8px;
+        z-index: -1;
+        pointer-events: none;
+    }
+
+    .hero-portrait-wrap::after {
+        content: "";
+        position: absolute;
+        bottom: -28px;
+        left: -28px;
+        width: 100px;
+        height: 100px;
+        border-left: 1px solid rgba(217, 154, 138, 0.3);
+        border-bottom: 1px solid rgba(217, 154, 138, 0.3);
+        border-radius: 0 0 0 8px;
+        pointer-events: none;
+    }
+
+    .portrait-badge {
+        position: absolute;
+        bottom: 24px;
+        right: -20px;
+        background: var(--rose);
+        color: var(--canvas);
+        padding: 14px 20px;
+        border-radius: 4px;
+        box-shadow: 0 20px 50px rgba(217, 154, 138, 0.4);
+        transform: rotate(-3deg);
+        z-index: 3;
+        text-align: center;
+    }
+
+    .portrait-badge-num {
+        font-family: var(--font-display);
+        font-size: 26px;
+        font-weight: 500;
+        font-style: italic;
+        line-height: 1;
+    }
+
+    .portrait-badge-lbl {
+        font-family: var(--font-mono);
+        font-size: 8px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        margin-top: 4px;
+        font-weight: 600;
+        opacity: 0.85;
+    }
+
+    .scroll-hint {
+        position: absolute;
+        bottom: 32px;
+        left: var(--pad-x);
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--muted);
+        z-index: 5;
+    }
+
+    .scroll-hint .line {
+        width: 42px;
+        height: 1px;
+        background: linear-gradient(90deg, var(--rose), transparent);
+        animation: scrollPulse 2.4s ease infinite;
+    }
+
+    @keyframes scrollPulse {
+        0% { transform: scaleX(0); transform-origin: left; }
+        50% { transform: scaleX(1); transform-origin: left; }
+        51% { transform-origin: right; }
+        100% { transform: scaleX(0); transform-origin: right; }
+    }
+
+    /* ============================================
+       SECTION BASE
+    ============================================ */
+    .section {
+        padding: 130px var(--pad-x);
+        position: relative;
+        scroll-margin-top: 90px;
+    }
+
+    .section-inner { max-width: 1400px; margin: 0 auto; width: 100%; }
+    .section.warm { background: var(--canvas-2); }
+
+    .sec-head {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        align-items: end;
+        gap: 30px;
+        padding-bottom: 26px;
+        margin-bottom: 70px;
+        border-bottom: 1px solid var(--line);
+    }
+
+    .sec-eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--rose);
+        font-weight: 500;
+        margin-bottom: 16px;
+    }
+
+    .sec-eyebrow::before {
+        content: "";
+        width: 30px;
+        height: 1px;
+        background: var(--rose);
+    }
+
+    .sec-title {
+        font-family: var(--font-display);
+        font-size: clamp(34px, 5vw, 68px);
+        font-weight: 300;
+        line-height: 1.02;
+        letter-spacing: -2px;
+        color: var(--cream);
+        word-break: break-word;
+    }
+
+    .sec-title em { font-style: italic; color: var(--rose); font-weight: 400; }
+
+    .sec-num {
+        font-family: var(--font-display);
+        font-size: 52px;
+        font-weight: 300;
+        font-style: italic;
+        color: var(--canvas-3);
+        line-height: 1;
+        letter-spacing: -2px;
+    }
+
+    .sec-note {
+        font-size: 14.5px;
+        color: var(--muted);
+        max-width: 520px;
+        margin-top: 14px;
+        line-height: 1.7;
+    }
+
+    /* ============================================
+       ABOUT
+    ============================================ */
+    .about-grid {
+        display: grid;
+        grid-template-columns: 1fr 1.1fr;
+        gap: 90px;
+        align-items: start;
+    }
+
+    .about-stack { position: relative; height: 640px; }
+
+    .about-card {
+        position: absolute;
+        border-radius: 4px;
+        overflow: hidden;
+        background: linear-gradient(135deg, var(--canvas-3), var(--canvas-2));
+        cursor: pointer;
+        box-shadow: 0 30px 70px rgba(0,0,0,0.5), 0 0 0 1px rgba(242,235,226,0.05);
+        transition: all 0.6s var(--ease);
+    }
+
+    .about-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 40px 90px rgba(0,0,0,0.65), 0 0 0 1px rgba(217,154,138,0.4);
+        z-index: 5;
+    }
+
+    .about-card img { width: 100%; height: 100%; object-fit: cover; }
+
+    .about-card .ph {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: var(--rose);
+        text-align: center;
+        padding: 12px;
+        pointer-events: none;
+    }
+
+    .about-card .ph-icon { font-size: 32px; opacity: 0.5; }
+    .about-card .ph-label {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        opacity: 0.85;
+    }
+    .about-card .ph-hint {
+        font-family: var(--font-mono);
+        font-size: 8px;
+        letter-spacing: 1.5px;
+        opacity: 0.5;
+        text-transform: uppercase;
+    }
+
+    .ac-1 { width: 62%; height: 62%; top: 0; left: 0; transform: rotate(-2deg); z-index: 1; }
+    .ac-2 { width: 52%; height: 48%; top: 32%; right: 0; transform: rotate(1.5deg); z-index: 2; }
+    .ac-3 { width: 44%; height: 38%; bottom: 0; left: 14%; transform: rotate(2.5deg); z-index: 3; }
+
+    .about-text h3 {
+        font-family: var(--font-display);
+        font-size: 38px;
+        font-weight: 300;
+        line-height: 1.15;
+        letter-spacing: -1px;
+        color: var(--cream);
+        margin-bottom: 28px;
+    }
+
+    .about-text h3 em { font-style: italic; color: var(--rose); font-weight: 400; }
+
+    .about-text p {
+        font-size: 15.5px;
+        line-height: 1.85;
+        color: var(--cream-dim);
+        margin-bottom: 20px;
+    }
+
+    .about-text strong { color: var(--cream); font-weight: 500; }
+
+    .pull-quote {
+        margin: 36px 0;
+        padding: 24px 0 24px 28px;
+        border-left: 2px solid var(--rose);
+        font-family: var(--font-display);
+        font-size: 22px;
+        font-weight: 300;
+        font-style: italic;
+        line-height: 1.4;
+        color: var(--cream);
+        letter-spacing: -0.3px;
+    }
+
+    .signature {
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+        margin-top: 32px;
+        padding-top: 26px;
+        border-top: 1px solid var(--line);
+        flex-wrap: wrap;
+    }
+
+    .signature-name {
+        font-family: var(--font-display);
+        font-size: 26px;
+        font-style: italic;
+        font-weight: 400;
+        color: var(--rose);
+    }
+
+    .signature-role {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 2.5px;
+        text-transform: uppercase;
+        color: var(--muted);
+    }
+
+    /* ============================================
+       PORTFOLIO
+    ============================================ */
+    .mosaic {
+        display: grid;
+        grid-template-columns: repeat(12, 1fr);
+        grid-auto-rows: 130px;
+        gap: 16px;
+    }
+
+    .m-item {
+        border-radius: 4px;
+        overflow: hidden;
+        position: relative;
+        background: linear-gradient(135deg, var(--canvas-3), var(--canvas-2));
+        cursor: pointer;
+        transition: all 0.6s var(--ease);
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    .m-item:hover {
+        transform: translateY(-8px) scale(1.01);
+        box-shadow: 0 30px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(217,154,138,0.3);
+        z-index: 3;
+    }
+
+    .m-item img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.9s var(--ease);
+    }
+
+    .m-item:hover img { transform: scale(1.08); }
+
+    .m-item .ph {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        color: var(--rose);
+        text-align: center;
+        padding: 12px;
+        pointer-events: none;
+    }
+
+    .m-item .ph-icon { font-size: 36px; opacity: 0.5; }
+    .m-item .ph-label {
+        font-family: var(--font-mono);
+        font-size: 9px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        opacity: 0.85;
+    }
+    .m-item .ph-hint {
+        font-family: var(--font-mono);
+        font-size: 8px;
+        letter-spacing: 1.5px;
+        opacity: 0.5;
+        text-transform: uppercase;
+    }
+
+    .m-xl { grid-column: span 7; grid-row: span 3; }
+    .m-tall { grid-column: span 5; grid-row: span 3; }
+    .m-wide { grid-column: span 8; grid-row: span 2; }
+    .m-sq { grid-column: span 4; grid-row: span 2; }
+    .m-strip { grid-column: span 6; grid-row: span 2; }
+    .m-full { grid-column: span 12; grid-row: span 3; }
+
+    /* ============================================
+       SKILLS
+    ============================================ */
+    .skills-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 60px;
+    }
+
+    .skill-col {
+        padding-top: 26px;
+        border-top: 2px solid var(--rose);
+    }
+
+    .skill-col:nth-child(2) { border-top-color: var(--gold); }
+    .skill-col:nth-child(3) { border-top-color: var(--cream-dim); }
+
+    .skill-num {
+        font-family: var(--font-display);
+        font-size: 44px;
+        font-weight: 300;
+        font-style: italic;
+        color: var(--canvas-3);
+        line-height: 1;
+        margin-bottom: 10px;
+    }
+
+    .skill-col h4 {
+        font-family: var(--font-display);
+        font-size: 24px;
+        font-weight: 400;
+        color: var(--cream);
+        margin-bottom: 22px;
+        letter-spacing: -0.3px;
+    }
+
+    .skill-col ul { list-style: none; }
+
+    .skill-col ul li {
+        font-size: 14px;
+        color: var(--cream-dim);
+        padding: 10px 0;
+        border-bottom: 1px solid var(--line);
+        line-height: 1.5;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        transition: color 0.25s var(--ease);
+    }
+
+    .skill-col ul li:hover { color: var(--cream); }
+
+    .skill-col ul li::before {
+        content: "";
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: var(--rose);
+        flex-shrink: 0;
+    }
+
+    .skill-col:nth-child(2) ul li::before { background: var(--gold); }
+    .skill-col:nth-child(3) ul li::before { background: var(--cream-dim); }
+
+    /* ============================================
+       EXPERIENCE
+    ============================================ */
+    .exp-list { display: flex; flex-direction: column; }
+
+    .exp-item {
+        display: grid;
+        grid-template-columns: 170px 1fr;
+        gap: 60px;
+        padding: 44px 0;
+        border-top: 1px solid var(--line);
+        transition: all 0.4s var(--ease);
+        position: relative;
+    }
+
+    .exp-item:hover { padding-left: 18px; }
+
+    .exp-item::before {
+        content: "";
+        position: absolute;
+        left: 0; top: 58px;
+        width: 0; height: 2px;
+        background: var(--rose);
+        transition: width 0.5s var(--ease);
+    }
+
+    .exp-item:hover::before { width: 36px; }
+
+    .exp-item:last-child { border-bottom: 1px solid var(--line); }
+
+    .exp-left { display: flex; flex-direction: column; gap: 10px; }
+
+    .exp-period {
+        font-family: var(--font-mono);
+        font-size: 10.5px;
+        letter-spacing: 1.5px;
+        color: var(--muted);
+        text-transform: uppercase;
+        font-weight: 500;
+    }
+
+    .exp-loc {
+        font-family: var(--font-display);
+        font-size: 14px;
+        font-style: italic;
+        color: var(--rose);
+        font-weight: 400;
+    }
+
+    .exp-role {
+        font-family: var(--font-display);
+        font-size: 30px;
+        font-weight: 300;
+        line-height: 1.1;
+        letter-spacing: -1px;
+        color: var(--cream);
+        margin-bottom: 6px;
+    }
+
+    .exp-role em { font-style: italic; color: var(--rose); font-weight: 400; }
+
+    .exp-company {
+        font-family: var(--font-display);
+        font-size: 16px;
+        font-weight: 400;
+        color: var(--gold);
+        margin-bottom: 18px;
+        letter-spacing: 0.2px;
+    }
+
+    .exp-details { list-style: none; }
+
+    .exp-details li {
+        font-size: 14px;
+        line-height: 1.7;
+        color: var(--cream-dim);
+        padding: 4px 0 4px 22px;
+        position: relative;
+    }
+
+    .exp-details li::before {
+        content: "";
+        position: absolute;
+        left: 0; top: 13px;
+        width: 10px; height: 1px;
+        background: var(--rose);
+    }
+
+    .num-hl { font-weight: 600; color: var(--cream); }
+
+    /* ============================================
+       CTA
+    ============================================ */
+    .cta {
+        background: var(--canvas-2);
+        padding: 140px var(--pad-x);
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+    }
+
+    .cta-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 2; }
+
+    .cta-watermark {
+        position: absolute;
+        top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        font-family: var(--font-display);
+        font-size: clamp(120px, 22vw, 360px);
+        font-weight: 300;
+        font-style: italic;
+        letter-spacing: -6px;
+        color: var(--rose);
+        opacity: 0.06;
+        pointer-events: none;
+        white-space: nowrap;
+    }
+
+    .cta-eyebrow {
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 3px;
+        text-transform: uppercase;
+        color: var(--rose);
+        margin-bottom: 24px;
+        display: inline-block;
+    }
+
+    .cta-title {
+        font-family: var(--font-display);
+        font-size: clamp(36px, 6vw, 84px);
+        font-weight: 300;
+        line-height: 1.05;
+        letter-spacing: -2px;
+        color: var(--cream);
+        margin-bottom: 28px;
+        word-break: break-word;
+    }
+
+    .cta-title em { font-style: italic; color: var(--rose); font-weight: 400; }
+
+    .cta-text {
+        font-size: 16px;
+        color: var(--cream-dim);
+        max-width: 520px;
+        margin: 0 auto 40px auto;
+        line-height: 1.7;
+    }
+
+    .cta-actions {
+        display: flex;
+        gap: 14px;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .cta-info {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+        gap: 36px;
+        margin-top: 60px;
+        padding-top: 40px;
+        border-top: 1px solid var(--line);
+        font-family: var(--font-mono);
+        font-size: 11px;
+        letter-spacing: 1.5px;
+        text-transform: uppercase;
+        color: var(--cream-dim);
+    }
+
+    .cta-info span,
+    .cta-info a {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        word-break: break-word;
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.25s var(--ease);
+    }
+
+    .cta-info a:hover { color: var(--rose); }
+
+    .cta-info .ico { color: var(--rose); }
+
+    /* ============================================
+       FOOTER
+    ============================================ */
+    .footer {
+        padding: 30px var(--pad-x);
+        padding-bottom: calc(30px + var(--safe-b));
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        font-family: var(--font-mono);
+        font-size: 10px;
+        letter-spacing: 2px;
+        text-transform: uppercase;
+        color: var(--muted);
+        border-top: 1px solid var(--line);
+    }
+
+    .footer strong { color: var(--rose); }
+
+    /* ============================================
+       SCROLL TOP
+    ============================================ */
+    .scroll-top {
+        position: fixed;
+        bottom: calc(20px + var(--safe-b));
+        right: calc(20px + var(--safe-r));
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: var(--rose);
+        color: var(--canvas);
+        border: none;
+        font-size: 18px;
+        cursor: pointer;
+        box-shadow: 0 16px 40px rgba(217,154,138,0.35);
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.35s var(--ease);
+        z-index: 999;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .scroll-top.visible { opacity: 1; visibility: visible; }
+    .scroll-top:hover { background: var(--cream); transform: translateY(-4px); }
+    .scroll-top:active { transform: translateY(0) scale(0.95); }
+
+    /* ============================================
+       REVEAL
+    ============================================ */
+    .reveal {
+        opacity: 0;
+        transform: translateY(50px);
+        transition: opacity 0.9s var(--ease), transform 0.9s var(--ease);
+    }
+
+    .reveal.on { opacity: 1; transform: translateY(0); }
+
+    @media (prefers-reduced-motion: reduce) {
+        .reveal { opacity: 1; transform: none; transition: none; }
+        html { scroll-behavior: auto; }
+    }
+
+    /* ============================================
+       RESPONSIVE — TABLET
+    ============================================ */
+    @media (max-width: 1100px) {
+        :root { --pad-x: 32px; }
+
+        .hero {
+            grid-template-columns: 1fr;
+            padding-top: calc(120px + env(safe-area-inset-top, 0px));
+            padding-bottom: 80px;
+            gap: 60px;
+            text-align: center;
+        }
+
+        .hero-text { max-width: 100%; margin: 0 auto; }
+        .hero-eyebrow { justify-content: center; }
+        .hero-desc { margin-left: auto; margin-right: auto; text-align: left; }
+        .hero-actions { justify-content: center; }
+
+        .hero-portrait { width: 320px; margin: 0 auto; }
+        .portrait-badge { right: 0; }
+
+        .scroll-hint { left: 50%; transform: translateX(-50%); align-items: center; }
+
+        .section { padding: 100px var(--pad-x); }
+
+        .about-grid { grid-template-columns: 1fr; gap: 60px; }
+        .about-stack { height: 520px; max-width: 560px; margin: 0 auto; width: 100%; }
+
+        .skills-grid { grid-template-columns: 1fr; gap: 40px; }
+
+        .exp-item { grid-template-columns: 1fr; gap: 14px; padding: 36px 0; }
+        .exp-item:hover { padding-left: 0; }
+        .exp-item:hover::before { width: 0; }
+        .exp-left { flex-direction: row; gap: 18px; align-items: center; flex-wrap: wrap; }
+
+        .mosaic {
+            grid-template-columns: repeat(6, 1fr);
+            grid-auto-rows: 120px;
+        }
+        .m-xl { grid-column: span 6; grid-row: span 3; }
+        .m-tall { grid-column: span 6; grid-row: span 3; }
+        .m-wide { grid-column: span 6; grid-row: span 2; }
+        .m-sq { grid-column: span 3; grid-row: span 2; }
+        .m-strip { grid-column: span 6; grid-row: span 2; }
+        .m-full { grid-column: span 6; grid-row: span 3; }
+    }
+
+    /* ============================================
+       RESPONSIVE — MOBILE
+    ============================================ */
+    @media (max-width: 760px) {
+        :root { --pad-x: 22px; }
+
+        body { font-size: 15px; }
+
+        /* Nav */
+        .nav {
+            padding: 14px var(--pad-x);
+            padding-top: calc(14px + env(safe-area-inset-top, 0px));
+        }
+        .nav.scrolled {
+            padding-top: calc(12px + env(safe-area-inset-top, 0px));
+            padding-bottom: 12px;
+        }
+        .nav-menu { display: none; }
+        .nav-menu.open {
+            display: flex;
+            flex-direction: column;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: rgba(28,25,23,0.98);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 16px;
+            border-top: 1px solid var(--line);
+            border-bottom: 1px solid var(--line);
+            gap: 4px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            max-height: calc(100vh - 80px);
+            overflow-y: auto;
+        }
+        .nav-menu.open a {
+            width: 100%;
+            text-align: center;
+            padding: 16px;
+            font-size: 12px;
+            border-radius: 10px;
+        }
+        .nav-menu.open a::after { display: none; }
+        .nav-menu.open a.active { background: rgba(217,154,138,0.1); }
+        .nav-toggle { display: flex; }
+        .nav-back { display: none; }
+
+        .brand-block { font-size: 9px; letter-spacing: 2px; }
+        .brand-block strong { letter-spacing: 2.5px; }
+
+        /* Hero */
+        .hero {
+            padding: calc(100px + env(safe-area-inset-top, 0px)) var(--pad-x) 60px var(--pad-x);
+            min-height: auto;
+        }
+        .hero-watermark { font-size: 90px; letter-spacing: -3px; }
+        .hero-portrait { width: 260px; max-width: 100%; }
+        .hero-portrait-wrap::before {
+            inset: -8px -8px 14px 14px;
+            border-color: rgba(217, 154, 138, 0.15);
+        }
+        .hero-portrait-wrap::after { display: none; }
+        .hero-name { font-size: clamp(38px, 11vw, 58px); letter-spacing: -1.8px; }
+        .hero-role { font-size: 10px; letter-spacing: 3px; }
+        .hero-desc { font-size: 14.5px; margin-bottom: 32px; }
+        .portrait-badge { right: -8px; bottom: 18px; padding: 12px 16px; }
+        .portrait-badge-num { font-size: 22px; }
+        .portrait-badge-lbl { font-size: 7px; }
+
+        /* Buttons become full-width stacked */
+        .hero-actions,
+        .cta-actions {
+            flex-direction: column;
+            width: 100%;
+            gap: 10px;
+        }
+        .btn {
+            width: 100%;
+            padding: 16px 24px;
+            font-size: 11px;
+            min-height: 50px;
+        }
+
+        /* Sections */
+        .section { padding: 80px var(--pad-x); }
+        .sec-head {
+            grid-template-columns: 1fr;
+            gap: 8px;
+            padding-bottom: 20px;
+            margin-bottom: 40px;
+        }
+        .sec-num { font-size: 32px; }
+        .sec-title { font-size: clamp(30px, 8vw, 42px); letter-spacing: -1.2px; }
+        .sec-eyebrow { font-size: 9px; letter-spacing: 2.5px; }
+        .sec-note { font-size: 13.5px; }
+
+        /* About */
+        .about-stack { height: 440px; }
+        .about-text h3 { font-size: 26px; letter-spacing: -0.6px; margin-bottom: 22px; }
+        .about-text p { font-size: 15px; line-height: 1.75; }
+        .pull-quote {
+            font-size: 18px;
+            padding: 18px 0 18px 20px;
+            margin: 28px 0;
+            line-height: 1.45;
+        }
+        .signature { gap: 10px; margin-top: 24px; padding-top: 20px; }
+        .signature-name { font-size: 22px; }
+        .signature-role { font-size: 9px; letter-spacing: 2px; }
+
+        /* Portfolio mosaic becomes single column */
+        .mosaic {
+            grid-template-columns: 1fr;
+            grid-auto-rows: 240px;
+            gap: 12px;
+        }
+        .m-xl, .m-tall, .m-wide, .m-sq, .m-strip, .m-full {
+            grid-column: span 1;
+            grid-row: span 1;
+        }
+        .m-item:hover { transform: none; }
+        .m-item:hover img { transform: none; }
+
+        /* Skills */
+        .skills-grid { gap: 32px; }
+        .skill-num { font-size: 36px; }
+        .skill-col h4 { font-size: 20px; margin-bottom: 16px; }
+        .skill-col ul li { font-size: 13.5px; padding: 9px 0; }
+
+        /* Experience */
+        .exp-item { padding: 30px 0; gap: 10px; }
+        .exp-period { font-size: 10px; }
+        .exp-loc { font-size: 13px; }
+        .exp-role { font-size: 24px; letter-spacing: -0.7px; }
+        .exp-company { font-size: 14.5px; margin-bottom: 14px; }
+        .exp-details li { font-size: 13.5px; line-height: 1.65; padding-left: 18px; }
+        .exp-details li::before { width: 8px; top: 12px; }
+
+        /* CTA */
+        .cta { padding: 80px var(--pad-x); }
+        .cta-title { font-size: clamp(30px, 8vw, 42px); letter-spacing: -1.2px; margin-bottom: 22px; }
+        .cta-text { font-size: 15px; margin-bottom: 32px; }
+        .cta-info {
+            gap: 14px;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 40px;
+            padding-top: 30px;
+            font-size: 10.5px;
+            letter-spacing: 1px;
+        }
+        .cta-info span,
+        .cta-info a {
+            justify-content: center;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        /* Footer */
+        .footer {
+            padding: 22px var(--pad-x);
+            padding-bottom: calc(22px + var(--safe-b));
+            flex-direction: column;
+            text-align: center;
+            font-size: 9.5px;
+        }
+
+        /* Scroll top */
+        .scroll-top {
+            bottom: calc(16px + var(--safe-b));
+            right: calc(16px + var(--safe-r));
+            width: 46px;
+            height: 46px;
+        }
+    }
+
+    /* ============================================
+       RESPONSIVE — SMALL PHONES
+    ============================================ */
+    @media (max-width: 420px) {
+        :root { --pad-x: 18px; }
+
+        .hero-watermark { font-size: 70px; letter-spacing: -2px; }
+        .hero-name { font-size: 38px; letter-spacing: -1px; }
+        .hero-role { letter-spacing: 2.5px; font-size: 9px; }
+        .hero-eyebrow { font-size: 9px; letter-spacing: 2px; }
+
+        .hero-portrait { width: 220px; }
+        .portrait-badge { padding: 10px 12px; right: -4px; bottom: 14px; }
+        .portrait-badge-num { font-size: 18px; }
+        .portrait-badge-lbl { font-size: 7px; letter-spacing: 1.5px; }
+
+        .sec-title { font-size: 30px; letter-spacing: -1px; }
+        .sec-num { font-size: 28px; }
+
+        .about-stack { height: 380px; }
+        .about-text h3 { font-size: 22px; }
+        .pull-quote { font-size: 16px; padding-left: 16px; }
+        .signature-name { font-size: 20px; }
+
+        .mosaic { grid-auto-rows: 200px; }
+
+        .skill-num { font-size: 30px; }
+
+        .exp-role { font-size: 21px; }
+        .exp-company { font-size: 13px; }
+        .exp-details li { font-size: 13px; }
+
+        .cta-title { font-size: 30px; letter-spacing: -1px; }
+        .cta-info span,
+        .cta-info a { font-size: 10px; letter-spacing: 0.5px; }
+
+        .btn { font-size: 10px; padding: 15px 20px; letter-spacing: 1.8px; }
+    }
+
+    /* ============================================
+       VERY SMALL PHONES
+    ============================================ */
+    @media (max-width: 340px) {
+        :root { --pad-x: 14px; }
+
+        .hero-name { font-size: 32px; }
+        .sec-title { font-size: 26px; }
+        .cta-title { font-size: 26px; }
+
+        .hero-portrait { width: 190px; }
+        .about-stack { height: 340px; }
+
+        .mosaic { grid-auto-rows: 180px; }
+
+        .btn { padding: 14px 18px; font-size: 9.5px; letter-spacing: 1.5px; }
+    }
+
+    /* Landscape phones */
+    @media (max-height: 500px) and (orientation: landscape) {
+        .hero {
+            padding-top: calc(80px + env(safe-area-inset-top, 0px));
+            padding-bottom: 40px;
+            min-height: auto;
+        }
+        .hero-portrait { width: 180px; }
+        .hero-name { font-size: 34px; }
+    }
+
+    /* Permanent portfolio images */
+    .drop-zone > img { display: block; }
+    .m-item > img { display: block; }
+
+    /* Prevent overflow from rotated cards on mobile */
+    @media (max-width: 760px) {
+        .about-card { transform: none !important; }
+        .ac-1 { width: 65%; height: 60%; top: 0; left: 0; }
+        .ac-2 { width: 55%; height: 45%; top: 35%; right: 0; }
+        .ac-3 { width: 48%; height: 36%; bottom: 0; left: 8%; }
+    }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+    <a href="#top" class="brand-block">
+        <strong>Nader Said</strong>
+        <span>Executive Chef</span>
+        <span>Cairo · Cyprus · Red Sea</span>
+    </a>
+
+    <ul class="nav-menu" id="navMenu">
+        <li><a href="#about" data-jump>About</a></li>
+        <li><a href="#portfolio" data-jump>Portfolio</a></li>
+        <li><a href="#skills" data-jump>Skills</a></li>
+        <li><a href="#experience" data-jump>Experience</a></li>
+        <li><a href="#contact" data-jump>Contact</a></li>
+    </ul>
+
+    <a href="#top" class="nav-back">↑ Top</a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false">☰</button>
+</nav>
+
+<!-- HERO -->
+<header class="hero" id="top">
+
+    <div class="hero-watermark">Nader<span>.</span></div>
+
+    <div class="hero-text reveal">
+        <div class="hero-eyebrow">Executive Chef — Portfolio 2025</div>
+        <h1 class="hero-name">Nader <em>Said</em></h1>
+        <div class="hero-role">Culinary Specialist</div>
+        <p class="hero-desc">
+            <strong>15+ years</strong> shaping kitchens across
+            <strong>Cyprus, Egypt, and Saudi Arabia</strong>. Specializing in
+            <strong>Asian &amp; International cuisine</strong>, leading brigades
+            of up to 40 chefs.
+        </p>
+        <div class="hero-actions">
+            <a href="#portfolio" class="btn btn-primary" data-jump>View Portfolio →</a>
+            <a href="#contact" class="btn btn-ghost" data-jump>Get in Touch</a>
+        </div>
+    </div>
+
+    <div class="hero-portrait-wrap reveal">
+        <div class="hero-portrait drop-zone" data-upload>
+            <img src="assets/1.webp" alt="Nader Said — Executive Chef" loading="lazy">
+        </div>
+        <div class="portrait-badge">
+            <div class="portrait-badge-num">15+</div>
+            <div class="portrait-badge-lbl">Years</div>
+        </div>
+    </div>
+
+    <div class="scroll-hint">
+        <span>Scroll</span>
+        <span class="line"></span>
+    </div>
+
+</header>
+
+<!-- ABOUT -->
+<section class="section" id="about">
+    <div class="section-inner">
+        <div class="sec-head reveal">
+            <div>
+                <div class="sec-eyebrow">About Me</div>
+                <h2 class="sec-title">A culinary <em>journey</em></h2>
+            </div>
+            <div class="sec-num">01</div>
+        </div>
+
+        <div class="about-grid">
+            <div class="about-stack reveal">
+                <div class="about-card ac-1 drop-zone" data-upload>
+                    <img src="assets/2.webp" alt="Nader Said working in the kitchen" loading="lazy">
+                </div>
+                <div class="about-card ac-2 drop-zone" data-upload>
+                    <img src="assets/3.webp" alt="Nader Said plating a dish" loading="lazy">
+                </div>
+                <div class="about-card ac-3 drop-zone" data-upload>
+                    <img src="assets/4.webp" alt="Sushi and culinary presentation" loading="lazy">
+                </div>
+            </div>
+
+            <div class="about-text reveal">
+                <h3>Where <em>craft</em> meets <em>leadership</em> in the kitchen</h3>
+                <p>I am an <strong>Executive Chef</strong> with <strong>15+ years of progressive culinary leadership</strong> across renowned restaurants and luxury hotels in <strong>Cyprus, Egypt, and Saudi Arabia</strong>.</p>
+                <p>My expertise spans <strong>Asian and International cuisines</strong>, with a proven track record of designing <strong>award-worthy menus</strong>, optimizing kitchen operations, and leading <strong>high-performing culinary teams</strong>.</p>
+                <div class="pull-quote">I don't just cook — I build kitchens that deliver excellence night after night.</div>
+                <p>From traditional Japanese sushi counters to luxury 5-star resorts — including <strong>The Chedi El Gouna</strong> — I have led multi-outlet operations, banqueting, and menu development across the Red Sea.</p>
+                <div class="signature">
+                    <div class="signature-name">Nader Said</div>
+                    <div class="signature-role">Executive Chef</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- PORTFOLIO -->
+<section class="section warm" id="portfolio">
+    <div class="section-inner">
+        <div class="sec-head reveal">
+            <div>
+                  <div class="sec-eyebrow">Portfolio</div>
+                     <h2 class="sec-title">Culinary <em>Creations</em></h2>
+                     <p class="sec-note">A collection of refined dishes where flavor, technique, and presentation come together.</p>>
+            </div>
+            <div class="sec-num">02</div>
+        </div>
+
+        <div class="mosaic">
+            <div class="m-item m-xl drop-zone" data-upload>
+                <img src="assets/5.webp" alt="Signature sushi by Nader Said" loading="lazy">
+            </div>
+            <div class="m-item m-tall drop-zone" data-upload>
+                <img src="assets/6.webp" alt="Asian fusion dish by Nader Said" loading="lazy">
+            </div>
+            <div class="m-item m-wide drop-zone" data-upload>
+                <img src="assets/7.webp" alt="Fine dining dish by Nader Said" loading="lazy">
+            </div>
+            <div class="m-item m-sq drop-zone" data-upload>
+                <img src="assets/8.webp" alt="Seafood dish by Nader Said" loading="lazy">
+            </div>
+            <div class="m-item m-sq drop-zone" data-upload>
+                <img src="assets/9.webp" alt="Dessert and plated dish by Nader Said" loading="lazy">
+            </div>
+            <div class="m-item m-strip drop-zone" data-upload>
+                <img src="assets/10.webp" alt="Plating design by Nader Said" loading="lazy">
+            </div>
+            <div class="m-item m-strip drop-zone" data-upload>
+                <img src="assets/11.webp" alt="Kitchen action by Nader Said" loading="lazy">
+            </div>
+            <div class="m-item m-full drop-zone" data-upload>
+                <img src="assets/12.webp" alt="Signature culinary experience by Nader Said" loading="lazy">
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- SKILLS -->
+<section class="section" id="skills">
+    <div class="section-inner">
+        <div class="sec-head reveal">
+            <div>
+                <div class="sec-eyebrow">Expertise</div>
+                <h2 class="sec-title">Core <em>competencies</em></h2>
+            </div>
+            <div class="sec-num">03</div>
+        </div>
+
+        <div class="skills-grid">
+            <div class="skill-col reveal">
+                <div class="skill-num">01</div>
+                <h4>Culinary Expertise</h4>
+                <ul>
+                    <li>Asian &amp; International Cuisine</li>
+                    <li>Menu Development &amp; Innovation</li>
+                    <li>Recipe Creation &amp; Costing</li>
+                    <li>Plating &amp; Presentation</li>
+                    <li>Sushi &amp; Japanese Cuisine</li>
+                    <li>Fine Dining &amp; Banquet Operations</li>
+                </ul>
+            </div>
+
+            <div class="skill-col reveal">
+                <div class="skill-num">02</div>
+                <h4>Leadership &amp; Management</h4>
+                <ul>
+                    <li>Team Leadership &amp; Mentoring</li>
+                    <li>Staff Training &amp; Development</li>
+                    <li>Kitchen Workflow Optimization</li>
+                    <li>Vendor Negotiation</li>
+                    <li>Performance Management</li>
+                    <li>Cross-Cultural Team Management</li>
+                </ul>
+            </div>
+
+            <div class="skill-col reveal">
+                <div class="skill-num">03</div>
+                <h4>Operations &amp; Compliance</h4>
+                <ul>
+                    <li>ISO Food Safety Standards</li>
+                    <li>HACCP Compliance</li>
+                    <li>Inventory &amp; Cost Management</li>
+                    <li>Budgeting &amp; P&amp;L Accountability</li>
+                    <li>Hygiene &amp; Sanitation Audits</li>
+                    <li>Supplier Relationship Management</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- EXPERIENCE -->
+<section class="section warm" id="experience">
+    <div class="section-inner">
+        <div class="sec-head reveal">
+            <div>
+                <div class="sec-eyebrow">Career</div>
+                <h2 class="sec-title">Professional <em>experience</em></h2>
+            </div>
+            <div class="sec-num">04</div>
+        </div>
+
+        <div class="exp-list">
+
+            <!-- The Chedi El Gouna -->
+            <div class="exp-item reveal">
+                <div class="exp-left">
+                    <div class="exp-period">2026 - Present</div>
+                    <div class="exp-loc">El Gouna, Red Sea, Egypt</div>
+                </div>
+                <div class="exp-right">
+                    <div class="exp-role">Executive <em>Sous Chef</em></div>
+                    <div class="exp-company">The Chedi El Gouna</div>
+                    <ul class="exp-details">
+                        <li>Supported the Executive Chef in leading a luxury 5-star resort kitchen, overseeing <span class="num-hl">4 à la carte restaurants, pool bar, in-room dining, and banquet operations</span>.</li>
+                        <li>Managed a brigade of <span class="num-hl">35+ chefs and kitchen staff</span> across multiple outlets, ensuring consistent quality, timing, and presentation.</li>
+                        <li>Developed seasonal à la carte and buffet menus featuring <span class="num-hl">Asian, Mediterranean, and Middle Eastern cuisine</span> tailored to international guests.</li>
+                        <li>Maintained strict <span class="num-hl">HACCP and ISO 22000 food safety standards</span>, passing all internal and external audits with top scores.</li>
+                        <li>Reduced food cost by <span class="num-hl">12%</span> through precise inventory control, portioning, and supplier negotiations.</li>
+                        <li>Trained and mentored <span class="num-hl">junior sous chefs and commis</span>, improving kitchen efficiency and staff retention.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Uni Sushi -->
+            <div class="exp-item reveal">
+                <div class="exp-left">
+                    <div class="exp-period">2025 – 2026</div>
+                    <div class="exp-loc">Larnaca, Cyprus</div>
+                </div>
+                <div class="exp-right">
+                    <div class="exp-role">Executive <em>Chef</em></div>
+                    <div class="exp-company">Uni Sushi Restaurant</div>
+                    <ul class="exp-details">
+                        <li>Spearheaded the launch of a premium sushi concept, achieving <span class="num-hl">30% revenue growth</span> within six months.</li>
+                        <li>Developed seasonal tasting menus, resulting in a <span class="num-hl">25% increase in repeat clientele</span>.</li>
+                        <li>Managed a team of <span class="num-hl">20+ culinary professionals</span>, improving <span class="num-hl">kitchen efficiency by 35%</span>.</li>
+                        <li>Maintained <span class="num-hl">ISO Food Safety Highest Grade certification</span>.</li>
+                        <li>Reduced food waste by <span class="num-hl">22%</span> through precise inventory control.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Rabenda -->
+            <div class="exp-item reveal">
+                <div class="exp-left">
+                    <div class="exp-period">2025</div>
+                    <div class="exp-loc">Zamalek, Sahl Hashish &amp; Hurghada, Egypt</div>
+                </div>
+                <div class="exp-right">
+                    <div class="exp-role">Executive Chef &amp; <em>Menu Consultant</em></div>
+                    <div class="exp-company">Rabenda</div>
+                    <ul class="exp-details">
+                        <li>Provided end-to-end menu consultancy for <span class="num-hl">three upscale venues</span>.</li>
+                        <li>Trained kitchen brigades across multiple locations, ensuring <span class="num-hl">brand consistency</span>.</li>
+                        <li>Introduced cost-effective sourcing strategies, reducing food costs by <span class="num-hl">18%</span>.</li>
+                        <li>Achieved <span class="num-hl">5-star guest ratings</span> for culinary experience across all outlets.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Yangtze Qu -->
+            <div class="exp-item reveal">
+                <div class="exp-left">
+                    <div class="exp-period">2023 – 2024</div>
+                    <div class="exp-loc">Cairo, Egypt</div>
+                </div>
+                <div class="exp-right">
+                    <div class="exp-role">Executive <em>Chef</em></div>
+                    <div class="exp-company">Yangtze Qu</div>
+                    <ul class="exp-details">
+                        <li>Led culinary direction of a high-volume Asian fine dining restaurant, serving <span class="num-hl">300+ covers daily</span>.</li>
+                        <li>Redesigned menu, boosting <span class="num-hl">average check size by 20%</span>.</li>
+                        <li>Implemented HACCP protocols, maintaining a <span class="num-hl">98% compliance score</span>.</li>
+                        <li>Recruited, trained, and mentored <span class="num-hl">25 chefs</span>, reducing turnover by <span class="num-hl">30%</span>.</li>
+                        <li>Created pairing menus, increasing beverage sales by <span class="num-hl">15%</span>.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Fine Dining, Barten -->
+            <div class="exp-item reveal">
+                <div class="exp-left">
+                    <div class="exp-period">2022</div>
+                    <div class="exp-loc">El Gouna, Red Sea, Egypt</div>
+                </div>
+                <div class="exp-right">
+                    <div class="exp-role">Executive Chef &amp; <em>Menu Developer</em></div>
+                    <div class="exp-company">Fine Dining, Barten</div>
+                    <ul class="exp-details">
+                        <li>Conceptualized and launched a luxury fine dining experience, earning <span class="num-hl">top-rated recognition</span>.</li>
+                        <li>Designed multi-course tasting menus blending <span class="num-hl">European and Asian techniques</span>.</li>
+                        <li>Managed kitchen P&amp;L, achieving a <span class="num-hl">12% reduction in operating costs</span>.</li>
+                        <li>Built and led a <span class="num-hl">culinary team of 15</span>.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Sushia -->
+            <div class="exp-item reveal">
+                <div class="exp-left">
+                    <div class="exp-period">2018 – 2022</div>
+                    <div class="exp-loc">Saudi Arabia</div>
+                </div>
+                <div class="exp-right">
+                    <div class="exp-role">Head <em>Chef</em></div>
+                    <div class="exp-company">Sushia Restaurant</div>
+                    <ul class="exp-details">
+                        <li>Oversaw daily kitchen operations for a leading sushi restaurant.</li>
+                        <li>Developed new sushi rolls and sashimi platters, increasing sales by <span class="num-hl">20%</span>.</li>
+                        <li>Trained junior chefs in <span class="num-hl">Japanese culinary techniques</span>.</li>
+                        <li>Enforced strict food safety standards, passing all inspections with <span class="num-hl">top marks</span>.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Siva Grand Hotel -->
+            <div class="exp-item reveal">
+                <div class="exp-left">
+                    <div class="exp-period">2017 – 2018</div>
+                    <div class="exp-loc">Egypt</div>
+                </div>
+                <div class="exp-right">
+                    <div class="exp-role">Sous <em>Chef</em></div>
+                    <div class="exp-company">Siva Grand Hotel</div>
+                    <ul class="exp-details">
+                        <li>Supported the Executive Chef in managing a large-scale hotel kitchen, serving <span class="num-hl">500+ guests daily</span>.</li>
+                        <li>Supervised food preparation, cooking, and plating across multiple stations.</li>
+                        <li>Assisted in menu planning, costing, and staff scheduling.</li>
+                        <li>Conducted training sessions on hygiene, safety, and culinary techniques.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Red Sea Hotels -->
+            <div class="exp-item reveal">
+                <div class="exp-left">
+                    <div class="exp-period">2015 – 2017</div>
+                    <div class="exp-loc">Hurghada, Egypt</div>
+                </div>
+                <div class="exp-right">
+                    <div class="exp-role">Sous <em>Chef</em></div>
+                    <div class="exp-company">Red Sea Hotels</div>
+                    <ul class="exp-details">
+                        <li>Managed kitchen operations for a busy hotel restaurant, ensuring consistency in taste and presentation.</li>
+                        <li>Assisted in menu development and cost control, reducing food costs by <span class="num-hl">10%</span>.</li>
+                        <li>Trained and mentored kitchen staff across multiple outlets.</li>
+                        <li>Coordinated with F&amp;B team for banquets and special events.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Domina Coral Bay — Chef De Partie -->
+            <div class="exp-item reveal">
+                <div class="exp-left">
+                    <div class="exp-period">2013 – 2015</div>
+                    <div class="exp-loc">Egypt</div>
+                </div>
+                <div class="exp-right">
+                    <div class="exp-role">Chef <em>De Partie</em></div>
+                    <div class="exp-company">Domina Coral Bay Hotel</div>
+                    <ul class="exp-details">
+                        <li>Managed a specific kitchen section, ensuring timely preparation and quality control.</li>
+                        <li>Maintained cleanliness and organization of workstations to the highest standards.</li>
+                        <li>Collaborated with senior chefs to improve recipes and presentation.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Domina Coral Bay — Demi Chef -->
+            <div class="exp-item reveal">
+                <div class="exp-left">
+                    <div class="exp-period">2012 – 2013</div>
+                    <div class="exp-loc">Egypt</div>
+                </div>
+                <div class="exp-right">
+                    <div class="exp-role">Demi <em>Chef</em></div>
+                    <div class="exp-company">Domina Coral Bay Hotel</div>
+                    <ul class="exp-details">
+                        <li>Assisted Chef De Partie in food preparation and plating.</li>
+                        <li>Learned basic culinary techniques, knife skills, and food safety practices.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Little Buddha Bar -->
+            <div class="exp-item reveal">
+                <div class="exp-left">
+                    <div class="exp-period">2011 – 2012</div>
+                    <div class="exp-loc">Sharm El Sheikh, Egypt</div>
+                </div>
+                <div class="exp-right">
+                    <div class="exp-role"><em>Chef</em></div>
+                    <div class="exp-company">Little Buddha Bar</div>
+                    <ul class="exp-details">
+                        <li>Prepared Asian fusion dishes in a fast-paced environment.</li>
+                        <li>Ensured consistent quality and presentation of all menu items.</li>
+                        <li>Collaborated with kitchen team to maintain smooth service during peak hours.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Jaz Mirabel Hotel -->
+            <div class="exp-item reveal">
+                <div class="exp-left">
+                    <div class="exp-period">2010 – 2011</div>
+                    <div class="exp-loc">Egypt</div>
+                </div>
+                <div class="exp-right">
+                    <div class="exp-role"><em>Chef</em></div>
+                    <div class="exp-company">Jaz Mirabel Hotel</div>
+                    <ul class="exp-details">
+                        <li>Assisted in food preparation and buffet setup for large-scale hotel operations.</li>
+                        <li>Maintained hygiene standards and supported senior chefs in daily kitchen tasks.</li>
+                    </ul>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- CTA -->
+<section class="cta" id="contact">
+    <div class="cta-watermark">Contact</div>
+    <div class="cta-inner reveal">
+        <div class="cta-eyebrow">Get in Touch</div>
+        <h2 class="cta-title">Let's create something <em>exceptional</em></h2>
+        <p class="cta-text">
+            Available for executive chef roles, menu consultancy, and culinary
+            concept development worldwide.
+        </p>
+        <div class="cta-info">
+            <a href="mailto:Nadersaied419@gmail.com"><span class="ico">✉</span> Nadersaied419@gmail.com</a>
+            <a href="tel:+201027212652"><span class="ico">✆</span> +20 102 721 2652</a>
+            <a href="https://www.instagram.com/nader.sa3eed/" target="_blank" rel="noopener noreferrer"><span class="ico">🔗</span> Instagram</a>
+            <span><span class="ico">⚲</span> Egypt</span>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+    <span>© <span id="year"></span> <strong>Nader Said</strong></span>
+    <span>Executive Chef Portfolio</span>
+</footer>
+
+<button class="scroll-top" id="scrollTop" aria-label="Back to top">↑</button>
+
+<script>
+    document.getElementById('year').textContent = new Date().getFullYear();
+
+    /* SMOOTH JUMP NAV */
+    const navMenu = document.getElementById('navMenu');
+    const navToggle = document.getElementById('navToggle');
+
+    function closeMenu() {
+        navMenu.classList.remove('open');
+        navToggle.setAttribute('aria-expanded', 'false');
+    }
+
+    document.querySelectorAll('a[data-jump], .nav-menu a').forEach(link => {
+        link.addEventListener('click', (e) => {
+            const href = link.getAttribute('href');
+            if (href && href.startsWith('#')) {
+                e.preventDefault();
+                const target = document.querySelector(href);
+                if (target) {
+                    const top = target.getBoundingClientRect().top + window.scrollY - 80;
+                    window.scrollTo({ top, behavior: 'smooth' });
+                    closeMenu();
+                }
+            }
+        });
+    });
+
+    /* MOBILE NAV */
+    navToggle.addEventListener('click', () => {
+        const isOpen = navMenu.classList.toggle('open');
+        navToggle.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    });
+
+    /* CLOSE MENU WHEN TAPPING OUTSIDE */
+    document.addEventListener('click', (e) => {
+        if (navMenu.classList.contains('open') &&
+            !navMenu.contains(e.target) &&
+            !navToggle.contains(e.target)) {
+            closeMenu();
+        }
+    });
+
+    /* NAV SCROLL STATE */
+    const nav = document.getElementById('nav');
+    let lastScrollY = 0;
+    window.addEventListener('scroll', () => {
+        const y = window.scrollY;
+        nav.classList.toggle('scrolled', y > 40);
+        lastScrollY = y;
+    }, { passive: true });
+
+    /* SCROLL TOP */
+    const scrollTop = document.getElementById('scrollTop');
+    window.addEventListener('scroll', () => {
+        scrollTop.classList.toggle('visible', window.scrollY > 500);
+    }, { passive: true });
+    scrollTop.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+
+    /* REVEAL */
+    const io = new IntersectionObserver((entries) => {
+        entries.forEach(e => {
+            if (e.isIntersecting) {
+                e.target.classList.add('on');
+                io.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+    /* ACTIVE LINK */
+    const sections = document.querySelectorAll('section[id], header[id]');
+    const navAnchors = document.querySelectorAll('.nav-menu a');
+    window.addEventListener('scroll', () => {
+        let current = '';
+        sections.forEach(s => {
+            if (window.scrollY >= s.offsetTop - 120) current = s.id;
+        });
+        navAnchors.forEach(a => {
+            a.classList.toggle('active', a.getAttribute('href') === '#' + current);
+        });
+    }, { passive: true });
+
+    /* DRAG & DROP + CLICK */
+    const uploadZones = document.querySelectorAll('[data-upload]');
+    uploadZones.forEach(zone => {
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(evt => {
+            zone.addEventListener(evt, e => { e.preventDefault(); e.stopPropagation(); });
+        });
+
+        ['dragenter', 'dragover'].forEach(evt => {
+            zone.addEventListener(evt, () => zone.classList.add('dragover'));
+        });
+
+        ['dragleave', 'drop'].forEach(evt => {
+            zone.addEventListener(evt, () => zone.classList.remove('dragover'));
+        });
+
+        zone.addEventListener('drop', e => {
+            const files = e.dataTransfer.files;
+            if (files && files.length > 0) {
+                const file = files[0];
+                if (file.type.startsWith('image/')) applyImage(zone, file);
+            }
+        });
+
+        zone.addEventListener('click', e => {
+            if (e.target.tagName === 'IMG' && zone.querySelector('img[src^="data:"]')) return;
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = ev => {
+                const file = ev.target.files[0];
+                if (file && file.type.startsWith('image/')) applyImage(zone, file);
+            };
+            input.click();
+        });
+
+        zone.addEventListener('paste', e => {
+            const items = e.clipboardData?.items;
+            if (!items) return;
+            for (let item of items) {
+                if (item.type.startsWith('image/')) {
+                    const file = item.getAsFile();
+                    if (file) { applyImage(zone, file); break; }
+                }
+            }
+        });
+    });
+
+    function applyImage(zone, file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            const existing = zone.querySelector('img');
+            if (existing) existing.remove();
+            const ph = zone.querySelector('.ph');
+            if (ph) ph.remove();
+
+            const img = document.createElement('img');
+            img.src = e.target.result;
+            img.alt = 'Chef portfolio';
+            zone.appendChild(img);
+
+            zone.style.boxShadow = '0 0 0 3px var(--rose), 0 30px 80px rgba(217,154,138,0.6)';
+            setTimeout(() => { zone.style.boxShadow = ''; }, 800);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    /* Global drop prevention */
+    ['dragenter', 'dragover', 'drop'].forEach(evt => {
+        window.addEventListener(evt, e => {
+            if (!e.target.closest('[data-upload]')) e.preventDefault();
+        });
+    });
+</script>
+
+</body>
+</html>

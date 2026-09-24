@@ -1,0 +1,15 @@
+ {
+    "name": "🐔 Poultry & Chicken",
+    "icon": "https://cdn-icons-png.flaticon.com/512/1998/1998619.png",
+    "items": [
+      { "name": "Chicken", "qty": "200g" },
+      { "name": "Chicken Breast", "qty": "200g" },
+      { "name": "Chicken Whole", "qty": "300g" },
+      { "name": "Duck Whole", "qty": "300g" },
+      { "name": "Duck Breast", "qty": "200g" },
+      { "name": "Chicken Cold Cut", "qty": "100g" },
+      { "name": "Chicken Sausage", "qty": "2 pieces" },
+      { "name": "Turkey Pressed Smoked", "qty": "100g" }
+    ]
+  }
+

@@ -1,0 +1,23 @@
+{
+  "name": "🍫 Chocolate & Fillings",
+  "icon": "https://cdn-icons-png.flaticon.com/512/3029/3029307.png",
+  "items": [
+    { "name": "Dark Chocolate Drops 60%", "qty": "30g" },
+    { "name": "Milk Chocolate", "qty": "30g" },
+    { "name": "Brown Chocolate Block", "qty": "30g" },
+    { "name": "White Chocolate Block", "qty": "30g" },
+    { "name": "Pipping Chocolate", "qty": "20g" },
+    { "name": "Pipping Golden Transparent", "qty": "20g" },
+    { "name": "Caramel Topping", "qty": "20ml" },
+    { "name": "Chocolate Topping", "qty": "20ml" },
+    { "name": "Strawberry Topping", "qty": "20ml" },
+    { "name": "Blueberry Filling", "qty": "30g" },
+    { "name": "Raspberry Filling", "qty": "30g" },
+    { "name": "Dark Cherry Filling", "qty": "30g" },
+    { "name": "Apple Filling", "qty": "40g" },
+    { "name": "Mango Filling", "qty": "40g" },
+    { "name": "Red Cherries", "qty": "40g" },
+    { "name": "Peach Compote", "qty": "60g" },
+    { "name": "Pineapple Compote", "qty": "60g" }
+  ]
+}

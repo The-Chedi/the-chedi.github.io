@@ -1,0 +1,102 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Baba Ghanoush آ· The Chedi</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#ffffff;font-family:Georgia,'Times New Roman',serif;color:#1a1a1a;padding:1.25rem 1rem 2rem;display:flex;justify-content:center;min-height:100vh}
+.page{width:100%;max-width:680px;background:#f1ead7;border:1px solid #e0d4b6;border-radius:8px;box-shadow:0 4px 14px rgba(0,0,0,.06);padding:1.25rem}
+.header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem;gap:1rem}
+.header-left{display:flex;flex-direction:column;gap:.9rem;flex:1}
+.butchery-banner{background:#4a5a63;color:#f1ead7;padding:.55rem 2rem;font-size:1.05rem;font-weight:700;display:inline-block;align-self:flex-start}
+.kitchen-recipe{font-family:'Brush Script MT','Lucida Handwriting',cursive;font-size:1.5rem;color:#8b3a52;font-style:italic}
+.header-right{display:flex;flex-direction:column;align-items:flex-end;gap:.9rem}
+.logo-box{background:#000;color:#fff;padding:.5rem .85rem;text-align:center;font-family:Arial,sans-serif;line-height:1.3}
+.logo-box .logo-main{font-size:.75rem;font-weight:700;letter-spacing:.22em}
+.logo-box .logo-sub{font-size:.42rem;letter-spacing:.3em;margin-top:.1rem}
+.dish-name{font-size:1.4rem;font-weight:600;text-align:right}
+.meta-row{display:flex;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:1rem}
+.meta-left{font-size:.85rem;line-height:1.55}
+.meta-left strong{font-weight:700;display:inline-block;min-width:68px}
+.meta-right{font-size:.85rem;line-height:1.55;display:flex;flex-direction:column;gap:.15rem}
+.meta-right .row{display:flex;gap:.75rem}
+.meta-right .label{font-weight:700;min-width:80px}
+table{width:100%;border-collapse:collapse;font-size:.82rem;margin-bottom:1.25rem}
+thead th{background:#3a3a3a;color:#e8dcc0;text-align:left;padding:.5rem .65rem;font-weight:700;font-size:.75rem;letter-spacing:.04em}
+thead th:nth-child(2),thead th:nth-child(3),thead th:nth-child(4){text-align:center}
+tbody td{padding:.5rem .65rem;background:#f5efd9}
+tbody tr:nth-child(even) td{background:#efe6c6}
+tbody td:nth-child(2),tbody td:nth-child(3),tbody td:nth-child(4){text-align:center}
+.method-box{border:1.2px solid #1a1a1a;padding:1rem 1.2rem;background:#f5efd9}
+.method-box ul{list-style:none}
+.method-box li{position:relative;padding-left:1.1rem;margin-bottom:.35rem;font-size:.85rem;line-height:1.45}
+.method-box li:last-child{margin-bottom:0}
+.method-box li::before{content:"\2022";position:absolute;left:.25rem;top:0}
+@media print{body{background:#fff;padding:0}.page{background:#fff;border:none;box-shadow:none;max-width:100%;padding:0}thead th{background:#3a3a3a !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}tbody tr td{background:#f5efd9 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}tbody tr:nth-child(even) td{background:#efe6c6 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.butchery-banner{background:#4a5a63 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.logo-box{background:#000 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}.method-box{background:#f5efd9 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact}}
+@media (max-width:520px){body{padding:.75rem .6rem 1.5rem}.header{flex-direction:column;gap:.9rem}.header-right{align-items:flex-start}.dish-name{text-align:left;font-size:1.15rem}.butchery-banner{font-size:.9rem;padding:.45rem 1.5rem}.kitchen-recipe{font-size:1.25rem}.meta-row{flex-direction:column}.meta-left,.meta-right{font-size:.78rem}table{font-size:.75rem}thead th,tbody td{padding:.4rem .5rem}.method-box{padding:.85rem .9rem}.method-box li{font-size:.78rem}}
+</style>
+</head>
+<body>
+<div class="page">
+<div class="header">
+  <div class="header-left">
+    <div class="butchery-banner">Cold Kitchen</div>
+    <div class="kitchen-recipe">kitchen recipe</div>
+  </div>
+  <div class="header-right">
+    <div class="logo-box">
+      <div class="logo-main">THE CHEDI</div>
+      <div class="logo-sub">El Gouna Red Sea</div>
+    </div>
+    <div class="dish-name">Baba Ghanoush</div>
+  </div>
+</div>
+
+<div class="meta-row">
+  <div class="meta-left">
+      <div class="logo-main">THE CHEDI</div>
+      <div class="logo-sub">El Gouna Red Sea</div>
+    <div><strong>Batch</strong> : I</div>
+    <div><strong>New Menu</strong></div>
+  </div>
+  <div class="meta-right">
+    <div class="row"><span class="label">DATE:</span><span>13-Sep-2026</span></div>
+    <div class="row"><span class="label">INVOICE #</span><span>130</span></div>
+  </div>
+</div>
+
+<table>
+  <thead>
+    <tr><th>INGREDIENT</th><th>QTY</th><th>UNIT</th><th>NOTE</th></tr>
+  </thead>
+  <tbody>
+<tr><td>Grilled Eggplant</td><td>5</td><td>KG</td><td></td></tr>
+<tr><td>Tahini</td><td>200</td><td>gram</td><td></td></tr>
+<tr><td>Labneh</td><td>200</td><td>ml</td><td></td></tr>
+<tr><td>Garlic, finely chopped</td><td>100</td><td>gram</td><td></td></tr>
+<tr><td>Fresh Mint, chopped</td><td>100</td><td>gram</td><td></td></tr>
+<tr><td>Fresh Chili, chopped</td><td>100</td><td>gram</td><td></td></tr>
+<tr><td>Lemon Salt</td><td>30</td><td>ml</td><td></td></tr>
+<tr><td>Salt</td><td>50</td><td>ml</td><td></td></tr>
+  </tbody>
+</table>
+
+<div class="method-box">
+  <ul>
+<li>Grill the eggplant until fully cooked and the skin is charred.</li>
+<li>Allow to cool slightly.</li>
+<li>Remove the skin and drain excess liquid.</li>
+<li>Roughly chop or mash the eggplant.</li>
+<li>Add tahini, labneh and garlic.</li>
+<li>Add mint, chili, lemon salt and salt.</li>
+<li>Mix gently while maintaining some texture.</li>
+<li>Taste and adjust the seasoning.</li>
+<li>Refrigerate until service.</li>
+  </ul>
+</div>
+</div>
+</body>
+</html>
+

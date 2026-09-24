@@ -1,0 +1,26 @@
+{
+  "name": "🥜 Nuts & Dried Fruits",
+  "icon": "https://cdn-icons-png.flaticon.com/512/3075/3075108.png",
+  "items": [
+    { "name": "Almond Powder", "qty": "20g" },
+    { "name": "Almond Slice", "qty": "20g" },
+    { "name": "Whole Almond", "qty": "30g" },
+    { "name": "Cashew", "qty": "30g" },
+    { "name": "Coconut Powder", "qty": "15g" },
+    { "name": "Dried Raisins", "qty": "20g" },
+    { "name": "Hazelnut", "qty": "20g" },
+    { "name": "Roasted Hazelnut", "qty": "20g" },
+    { "name": "Mixed Nuts", "qty": "30g" },
+    { "name": "Salted Mixed Nuts", "qty": "30g" },
+    { "name": "Peanuts for Pastry", "qty": "20g" },
+    { "name": "Pine Nut", "qty": "15g" },
+    { "name": "Pistachio Powder", "qty": "15g" },
+    { "name": "Whole Pistachio", "qty": "20g" },
+    { "name": "Walnuts", "qty": "30g" },
+    { "name": "Dried Banana", "qty": "30g" },
+    { "name": "Dried Fig", "qty": "30g" },
+    { "name": "Dried Plums", "qty": "40g" },
+    { "name": "Medjool Dates", "qty": "40g" },
+    { "name": "Peanut Butter", "qty": "20g" }
+  ]
+}

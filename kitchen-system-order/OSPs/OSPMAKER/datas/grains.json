@@ -1,0 +1,21 @@
+{
+  "name": "🌾 Grains, Rice & Pasta",
+  "icon": "https://cdn-icons-png.flaticon.com/512/3917/3917753.png",
+  "items": [
+    { "name": "Glass Noodles", "qty": "50g" },
+    { "name": "Gluten Free Macaroni", "qty": "80g" },
+    { "name": "Linguine Pasta", "qty": "80g" },
+    { "name": "Penne Pasta", "qty": "80g" },
+    { "name": "Spaghetti", "qty": "80g" },
+    { "name": "Risotto Rice", "qty": "80g" },
+    { "name": "Basmati Rice", "qty": "80g" },
+    { "name": "White Rice", "qty": "80g" },
+    { "name": "Bird Tongue Pasta", "qty": "50g" },
+    { "name": "Vermicelli", "qty": "40g" },
+    { "name": "Couscous", "qty": "70g" },
+    { "name": "Kibbeh", "qty": "100g" },
+    { "name": "Egg Noodles", "qty": "80g" },
+    { "name": "Soba Noodles", "qty": "80g" },
+    { "name": "Rice Paper", "qty": "3 sheets" }
+  ]
+}
