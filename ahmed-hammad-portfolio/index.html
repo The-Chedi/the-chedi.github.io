@@ -6,92 +6,184 @@
   <title>Ahmed Hammad — Chef</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Caveat:wght@700&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
-<body class="page-home">
+<body>
 
-  <!-- TOP NAV -->
-  <nav class="topnav">
-    <div class="topnav-inner">
-      <a href="index.html" class="brand">
-        <span class="brand-line1">CHEF</span><span class="brand-line2">AHMED</span>
-        <span class="brand-tag">Portfolio</span>
-      </a>
-
-      <ul class="topnav-links">
-        <li><a href="index.html" class="active"><span>🏠</span> Home</a></li>
-        <li><a href="cv.html"><span>📄</span> CV</a></li>
-        <li><a href="plates.html"><span>🍽️</span> Plates</a></li>
-        <li><a href="lifestyle.html"><span>✨</span> Lifestyle</a></li>
-        <li><a href="contact.html"><span>✉️</span> Contact</a></li>
-      </ul>
+  <!-- TICKER MARQUEE -->
+  <div class="ticker">
+    <div class="ticker-track">
+      <span>★ SOUS CHEF</span><span>THE CHEDI EL GOUNA</span><span>20+ YEARS</span>
+      <span>SILVER MEDAL 2015</span><span>BRONZE MEDAL 2013</span><span>HACCP CERTIFIED</span>
+      <span>★ SOUS CHEF</span><span>THE CHEDI EL GOUNA</span><span>20+ YEARS</span>
+      <span>SILVER MEDAL 2015</span><span>BRONZE MEDAL 2013</span><span>HACCP CERTIFIED</span>
     </div>
+  </div>
+
+  <!-- NAV -->
+  <nav class="nav">
+    <a href="index.html" class="logo">
+      <div class="logo-top">CHEF</div>
+      <div class="logo-bottom">HAMMAD</div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html" class="active">Home</a></li>
+      <li><a href="cv.html">CV</a></li>
+      <li><a href="plates.html">Plates</a></li>
+      <li><a href="lifestyle.html">Lifestyle</a></li>
+      <li><a href="contact.html" class="nav-cta">Book Me</a></li>
+    </ul>
+    <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
   </nav>
 
-  <!-- HERO (ChefJAY-style split) -->
-  <section class="hero-split">
-    <div class="hero-photo">
-      <img src="images/hero.jpg" alt="Chef Ahmed Hammad" onerror="this.style.display='none'; this.parentElement.classList.add('no-photo');" />
-    </div>
+  <!-- HERO -->
+  <header class="hero">
+    <div class="hero-blob hero-blob-1"></div>
+    <div class="hero-blob hero-blob-2"></div>
 
-    <div class="hero-text">
-      <div class="script-accent">Ahmed Hammad</div>
-      <h1>
-        <span class="thin">CHEF</span>
-        <span class="bold">HAMMAD</span>
-      </h1>
-      <p class="script-tagline">Cookin' it fresh!</p>
+    <div class="hero-inner">
+      <div class="hero-text">
+        <div class="sticker sticker-rotate">⭐ 20+ YEARS</div>
+        <h1 class="hero-title">
+          <span class="line-1">THE</span>
+          <span class="line-2">CHEF</span>
+          <span class="line-3">Hammad</span>
+        </h1>
+        <p class="hero-sub">
+          <span class="scribble">Sous Chef</span> at The Chedi El Gouna.
+          Cooking <em>five-star</em> food with fire, flavor, and a whole lot of heart.
+        </p>
+        <div class="hero-cta">
+          <a href="plates.html" class="btn btn-fill">SEE MY PLATES →</a>
+          <a href="cv.html" class="btn btn-ghost">VIEW CV</a>
+        </div>
+      </div>
 
-      <p class="hero-desc">
-        Sous Chef at <strong>The Chedi El Gouna</strong>. 20+ years crafting
-        five-star experiences across Egypt and the UAE.
-      </p>
-
-      <div class="hero-cta">
-        <a href="plates.html" class="btn btn-red">View Plates</a>
-        <a href="cv.html" class="btn btn-outline">My CV</a>
+      <div class="hero-photo-wrap">
+        <div class="hero-photo-frame">
+          <img src="images/hero.jpg" alt="Chef Ahmed Hammad"
+               onerror="this.parentElement.classList.add('empty');" />
+        </div>
+        <div class="sticker sticker-coral">🥈 SILVER 2015</div>
+        <div class="sticker sticker-yellow">🥉 BRONZE 2013</div>
       </div>
     </div>
-  </section>
 
-  <!-- QUICK TILES -->
-  <section class="tiles">
-    <a href="cv.html" class="tile">
-      <div class="tile-icon">📄</div>
-      <h3>The CV</h3>
-      <p>20 years of world-class kitchens</p>
-    </a>
-    <a href="plates.html" class="tile">
-      <div class="tile-icon">🍽️</div>
-      <h3>Plates</h3>
-      <p>Signature dishes & cooking</p>
-    </a>
-    <a href="lifestyle.html" class="tile">
-      <div class="tile-icon">✨</div>
-      <h3>Lifestyle</h3>
-      <p>Behind the chef's apron</p>
-    </a>
-    <a href="contact.html" class="tile">
-      <div class="tile-icon">✉️</div>
-      <h3>Contact</h3>
-      <p>Let's work together</p>
-    </a>
-  </section>
-
-  <!-- STRIP -->
-  <section class="strip">
-    <div class="strip-inner">
-      <div><strong>20+</strong><span>Years</span></div>
-      <div><strong>10</strong><span>5-Star Kitchens</span></div>
-      <div><strong>2</strong><span>Culinary Medals</span></div>
-      <div><strong>3</strong><span>Countries</span></div>
+    <div class="scroll-hint">
+      <span>SCROLL</span>
+      <div class="scroll-line"></div>
     </div>
+  </header>
+
+  <!-- STATS BAND -->
+  <section class="stats-band">
+    <div class="stat">
+      <div class="stat-num">20<span>+</span></div>
+      <div class="stat-label">Years in kitchens</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">10</div>
+      <div class="stat-label">5-star hotels</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">2</div>
+      <div class="stat-label">Culinary medals</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">3</div>
+      <div class="stat-label">Countries cooked in</div>
+    </div>
+  </section>
+
+  <!-- INTRO -->
+  <section class="intro">
+    <div class="intro-label">— THE STORY SO FAR</div>
+    <h2 class="intro-title">
+      From the <em>markets of Alexandria</em> to the
+      <em>hottest kitchens in Dubai</em> — I've spent two decades
+      learning what makes a plate unforgettable.
+    </h2>
+    <p class="intro-body">
+      Specialized in menu development, cost control, HACCP compliance
+      and leading teams that deliver — service after service.
+    </p>
+  </section>
+
+  <!-- TILES / PORTFOLIO GRID -->
+  <section class="grid-section">
+    <div class="grid-header">
+      <h3>EXPLORE</h3>
+      <p>Pick a page. Take a look around.</p>
+    </div>
+
+    <div class="grid">
+      <a href="cv.html" class="grid-card grid-card-1">
+        <div class="grid-num">01</div>
+        <div class="grid-icon">📄</div>
+        <h4>The CV</h4>
+        <p>20 years. 10 kitchens. One story.</p>
+        <span class="grid-arrow">→</span>
+      </a>
+      <a href="plates.html" class="grid-card grid-card-2">
+        <div class="grid-num">02</div>
+        <div class="grid-icon">🍽️</div>
+        <h4>Plates</h4>
+        <p>Signature dishes, plated with attitude.</p>
+        <span class="grid-arrow">→</span>
+      </a>
+      <a href="lifestyle.html" class="grid-card grid-card-3">
+        <div class="grid-num">03</div>
+        <div class="grid-icon">✨</div>
+        <h4>Lifestyle</h4>
+        <p>The story behind the apron.</p>
+        <span class="grid-arrow">→</span>
+      </a>
+      <a href="contact.html" class="grid-card grid-card-4">
+        <div class="grid-num">04</div>
+        <div class="grid-icon">✉️</div>
+        <h4>Contact</h4>
+        <p>Let's cook something great.</p>
+        <span class="grid-arrow">→</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- QUOTE BLOCK -->
+  <section class="quote-block">
+    <div class="quote-mark">"</div>
+    <p class="quote-text">
+      Cooking isn't just a job. It's <em>how I say hello</em>,
+      <em>how I say thank you</em>, and <em>how I say welcome home</em>.
+    </p>
+    <div class="quote-author">— Chef Ahmed Hammad</div>
   </section>
 
   <!-- FOOTER -->
   <footer class="footer">
-    <p>© <span id="year"></span> Ahmed Hammad · Sous Chef · The Chedi El Gouna</p>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="footer-logo">CHEF<br><span>HAMMAD</span></div>
+        <p>The Chedi El Gouna · Alexandria, Egypt</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Explore</strong>
+          <a href="cv.html">CV</a>
+          <a href="plates.html">Plates</a>
+          <a href="lifestyle.html">Lifestyle</a>
+        </div>
+        <div>
+          <strong>Contact</strong>
+          <a href="tel:01287633200">01287633200</a>
+          <a href="mailto:Chef10182@gmail.com">Email</a>
+          <a href="https://wa.me/201287633200">WhatsApp</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      © <span id="year"></span> Ahmed Hammad · Crafted with 🔥
+    </div>
   </footer>
 
   <script src="script.js"></script>
