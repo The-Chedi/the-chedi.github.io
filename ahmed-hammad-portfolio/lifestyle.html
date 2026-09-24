@@ -4,81 +4,127 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Lifestyle — Ahmed Hammad</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&family=Great+Vibes&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Caveat:wght@700&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <nav class="nav">
-  <a href="index.html" class="logo">
-    <div class="logo-top">CHEF</div>
-    <div class="logo-bottom">HAMMAD</div>
-  </a>
-  <ul class="nav-links">
-    <li><a href="index.html">Home</a></li>
-    <li><a href="cv.html" class="active">CV</a></li>
-    <li><a href="plates.html">Plates</a></li>
-    <li><a href="lifestyle.html">Lifestyle</a></li>
-    <li><a href="contact.html" class="nav-cta">Book Me</a></li>
-  </ul>
-  <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
-</nav>
+  <div class="ticker">
+    <div class="ticker-track">
+      <span>★ BEHIND THE APRON</span><span>PHILOSOPHY</span><span>DAILY RITUAL</span>
+      <span>★ BEHIND THE APRON</span><span>PHILOSOPHY</span><span>DAILY RITUAL</span>
+    </div>
+  </div>
 
-  <header class="page-header">
-    <h1>Lifestyle</h1>
-    <p>Behind the apron — stories, philosophy, and everyday inspiration.</p>
+  <nav class="nav">
+    <a href="index.html" class="logo">
+      <div class="logo-top">CHEF</div>
+      <div class="logo-bottom">HAMMAD</div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="cv.html">CV</a></li>
+      <li><a href="plates.html">Plates</a></li>
+      <li><a href="lifestyle.html" class="active">Lifestyle</a></li>
+      <li><a href="contact.html" class="nav-cta">Book Me</a></li>
+    </ul>
+    <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+  </nav>
+
+  <header class="page-hero">
+    <div class="page-hero-inner">
+      <div>
+        <div class="eyebrow">— BEHIND THE APRON</div>
+        <h1>My <em>Life</em></h1>
+      </div>
+      <div class="page-desc">
+        Stories, philosophy, and everything that
+        happens <strong>before the first guest arrives</strong>.
+      </div>
+    </div>
   </header>
 
   <main class="container">
 
-    <section class="story">
-      <div class="story-text">
-        <div class="script-accent">My Philosophy</div>
-        <h2>Cooking is storytelling on a plate.</h2>
+    <!-- STORY 1 -->
+    <section class="story-funky">
+      <div class="story-funky-text">
+        <span class="script-heading">My Philosophy</span>
+        <h2>
+          Cooking is <em>storytelling</em> — every plate
+          is a chapter.
+        </h2>
         <p>
           Twenty years in professional kitchens taught me that a great dish is more
-          than technique — it is memory, culture, and generosity. From the spice
-          markets of Alexandria to the polished dining rooms of Dubai, I have learned
-          to cook with respect for ingredients, for my team, and for every guest.
+          than technique — it is memory, culture, and generosity.
         </p>
         <p>
-          Every plate should tell a story: where it came from, who made it, and why
-          it matters. That's the standard I bring to The Chedi El Gouna, every service.
+          From the spice markets of Alexandria to the polished dining rooms of Dubai,
+          I've learned to cook with respect for ingredients, for my team, and for every guest.
         </p>
       </div>
-      <div class="story-photo">
-        <img src="images/lifestyle-1.jpg" alt="Chef lifestyle" onerror="this.parentElement.classList.add('placeholder');">
+      <div class="story-funky-photo">
+        <img src="images/lifestyle-1.jpg" alt="Chef lifestyle"
+             onerror="this.parentElement.classList.add('empty');">
       </div>
     </section>
 
-    <section class="story reverse">
-      <div class="story-photo">
-        <img src="images/lifestyle-2.jpg" alt="In the kitchen" onerror="this.parentElement.classList.add('placeholder');">
-      </div>
-      <div class="story-text">
-        <div class="script-accent">Daily Ritual</div>
-        <h2>Mise en place, every morning.</h2>
+    <!-- STORY 2 (reversed) -->
+    <section class="story-funky reverse">
+      <div class="story-funky-text">
+        <span class="script-heading">Daily Ritual</span>
+        <h2>
+          <em>Mise en place</em> — every single morning.
+        </h2>
         <p>
           Before the first guest arrives, the kitchen is already alive. Prep lists,
-          stock rotation, station briefing — every detail matters. I believe in
-          leading from the front: hands-on, calm, and precise.
+          stock rotation, station briefing — every detail matters.
         </p>
         <p>
-          Outside the kitchen, I follow food trends, travel for flavors, and spend
-          time with family — the best reminder of why hospitality exists.
+          I believe in leading from the front: hands-on, calm, and precise. Outside
+          the kitchen, I follow food trends, travel for flavors, and spend time with family.
         </p>
+      </div>
+      <div class="story-funky-photo">
+        <img src="images/lifestyle-2.jpg" alt="In the kitchen"
+             onerror="this.parentElement.classList.add('empty');">
       </div>
     </section>
 
-    <section class="quote-block">
-      <p class="script-accent center">"Doin' it fresh — every single plate."</p>
-      <p class="quote-author">— Chef Ahmed Hammad</p>
-    </section>
+    <!-- QUOTE -->
+    <div class="life-quote">
+      <div class="script-quote">
+        "Cookin' it fresh — <br>one plate at a time."
+      </div>
+      <div class="quote-sign">— Chef Ahmed Hammad</div>
+    </div>
 
   </main>
 
   <footer class="footer">
-    <p>© <span id="year"></span> Ahmed Hammad · Sous Chef · The Chedi El Gouna</p>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="footer-logo">CHEF<br><span>HAMMAD</span></div>
+        <p>The Chedi El Gouna · Alexandria, Egypt</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Explore</strong>
+          <a href="cv.html">CV</a>
+          <a href="plates.html">Plates</a>
+          <a href="lifestyle.html">Lifestyle</a>
+        </div>
+        <div>
+          <strong>Contact</strong>
+          <a href="tel:01287633200">01287633200</a>
+          <a href="mailto:Chef10182@gmail.com">Email</a>
+          <a href="https://wa.me/201287633200">WhatsApp</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">© <span id="year"></span> Ahmed Hammad · Crafted with 🔥</div>
   </footer>
 
   <script src="script.js"></script>
