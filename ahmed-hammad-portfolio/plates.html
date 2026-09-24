@@ -4,67 +4,109 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Plates — Ahmed Hammad</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&family=Great+Vibes&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Caveat:wght@700&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
-  <nav class="nav">
-  <a href="index.html" class="logo">
-    <div class="logo-top">CHEF</div>
-    <div class="logo-bottom">HAMMAD</div>
-  </a>
-  <ul class="nav-links">
-    <li><a href="index.html">Home</a></li>
-    <li><a href="cv.html" class="active">CV</a></li>
-    <li><a href="plates.html">Plates</a></li>
-    <li><a href="lifestyle.html">Lifestyle</a></li>
-    <li><a href="contact.html" class="nav-cta">Book Me</a></li>
-  </ul>
-  <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
-</nav>
+  <div class="ticker">
+    <div class="ticker-track">
+      <span>★ SIGNATURE PLATES</span><span>LIVE COOKING</span><span>PLATED WITH ATTITUDE</span>
+      <span>★ SIGNATURE PLATES</span><span>LIVE COOKING</span><span>PLATED WITH ATTITUDE</span>
+    </div>
+  </div>
 
-  <header class="page-header">
-    <h1>Plates</h1>
-    <p>A gallery of signature dishes and kitchen moments.</p>
+  <nav class="nav">
+    <a href="index.html" class="logo">
+      <div class="logo-top">CHEF</div>
+      <div class="logo-bottom">HAMMAD</div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="cv.html">CV</a></li>
+      <li><a href="plates.html" class="active">Plates</a></li>
+      <li><a href="lifestyle.html">Lifestyle</a></li>
+      <li><a href="contact.html" class="nav-cta">Book Me</a></li>
+    </ul>
+    <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+  </nav>
+
+  <header class="page-hero">
+    <div class="page-hero-inner">
+      <div>
+        <div class="eyebrow">— FROM THE PASS</div>
+        <h1>The <em>Plates</em></h1>
+      </div>
+      <div class="page-desc">
+        A look at signature dishes, live cooking moments
+        and <strong>plates I'm proud to send out</strong>.
+      </div>
+    </div>
   </header>
 
   <main class="container">
 
-    <div class="plates-grid">
-      <!-- Replace image src with your own files in images/ -->
-      <div class="plate-item">
-        <img src="images/plate-1.jpg" alt="Signature dish 1" onerror="this.parentElement.classList.add('placeholder');">
-        <div class="plate-caption">Signature Main</div>
+    <div class="section-label">— GALLERY</div>
+
+    <div class="plates-masonry">
+      <div class="plate-card">
+        <div class="plate-badge">SIGNATURE</div>
+        <img src="images/plate-1.jpg" alt="Signature dish" onerror="this.parentElement.classList.add('empty');">
+        <div class="plate-caption"><h4>Signature Main</h4><span>01</span></div>
       </div>
-      <div class="plate-item">
-        <img src="images/plate-2.jpg" alt="Signature dish 2" onerror="this.parentElement.classList.add('placeholder');">
-        <div class="plate-caption">Seafood Special</div>
+      <div class="plate-card">
+        <div class="plate-badge">SEAFOOD</div>
+        <img src="images/plate-2.jpg" alt="Seafood dish" onerror="this.parentElement.classList.add('empty');">
+        <div class="plate-caption"><h4>Seafood Special</h4><span>02</span></div>
       </div>
-      <div class="plate-item">
-        <img src="images/plate-3.jpg" alt="Signature dish 3" onerror="this.parentElement.classList.add('placeholder');">
-        <div class="plate-caption">Dessert Art</div>
+      <div class="plate-card">
+        <div class="plate-badge">DESSERT</div>
+        <img src="images/plate-3.jpg" alt="Dessert" onerror="this.parentElement.classList.add('empty');">
+        <div class="plate-caption"><h4>Dessert Art</h4><span>03</span></div>
       </div>
-      <div class="plate-item">
-        <img src="images/plate-4.jpg" alt="Signature dish 4" onerror="this.parentElement.classList.add('placeholder');">
-        <div class="plate-caption">Live Cooking</div>
+      <div class="plate-card">
+        <div class="plate-badge">LIVE</div>
+        <img src="images/plate-4.jpg" alt="Live cooking" onerror="this.parentElement.classList.add('empty');">
+        <div class="plate-caption"><h4>Live Cooking</h4><span>04</span></div>
       </div>
-      <div class="plate-item">
-        <img src="images/plate-5.jpg" alt="Signature dish 5" onerror="this.parentElement.classList.add('placeholder');">
-        <div class="plate-caption">Plated Starter</div>
+      <div class="plate-card">
+        <div class="plate-badge">STARTER</div>
+        <img src="images/plate-5.jpg" alt="Starter" onerror="this.parentElement.classList.add('empty');">
+        <div class="plate-caption"><h4>Plated Starter</h4><span>05</span></div>
       </div>
-      <div class="plate-item">
-        <img src="images/plate-6.jpg" alt="Signature dish 6" onerror="this.parentElement.classList.add('placeholder');">
-        <div class="plate-caption">Mediterranean</div>
+      <div class="plate-card">
+        <div class="plate-badge">MAIN</div>
+        <img src="images/plate-6.jpg" alt="Main course" onerror="this.parentElement.classList.add('empty');">
+        <div class="plate-caption"><h4>Mediterranean</h4><span>06</span></div>
       </div>
     </div>
-
-    <p class="plates-note">📸 Add your own photos inside the <code>images/</code> folder — name them <code>plate-1.jpg</code>, <code>plate-2.jpg</code>, etc.</p>
 
   </main>
 
   <footer class="footer">
-    <p>© <span id="year"></span> Ahmed Hammad · Sous Chef · The Chedi El Gouna</p>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="footer-logo">CHEF<br><span>HAMMAD</span></div>
+        <p>The Chedi El Gouna · Alexandria, Egypt</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Explore</strong>
+          <a href="cv.html">CV</a>
+          <a href="plates.html">Plates</a>
+          <a href="lifestyle.html">Lifestyle</a>
+        </div>
+        <div>
+          <strong>Contact</strong>
+          <a href="tel:01287633200">01287633200</a>
+          <a href="mailto:Chef10182@gmail.com">Email</a>
+          <a href="https://wa.me/201287633200">WhatsApp</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">© <span id="year"></span> Ahmed Hammad · Crafted with 🔥</div>
   </footer>
 
   <script src="script.js"></script>
