@@ -4,64 +4,109 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Contact — Ahmed Hammad</title>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@300;400;500;600&family=Great+Vibes&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Caveat:wght@700&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
- <nav class="nav">
-  <a href="index.html" class="logo">
-    <div class="logo-top">CHEF</div>
-    <div class="logo-bottom">HAMMAD</div>
-  </a>
-  <ul class="nav-links">
-    <li><a href="index.html">Home</a></li>
-    <li><a href="cv.html" class="active">CV</a></li>
-    <li><a href="plates.html">Plates</a></li>
-    <li><a href="lifestyle.html">Lifestyle</a></li>
-    <li><a href="contact.html" class="nav-cta">Book Me</a></li>
-  </ul>
-  <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
-</nav>
-  <header class="page-header">
-    <h1>Contact</h1>
-    <p>Available for fine-dining, hotel and resort opportunities worldwide.</p>
+  <div class="ticker">
+    <div class="ticker-track">
+      <span>★ LET'S TALK</span><span>OPEN TO WORK</span><span>WORLDWIDE</span>
+      <span>★ LET'S TALK</span><span>OPEN TO WORK</span><span>WORLDWIDE</span>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <a href="index.html" class="logo">
+      <div class="logo-top">CHEF</div>
+      <div class="logo-bottom">HAMMAD</div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="cv.html">CV</a></li>
+      <li><a href="plates.html">Plates</a></li>
+      <li><a href="lifestyle.html">Lifestyle</a></li>
+      <li><a href="contact.html" class="nav-cta active">Book Me</a></li>
+    </ul>
+    <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+  </nav>
+
+  <header class="page-hero">
+    <div class="page-hero-inner">
+      <div>
+        <div class="eyebrow">— SAY HELLO</div>
+        <h1>Get in <em>touch</em></h1>
+      </div>
+      <div class="page-desc">
+        Available for fine-dining, hotel and resort roles
+        <strong>worldwide</strong>. Let's cook something great together.
+      </div>
+    </div>
   </header>
 
   <main class="container">
 
-    <div class="contact-grid">
-      <a href="tel:01287633200" class="contact-card">
-        <div class="cc-icon">📞</div>
-        <span>Phone</span>
-        <strong>01287633200</strong>
+    <div class="section-label">— PICK YOUR CHANNEL</div>
+
+    <div class="contact-funky">
+      <a href="tel:01287633200" class="contact-tile">
+        <div class="ct-icon">📞</div>
+        <div class="ct-label">PHONE</div>
+        <div class="ct-value">01287633200</div>
       </a>
-      <a href="mailto:Chef10182@gmail.com" class="contact-card">
-        <div class="cc-icon">✉️</div>
-        <span>Email</span>
-        <strong>Chef10182@gmail.com</strong>
+      <a href="mailto:Chef10182@gmail.com" class="contact-tile">
+        <div class="ct-icon">✉️</div>
+        <div class="ct-label">EMAIL</div>
+        <div class="ct-value">Chef10182@<br>gmail.com</div>
       </a>
-      <a href="https://wa.me/201287633200" target="_blank" rel="noopener" class="contact-card">
-        <div class="cc-icon">💬</div>
-        <span>WhatsApp</span>
-        <strong>Chat now</strong>
+      <a href="https://wa.me/201287633200" target="_blank" rel="noopener" class="contact-tile dark">
+        <div class="ct-icon">💬</div>
+        <div class="ct-label">WHATSAPP</div>
+        <div class="ct-value">Chat now →</div>
       </a>
-      <div class="contact-card static">
-        <div class="cc-icon">📍</div>
-        <span>Location</span>
-        <strong>Alexandria, Egypt</strong>
+      <div class="contact-tile static">
+        <div class="ct-icon">📍</div>
+        <div class="ct-label">BASED IN</div>
+        <div class="ct-value">Alexandria,<br>Egypt</div>
       </div>
     </div>
 
-    <div class="contact-note">
+    <!-- CTA BANNER -->
+    <div class="contact-cta">
       <h3>Open to opportunities</h3>
-      <p>Sous Chef · Chef de Cuisine · Executive Sous Chef roles — Egypt, GCC, Europe.</p>
+      <p>
+        Sous Chef · Chef de Cuisine · Executive Sous Chef —
+        Egypt, GCC, Europe, worldwide.
+      </p>
+      <a href="mailto:Chef10182@gmail.com" class="btn btn-fill">Send me a message →</a>
     </div>
 
   </main>
 
   <footer class="footer">
-    <p>© <span id="year"></span> Ahmed Hammad · Sous Chef · The Chedi El Gouna</p>
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="footer-logo">CHEF<br><span>HAMMAD</span></div>
+        <p>The Chedi El Gouna · Alexandria, Egypt</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Explore</strong>
+          <a href="cv.html">CV</a>
+          <a href="plates.html">Plates</a>
+          <a href="lifestyle.html">Lifestyle</a>
+        </div>
+        <div>
+          <strong>Contact</strong>
+          <a href="tel:01287633200">01287633200</a>
+          <a href="mailto:Chef10182@gmail.com">Email</a>
+          <a href="https://wa.me/201287633200">WhatsApp</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">© <span id="year"></span> Ahmed Hammad · Crafted with 🔥</div>
   </footer>
 
   <script src="script.js"></script>
