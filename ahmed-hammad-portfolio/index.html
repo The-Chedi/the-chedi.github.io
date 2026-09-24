@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Ahmed Hammad — Chef</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600;700&family=Great+Vibes&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="page-home">
+
+  <!-- TOP NAV -->
+  <nav class="topnav">
+    <div class="topnav-inner">
+      <a href="index.html" class="brand">
+        <span class="brand-line1">CHEF</span><span class="brand-line2">AHMED</span>
+        <span class="brand-tag">Portfolio</span>
+      </a>
+
+      <ul class="topnav-links">
+        <li><a href="index.html" class="active"><span>🏠</span> Home</a></li>
+        <li><a href="cv.html"><span>📄</span> CV</a></li>
+        <li><a href="plates.html"><span>🍽️</span> Plates</a></li>
+        <li><a href="lifestyle.html"><span>✨</span> Lifestyle</a></li>
+        <li><a href="contact.html"><span>✉️</span> Contact</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- HERO (ChefJAY-style split) -->
+  <section class="hero-split">
+    <div class="hero-photo">
+      <img src="images/hero.jpg" alt="Chef Ahmed Hammad" onerror="this.style.display='none'; this.parentElement.classList.add('no-photo');" />
+    </div>
+
+    <div class="hero-text">
+      <div class="script-accent">Ahmed Hammad</div>
+      <h1>
+        <span class="thin">CHEF</span>
+        <span class="bold">HAMMAD</span>
+      </h1>
+      <p class="script-tagline">Cookin' it fresh!</p>
+
+      <p class="hero-desc">
+        Sous Chef at <strong>The Chedi El Gouna</strong>. 20+ years crafting
+        five-star experiences across Egypt and the UAE.
+      </p>
+
+      <div class="hero-cta">
+        <a href="plates.html" class="btn btn-red">View Plates</a>
+        <a href="cv.html" class="btn btn-outline">My CV</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- QUICK TILES -->
+  <section class="tiles">
+    <a href="cv.html" class="tile">
+      <div class="tile-icon">📄</div>
+      <h3>The CV</h3>
+      <p>20 years of world-class kitchens</p>
+    </a>
+    <a href="plates.html" class="tile">
+      <div class="tile-icon">🍽️</div>
+      <h3>Plates</h3>
+      <p>Signature dishes & cooking</p>
+    </a>
+    <a href="lifestyle.html" class="tile">
+      <div class="tile-icon">✨</div>
+      <h3>Lifestyle</h3>
+      <p>Behind the chef's apron</p>
+    </a>
+    <a href="contact.html" class="tile">
+      <div class="tile-icon">✉️</div>
+      <h3>Contact</h3>
+      <p>Let's work together</p>
+    </a>
+  </section>
+
+  <!-- STRIP -->
+  <section class="strip">
+    <div class="strip-inner">
+      <div><strong>20+</strong><span>Years</span></div>
+      <div><strong>10</strong><span>5-Star Kitchens</span></div>
+      <div><strong>2</strong><span>Culinary Medals</span></div>
+      <div><strong>3</strong><span>Countries</span></div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <p>© <span id="year"></span> Ahmed Hammad · Sous Chef · The Chedi El Gouna</p>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
