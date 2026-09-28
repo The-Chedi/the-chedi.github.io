@@ -1,4 +1,52 @@
-  <main class="container">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plates — Ahmed Hammad</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Archivo+Black&family=Caveat:wght@700&family=Inter:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="ticker">
+    <div class="ticker-track">
+      <span>★ SIGNATURE PLATES</span><span>LIVE COOKING</span><span>PLATED WITH ATTITUDE</span>
+      <span>★ SIGNATURE PLATES</span><span>LIVE COOKING</span><span>PLATED WITH ATTITUDE</span>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <a href="index.html" class="logo">
+      <div class="logo-top">CHEF</div>
+      <div class="logo-bottom">HAMMAD</div>
+    </a>
+    <ul class="nav-links">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="cv.html">CV</a></li>
+      <li><a href="plates.html" class="active">Plates</a></li>
+      <li><a href="lifestyle.html">Lifestyle</a></li>
+      <li><a href="contact.html" class="nav-cta">Book Me</a></li>
+    </ul>
+    <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('open')">☰</button>
+  </nav>
+
+  <header class="page-hero">
+    <div class="page-hero-inner">
+      <div>
+        <div class="eyebrow">— FROM THE PASS</div>
+        <h1>The <em>Plates</em></h1>
+      </div>
+      <div class="page-desc">
+        A look at signature dishes, live cooking moments
+        and <strong>plates I'm proud to send out</strong>.
+      </div>
+    </div>
+  </header>
+
+   <main class="container">
     <div class="section-label">— GALLERY</div>
 
     <div class="plates-masonry">
@@ -52,3 +100,31 @@
       <div class="lb-caption" id="lb-caption"></div>
     </div>
   </div>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <div class="footer-logo">CHEF<br><span>HAMMAD</span></div>
+        <p>The Chedi El Gouna · Alexandria, Egypt</p>
+      </div>
+      <div class="footer-links">
+        <div>
+          <strong>Explore</strong>
+          <a href="cv.html">CV</a>
+          <a href="plates.html">Plates</a>
+          <a href="lifestyle.html">Lifestyle</a>
+        </div>
+        <div>
+          <strong>Contact</strong>
+          <a href="tel:01287633200">01287633200</a>
+          <a href="mailto:Chef10182@gmail.com">Email</a>
+          <a href="https://wa.me/201287633200">WhatsApp</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">© <span id="year"></span> Ahmed Hammad · Crafted with 🔥</div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
