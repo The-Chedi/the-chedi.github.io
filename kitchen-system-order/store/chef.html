@@ -260,13 +260,13 @@ const kitchenToFirestoreId = {
 };
 
 const kitchenToFileMap = {
-    "Hot Kitchen": "hot-kitchen.json",
-    "Cold Kitchen": "cold-kitchen.json",
-    "Pastry / Bakery": "pastry.json",
-    "Butchery": "butchery.json",
-    "Beach House": "beach-house.json",
-    "Nihon Kitchen": "nihon-kitchen.json",
-    "Staff Kitchen": "staff-kitchen.json"
+    "Hot Kitchen":    "itmes/hot-kitchen.json",
+    "Cold Kitchen":   "itmes/cold-kitchen.json",
+    "Pastry / Bakery":"itmes/pastry.json",
+    "Butchery":       "itmes/butchery.json",
+    "Beach House":    "itmes/beach-house.json",
+    "Nihon Kitchen":  "itmes/nihon-kitchen.json",
+    "Staff Kitchen":  "itmes/staff-kitchen.json"
 };
 
 let unlockedKitchens = {};
@@ -624,7 +624,7 @@ async function loadItemsForKitchen(kitchen, forceRefresh = false) {
     if (kitchenItemsCache[kitchen] && !forceRefresh) return kitchenItemsCache[kitchen];
     const fileName = kitchenToFileMap[kitchen];
     if (!fileName) return [];
-    const url = `items/${fileName}?t=${Date.now()}`;
+    const url = `${fileName}?t=${Date.now()}`;
     try {
         const response = await fetch(url);
         if (!response.ok) return [];
