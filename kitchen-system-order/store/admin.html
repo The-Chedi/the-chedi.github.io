@@ -82,7 +82,148 @@ body {
 .btn-analytics {
     background: linear-gradient(135deg, #667eea, #764ba2);
 }
+.btn-stock {
+    background: linear-gradient(135deg, #10b981, #059669);
+}
 
+/* ============ STOCK MANAGER STYLES ============ */
+.stock-modal {
+    display: flex;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.9);
+    z-index: 3000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+.stock-modal-content {
+    background: white;
+    border-radius: 20px;
+    width: 100%;
+    max-width: 900px;
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+}
+.stock-modal-header {
+    background: linear-gradient(135deg, #1e3c72, #2a5298);
+    color: white;
+    padding: 18px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.stock-modal-header h2 { font-size: 1.1rem; margin: 0; }
+.stock-modal-header .kitchen-picker {
+    background: rgba(255,255,255,0.15);
+    color: white;
+    border: 1px solid rgba(255,255,255,0.3);
+    padding: 8px 14px;
+    border-radius: 30px;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+}
+.stock-modal-header .kitchen-picker option { color: #1e3c72; }
+.stock-modal-header .close-stock {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    color: white;
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    cursor: pointer;
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+.stock-toolbar {
+    padding: 12px 24px;
+    background: #f8f9fa;
+    border-bottom: 1px solid #eef2f6;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.stock-toolbar input {
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    font-size: 12px;
+    flex: 1;
+    min-width: 140px;
+}
+.stock-toolbar .btn-sm {
+    padding: 8px 14px;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+}
+.btn-save-all { background: #27ae60; color: white; }
+.btn-reset-stock { background: #e74c3c; color: white; }
+.btn-refresh-stock { background: #3498db; color: white; }
+.stock-body {
+    padding: 0;
+    overflow-y: auto;
+    flex: 1;
+}
+.stock-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+}
+.stock-table thead {
+    position: sticky;
+    top: 0;
+    background: #f8f9fa;
+    z-index: 2;
+}
+.stock-table th {
+    padding: 12px 10px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: #555;
+    text-transform: uppercase;
+    border-bottom: 2px solid #e0e0e0;
+}
+.stock-table td {
+    padding: 10px;
+    border-bottom: 1px solid #f0f0f0;
+    font-size: 12px;
+}
+.stock-table tr:hover { background: #fafcfc; }
+.stock-table tr.row-out { background: #ffe5e5; }
+.stock-table tr.row-low { background: #fff8e1; }
+.stock-input {
+    width: 90px;
+    padding: 6px 8px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    text-align: center;
+}
+.stock-input:focus { outline: none; border-color: #3498db; }
+.stock-badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.stock-badge.ok { background: #e8f5e9; color: #2e7d32; }
+.stock-badge.low { background: #fff3cd; color: #e65100; }
+.stock-badge.out { background: #ffcdd2; color: #b71c1c; }
+.stock-badge.untracked { background: #eceff1; color: #546e7a; }
 .btn-danger {
     background: #e74c3c;
 }
@@ -813,6 +954,7 @@ body {
                 <button class="btn-header" onclick="logout()">🚪 Logout</button>
             </div>
             <div class="header-buttons">
+                <button class="btn-header btn-stock" onclick="openStockManager()">📦 Stock</button>
                 <button class="btn-header btn-analytics" onclick="openAnalytics()">📊 Analytics</button>
                 <button class="btn-header" onclick="exportExcel()">📎 Export</button>
                 <button class="btn-header" onclick="window.print()">🖨️ Print</button>
@@ -840,7 +982,30 @@ body {
 <script>
 
 const KITCHENS = ["Hot Kitchen", "Cold Kitchen", "Pastry / Bakery", "Butchery", "Beach House", "Nihon Kitchen", "Staff Kitchen"];
+    
+// ============ STOCK SUPPORT: Kitchen mappings ============
+const kitchenToFirestoreId = {
+    "Hot Kitchen": "Hot_Kitchen",
+    "Cold Kitchen": "Cold_Kitchen",
+    "Pastry / Bakery": "Pastry_Bakery",
+    "Butchery": "Butchery",
+    "Beach House": "Beach_House",
+    "Nihon Kitchen": "Nihon_Kitchen",
+    "Staff Kitchen": "Staff_Kitchen"
+};
 
+const kitchenToFileMap = {
+    "Hot Kitchen": "iteme/hot-kitchen.json",
+    "Cold Kitchen": "iteme/cold-kitchen.json",
+    "Pastry / Bakery": "iteme/pastry.json",
+    "Butchery": "iteme/butchery.json",
+    "Beach House": "iteme/beach-house.json",
+    "Nihon Kitchen": "iteme/nihon-kitchen.json",
+    "Staff Kitchen": "iteme/staff-kitchen.json"
+};
+
+// Cache for loaded items per kitchen
+let adminItemsCache = {};
 let currentAdmin = "";
 let currentAdminEmail = "";
 let currentKitchen = "all";
@@ -1142,7 +1307,480 @@ function showResetConfirmModal() {
     document.body.appendChild(modal);
     const input = modal.querySelector('#confirmDeleteInput');
     const confirmBtn = modal.querySelector('#confirmDeleteBtn');
-    input.focus();
+    input.focus();// ==================================================================
+// ============ STOCK MANAGER (independent, doesn't affect =========
+// ============ any existing request/approval logic) ===============
+// ==================================================================
+
+let stockManagerState = {
+    kitchen: "Hot Kitchen",
+    items: {},          // code -> { name, unit, stockQty, minAlert, tracked }
+    dirty: false
+};
+
+async function loadItemsJsonForAdmin(kitchen, forceRefresh = false) {
+    if (!forceRefresh && adminItemsCache[kitchen]) return adminItemsCache[kitchen];
+    const path = kitchenToFileMap[kitchen];
+    if (!path) return [];
+    try {
+        const res = await fetch(`${path}?t=${Date.now()}`);
+        if (!res.ok) return [];
+        const data = await res.json();
+        let arr = Array.isArray(data) ? data : (data.items || []);
+        arr = arr.map(it => ({
+            code: it.code,
+            name: it.name,
+            name_ar: it.name_ar || it.name,
+            unit: it.unit || "pcs"
+        }));
+        adminItemsCache[kitchen] = arr;
+        return arr;
+    } catch (e) {
+        console.error("Item load error:", e);
+        return [];
+    }
+}
+
+async function openStockManager() {
+    stockManagerState.kitchen = "Hot Kitchen";
+    stockManagerState.dirty = false;
+
+    const modal = document.createElement("div");
+    modal.className = "stock-modal";
+    modal.id = "stockManagerModal";
+    modal.innerHTML = `
+        <div class="stock-modal-content">
+            <div class="stock-modal-header">
+                <h2>📦 Stock Manager</h2>
+                <select class="kitchen-picker" id="stockKitchenPicker" onchange="onStockKitchenChange()">
+                    ${KITCHENS.map(k => `<option value="${k}">${k}</option>`).join("")}
+                </select>
+                <button class="close-stock" onclick="closeStockManager()">✕</button>
+            </div>
+            <div class="stock-toolbar">
+                <input type="text" id="stockSearchInput" placeholder="🔍 Search by name or code..." oninput="filterStockRows()">
+                <button class="btn-sm btn-refresh-stock" onclick="refreshStockManager()">🔄 Refresh</button>
+                <button class="btn-sm btn-save-all" onclick="saveAllStock()">💾 Save All</button>
+                <button class="btn-sm btn-reset-stock" onclick="resetKitchenStock()">🗑️ Reset</button>
+            </div>
+            <div class="stock-body" id="stockBody">
+                <div class="empty-state">Loading items...</div>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+    await loadStockManagerData();
+}
+
+function closeStockManager() {
+    const modal = document.getElementById("stockManagerModal");
+    if (modal) modal.remove();
+    stockManagerState.dirty = false;
+}
+
+async function onStockKitchenChange() {
+    if (stockManagerState.dirty) {
+        if (!confirm("You have unsaved changes. Switch kitchen anyway?")) {
+            document.getElementById("stockKitchenPicker").value = stockManagerState.kitchen;
+            return;
+        }
+    }
+    stockManagerState.kitchen = document.getElementById("stockKitchenPicker").value;
+    stockManagerState.dirty = false;
+    await loadStockManagerData();
+}
+
+async function refreshStockManager() {
+    await loadStockManagerData();
+    showToast("🔄 Stock reloaded");
+}
+
+async function loadStockManagerData() {
+    const kitchen = stockManagerState.kitchen;
+    const body = document.getElementById("stockBody");
+    body.innerHTML = `<div class="empty-state">Loading items...</div>`;
+
+    // 1. Load items JSON
+    const itemsArr = await loadItemsJsonForAdmin(kitchen, true);
+
+    // 2. Load Firestore stock
+    let firestoreStock = {};
+    try {
+        const kitchenId = kitchenToFirestoreId[kitchen];
+        const doc = await db.collection("stock").doc(kitchenId).get();
+        if (doc.exists && doc.data().items) firestoreStock = doc.data().items;
+    } catch (e) {
+        console.error("Stock load error:", e);
+    }
+
+    // 3. Merge
+    const merged = {};
+    itemsArr.forEach(it => {
+        const fs = firestoreStock[it.code];
+        if (fs) {
+            merged[it.code] = {
+                name: it.name,
+                name_ar: it.name_ar,
+                unit: it.unit,
+                stockQty: Number(fs.stockQty ?? 0),
+                minAlert: Number(fs.minAlert ?? 0),
+                tracked: true
+            };
+        } else {
+            merged[it.code] = {
+                name: it.name,
+                name_ar: it.name_ar,
+                unit: it.unit,
+                stockQty: "",
+                minAlert: "",
+                tracked: false
+            };
+        }
+    });
+    // Also include any Firestore entries not present in JSON (safety)
+    Object.keys(firestoreStock).forEach(code => {
+        if (!merged[code]) {
+            const fs = firestoreStock[code];
+            merged[code] = {
+                name: fs.name || code,
+                unit: fs.unit || "pcs",
+                stockQty: Number(fs.stockQty ?? 0),
+                minAlert: Number(fs.minAlert ?? 0),
+                tracked: true
+            };
+        }
+    });
+
+    stockManagerState.items = merged;
+    renderStockTable();
+}
+
+function renderStockTable(filterText = "") {
+    const body = document.getElementById("stockBody");
+    const items = stockManagerState.items;
+    const kitchen = stockManagerState.kitchen;
+    const codes = Object.keys(items).sort((a, b) =>
+        (items[a].name || "").localeCompare(items[b].name || "")
+    );
+
+    if (!codes.length) {
+        body.innerHTML = `<div class="empty-state">📭 No items found for ${kitchen}</div>`;
+        return;
+    }
+
+    const lowerFilter = filterText.toLowerCase();
+    const visibleCodes = codes.filter(code => {
+        if (!lowerFilter) return true;
+        const it = items[code];
+        return (it.name || "").toLowerCase().includes(lowerFilter) ||
+               (code || "").toLowerCase().includes(lowerFilter);
+    });
+
+    let html = `<div style="overflow-x:auto;"><table class="stock-table">
+        <thead><tr>
+            <th style="width:80px;">Code</th>
+            <th>Item</th>
+            <th style="width:70px;">Unit</th>
+            <th style="width:110px;">Stock Qty</th>
+            <th style="width:110px;">Min Alert</th>
+            <th style="width:90px;">Status</th>
+            <th style="width:80px;">Action</th>
+        </tr></thead><tbody>`;
+
+    visibleCodes.forEach(code => {
+        const it = items[code];
+        const tracked = it.tracked;
+        const qty = tracked ? Number(it.stockQty) : null;
+        const minAlert = tracked ? Number(it.minAlert ?? 0) : null;
+
+        let rowClass = "";
+        let badge = `<span class="stock-badge untracked">Not set</span>`;
+        if (tracked) {
+            if (qty <= 0) { rowClass = "row-out"; badge = `<span class="stock-badge out">Out</span>`; }
+            else if (minAlert > 0 && qty <= minAlert) { rowClass = "row-low"; badge = `<span class="stock-badge low">Low</span>`; }
+            else { badge = `<span class="stock-badge ok">OK</span>`; }
+        }
+
+        html += `<tr class="${rowClass}" data-code="${code}">
+            <td style="font-family:monospace; font-size:11px;">${code}</td>
+            <td><strong>${escapeHtml(it.name || code)}</strong></td>
+            <td>${escapeHtml(it.unit || "pcs")}</td>
+            <td>
+                <input type="number" class="stock-input" min="0" step="0.5"
+                    value="${tracked ? qty : ""}"
+                    placeholder="—"
+                    oninput="onStockQtyInput('${code}', this.value)">
+            </td>
+            <td>
+                <input type="number" class="stock-input" min="0" step="1"
+                    value="${tracked ? minAlert : ""}"
+                    placeholder="—"
+                    oninput="onStockMinInput('${code}', this.value)">
+            </td>
+            <td>${badge}</td>
+            <td>
+                <button class="btn-reject" style="font-size:10px; padding:4px 8px;"
+                    onclick="removeStockEntry('${code}')" title="Untrack this item">✕</button>
+            </td>
+        </tr>`;
+    });
+
+    html += `</tbody></table></div>`;
+    body.innerHTML = html;
+}
+
+function onStockQtyInput(code, val) {
+    const it = stockManagerState.items[code];
+    if (!it) return;
+    if (val === "") {
+        it.tracked = false;
+        it.stockQty = "";
+        it.minAlert = "";
+    } else {
+        it.tracked = true;
+        it.stockQty = Number(val);
+        if (it.minAlert === "") it.minAlert = 0;
+    }
+    stockManagerState.dirty = true;
+    updateRowVisual(code);
+}
+
+function onStockMinInput(code, val) {
+    const it = stockManagerState.items[code];
+    if (!it) return;
+    it.minAlert = val === "" ? 0 : Number(val);
+    if (it.tracked) stockManagerState.dirty = true;
+    updateRowVisual(code);
+}
+
+function updateRowVisual(code) {
+    const it = stockManagerState.items[code];
+    if (!it) return;
+    const row = document.querySelector(`tr[data-code="${code}"]`);
+    if (!row) return;
+    row.classList.remove("row-out", "row-low");
+    const badgeCell = row.querySelector("td:nth-child(6)");
+    if (!it.tracked) {
+        if (badgeCell) badgeCell.innerHTML = `<span class="stock-badge untracked">Not set</span>`;
+        return;
+    }
+    const qty = Number(it.stockQty);
+    const minAlert = Number(it.minAlert ?? 0);
+    if (qty <= 0) {
+        row.classList.add("row-out");
+        if (badgeCell) badgeCell.innerHTML = `<span class="stock-badge out">Out</span>`;
+    } else if (minAlert > 0 && qty <= minAlert) {
+        row.classList.add("row-low");
+        if (badgeCell) badgeCell.innerHTML = `<span class="stock-badge low">Low</span>`;
+    } else {
+        if (badgeCell) badgeCell.innerHTML = `<span class="stock-badge ok">OK</span>`;
+    }
+}
+
+function removeStockEntry(code) {
+    const it = stockManagerState.items[code];
+    if (!it) return;
+    it.tracked = false;
+    it.stockQty = "";
+    it.minAlert = "";
+    stockManagerState.dirty = true;
+    renderStockTable(document.getElementById("stockSearchInput")?.value || "");
+}
+
+function filterStockRows() {
+    const txt = document.getElementById("stockSearchInput")?.value || "";
+    renderStockTable(txt);
+}
+
+async function saveAllStock() {
+    const kitchen = stockManagerState.kitchen;
+    const kitchenId = kitchenToFirestoreId[kitchen];
+    const items = stockManagerState.items;
+
+    const payloadItems = {};
+    Object.keys(items).forEach(code => {
+        const it = items[code];
+        if (it.tracked) {
+            payloadItems[code] = {
+                name: it.name || code,
+                unit: it.unit || "pcs",
+                stockQty: Number(it.stockQty ?? 0),
+                minAlert: Number(it.minAlert ?? 0)
+            };
+        }
+    });
+
+    try {
+        await db.collection("stock").doc(kitchenId).set({
+            items: payloadItems,
+            updatedAt: new Date().toISOString(),
+            updatedBy: currentAdmin || "admin"
+        }, { merge: false });
+
+        stockManagerState.dirty = false;
+        showToast(`💾 Saved ${Object.keys(payloadItems).length} tracked item(s) for ${kitchen}`);
+        // small delay then re-render to refresh "tracked" flags
+        setTimeout(() => loadStockManagerData(), 300);
+    } catch (e) {
+        console.error("Save stock error:", e);
+        showToast("❌ Failed to save stock");
+    }
+}
+
+async function resetKitchenStock() {
+    const kitchen = stockManagerState.kitchen;
+    if (!confirm(`⚠️ RESET STOCK for ${kitchen}?\n\nAll items will become UNTRACKED (unlimited).\nChef will see ∞ for all items.\n\nContinue?`)) return;
+    if (!confirm(`⚠️ FINAL CONFIRMATION\n\nDelete ALL stock entries for ${kitchen}?`)) return;
+
+    try {
+        const kitchenId = kitchenToFirestoreId[kitchen];
+        await db.collection("stock").doc(kitchenId).delete();
+        showToast(`✅ Stock reset for ${kitchen}`);
+        await loadStockManagerData();
+    } catch (e) {
+        console.error("Reset error:", e);
+        showToast("❌ Failed to reset stock");
+    }
+}
+
+// ==================================================================
+// ============ STOCK RESTORE ON REJECT / PARTIAL APPROVE ==========
+// ==================================================================
+
+/**
+ * Adjust stock in Firestore.
+ * deltaQty is added to current stock (can be negative for deduction).
+ */
+async function adjustKitchenStock(kitchen, code, deltaQty) {
+    if (!deltaQty) return;
+    try {
+        const kitchenId = kitchenToFirestoreId[kitchen];
+        const ref = db.collection("stock").doc(kitchenId);
+        const doc = await ref.get();
+        if (!doc.exists) return; // untracked → nothing to restore
+        const data = doc.data().items || {};
+        if (!data[code]) return; // untracked item
+        const current = Number(data[code].stockQty ?? 0);
+        const next = Math.max(0, current + deltaQty);
+        await ref.update({ [`items.${code}.stockQty`]: next });
+    } catch (e) {
+        console.error("adjustKitchenStock error:", e);
+    }
+}
+
+/**
+ * Restore full originalQty for a rejected item (only if it was previously deducted).
+ * Chef page deducts on submit, so:
+ *  - pending → rejected           → restore originalQty
+ *  - approved → rejected          → restore approvedQty (that's what was actually cut)
+ *  - partial  → rejected          → restore approvedQty
+ */
+async function restoreStockForRejectedItem(req, item) {
+    if (!req || !item) return;
+    const restoreQty = Number(item.approvedQty || item.originalQty || 0);
+    if (restoreQty <= 0) return;
+    await adjustKitchenStock(req.section, item.code, restoreQty);
+}
+
+/**
+ * Partial approval restore: if admin approves LESS than requested,
+ * restore the difference back to stock.
+ */
+async function restoreStockForPartialApproval(req, item, oldApprovedQty) {
+    if (!req || !item) return;
+    const newApproved = Number(item.approvedQty || 0);
+    const oldApproved = Number(oldApprovedQty || 0);
+    const diff = oldApproved - newApproved;
+    // If newApproved < original, restore the unapproved portion.
+    // But only if we haven't already restored it before.
+    // We track "stockDeducted" amount: original was deducted, so
+    // the "gap" to restore = originalQty - newApprovedQty, minus whatever we already restored.
+    const original = Number(item.originalQty || 0);
+    const toRestore = original - newApproved;
+    const alreadyRestored = Number(item.stockRestoredQty || 0);
+    const delta = toRestore - alreadyRestored;
+    if (delta > 0) {
+        await adjustKitchenStock(req.section, item.code, delta);
+        item.stockRestoredQty = toRestore;
+    }
+}
+
+// ==================================================================
+// ============ PATCHED HANDLERS (only additions — no removals) =====
+// We wrap the original functions instead of replacing them,
+// so your existing behavior stays 100% intact.
+// ==================================================================
+
+(function patchAdminHandlers() {
+    // ---- Patch rejectItem ----
+    const originalReject = window.rejectItem;
+    window.rejectItem = async function(reqId, idx) {
+        const req = allRequests.find(r => r.id === reqId);
+        const item = req ? req.items[idx] : null;
+        const prevStatus = item ? item.status : null;
+
+        // Call original (shows prompt, updates Firestore, reloads)
+        await originalReject(reqId, idx);
+
+        // After original completes, restore stock if item was just rejected
+        if (req && item && item.status === "rejected" && prevStatus !== "rejected") {
+            await restoreStockForRejectedItem(req, item);
+        }
+    };
+
+    // ---- Patch rejectAll ----
+    const originalRejectAll = window.rejectAll;
+    window.rejectAll = async function(reqId) {
+        const req = allRequests.find(r => r.id === reqId);
+        const snapshot = req ? req.items.map(it => ({ code: it.code, prevStatus: it.status })) : [];
+
+        await originalRejectAll(reqId);
+
+        if (req) {
+            for (const s of snapshot) {
+                if (s.prevStatus === "rejected") continue; // already rejected, skip
+                const it = req.items.find(x => x.code === s.code);
+                if (it && it.status === "rejected") {
+                    await restoreStockForRejectedItem(req, it);
+                }
+            }
+        }
+    };
+
+    // ---- Patch approveItemFlex ----
+    const originalApproveItem = window.approveItemFlex;
+    window.approveItemFlex = async function(reqId, idx) {
+        const req = allRequests.find(r => r.id === reqId);
+        const item = req ? req.items[idx] : null;
+        const prevApprovedQty = item ? Number(item.approvedQty || 0) : 0;
+
+        await originalApproveItem(reqId, idx);
+
+        // After approval, if new approved < original, restore the difference
+        if (req && item && item.status === "approved") {
+            await restoreStockForPartialApproval(req, item, prevApprovedQty);
+        }
+    };
+
+    // ---- Patch approveAllFlex ----
+    const originalApproveAll = window.approveAllFlex;
+    window.approveAllFlex = async function(reqId) {
+        const req = allRequests.find(r => r.id === reqId);
+        const prevQtys = req ? req.items.map(it => ({ code: it.code, qty: Number(it.approvedQty || 0) })) : [];
+
+        await originalApproveAll(reqId);
+
+        if (req) {
+            for (const p of prevQtys) {
+                const it = req.items.find(x => x.code === p.code);
+                if (it && it.status === "approved") {
+                    await restoreStockForPartialApproval(req, it, p.qty);
+                }
+            }
+        }
+    };
+})();
+    
     input.addEventListener('input', (e) => { confirmBtn.disabled = e.target.value !== 'DELETE'; });
     confirmBtn.onclick = async () => {
         if(input.value === 'DELETE') {
