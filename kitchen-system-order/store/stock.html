@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="firebase-config.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+<title>Stock Manager — Excel Import</title>
+
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f0f4f8;
+    min-height: 100vh;
+}
+
+/* ============ HEADER ============ */
+.header {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    padding: 14px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+}
+.header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+.logo {
+    font-size: 1.2rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.logo-icon { font-size: 1.5rem; }
+.header-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.btn-header {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 25px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+.btn-header:hover { background: rgba(255,255,255,0.35); transform: translateY(-1px); }
+.btn-header.danger { background: rgba(231, 76, 60, 0.9); }
+.btn-header.primary { background: rgba(255,255,255,0.95); color: #059669; }
+
+/* ============ CONTAINER ============ */
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* ============ DROP ZONE ============ */
+.drop-zone {
+    background: white;
+    border: 3px dashed #cbd5e1;
+    border-radius: 20px;
+    padding: 60px 30px;
+    text-align: center;
+    transition: all 0.3s;
+    cursor: pointer;
+    margin-bottom: 20px;
+}
+.drop-zone:hover {
+    border-color: #10b981;
+    background: #f0fdf4;
+}
+.drop-zone.dragover {
+    border-color: #10b981;
+    background: #dcfce7;
+    transform: scale(1.01);
+}
+.drop-zone-icon {
+    font-size: 4rem;
+    margin-bottom: 15px;
+}
+.drop-zone-title {
+    font-size: 1.4rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 8px;
+}
+.drop-zone-sub {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-bottom: 20px;
+}
+.drop-zone-btn {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+    padding: 12px 28px;
+    border-radius: 30px;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.drop-zone-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(16,185,129,0.3); }
+
+/* ============ PREVIEW SECTION ============ */
+.preview-section { display: none; }
+.preview-section.active { display: block; }
+
+.summary-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+.summary-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1e3c72;
+    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+.file-name-badge {
+    background: #eff6ff;
+    color: #1e40af;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-family: monospace;
+}
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+}
+.summary-stat {
+    background: #f8fafc;
+    padding: 14px;
+    border-radius: 12px;
+    text-align: center;
+    border-left: 4px solid #cbd5e1;
+}
+.summary-stat.increase { border-left-color: #10b981; background: #f0fdf4; }
+.summary-stat.decrease { border-left-color: #f59e0b; background: #fffbeb; }
+.summary-stat.new-item { border-left-color: #8b5cf6; background: #faf5ff; }
+.summary-stat.unchanged { border-left-color: #94a3b8; background: #f8fafc; }
+.summary-stat.zero { border-left-color: #ef4444; background: #fef2f2; }
+.summary-number {
+    font-size: 1.8rem;
+    font-weight: 800;
+    line-height: 1;
+}
+.summary-stat.increase .summary-number { color: #059669; }
+.summary-stat.decrease .summary-number { color: #d97706; }
+.summary-stat.new-item .summary-number { color: #7c3aed; }
+.summary-stat.unchanged .summary-number { color: #64748b; }
+.summary-stat.zero .summary-number { color: #dc2626; }
+.summary-label {
+    font-size: 0.7rem;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-top: 6px;
+    letter-spacing: 0.5px;
+}
+
+/* ============ TOOLBAR ============ */
+.toolbar {
+    background: white;
+    border-radius: 16px;
+    padding: 14px 20px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+}
+.toolbar input[type="text"] {
+    flex: 1;
+    min-width: 180px;
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 13px;
+}
+.toolbar input[type="text"]:focus { outline: none; border-color: #10b981; }
+.filter-btn {
+    padding: 10px 16px;
+    border: 1px solid #e2e8f0;
+    background: white;
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.filter-btn:hover { background: #f8fafc; }
+.filter-btn.active {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border-color: #10b981;
+}
+
+/* ============ ACTION BAR ============ */
+.action-bar {
+    background: white;
+    border-radius: 16px;
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    display: flex;
+    gap: 12px;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    position: sticky;
+    top: 70px;
+    z-index: 50;
+}
+.action-info {
+    font-size: 0.85rem;
+    color: #475569;
+    font-weight: 600;
+}
+.btn-apply {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+    padding: 14px 32px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+}
+.btn-apply:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(16,185,129,0.4); }
+.btn-apply:disabled {
+    background: #cbd5e1;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+.btn-cancel {
+    background: white;
+    color: #ef4444;
+    border: 1px solid #fecaca;
+    padding: 14px 24px;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-cancel:hover { background: #fef2f2; }
+
+/* ============ TABLE ============ */
+.table-wrapper {
+    background: white;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    overflow-x: auto;
+}
+.stock-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 900px;
+}
+.stock-table thead {
+    background: #f8fafc;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+.stock-table th {
+    padding: 14px 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #e2e8f0;
+}
+.stock-table td {
+    padding: 12px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 13px;
+    vertical-align: middle;
+}
+.stock-table tbody tr:hover { background: #f8fafc; }
+.stock-table tr.row-increase { background: #f0fdf4; }
+.stock-table tr.row-decrease { background: #fffbeb; }
+.stock-table tr.row-new { background: #faf5ff; }
+.stock-table tr.row-zero { background: #fef2f2; }
+.stock-table tr.row-unchanged { display: none; }
+.stock-table tr.row-unchanged.show { display: table-row; }
+
+.code-cell {
+    font-family: monospace;
+    font-size: 12px;
+    color: #475569;
+    font-weight: 600;
+}
+.item-cell { font-weight: 600; color: #1e293b; }
+.unit-cell { font-size: 11px; color: #64748b; }
+.num-cell {
+    text-align: right;
+    font-weight: 600;
+    font-family: monospace;
+}
+.old-val { color: #64748b; }
+.new-val { color: #1e293b; font-weight: 700; }
+.delta-val { font-weight: 700; }
+.delta-up { color: #059669; }
+.delta-down { color: #d97706; }
+.delta-none { color: #94a3b8; }
+
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.badge.increase { background: #d1fae5; color: #065f46; }
+.badge.decrease { background: #fef3c7; color: #92400e; }
+.badge.new { background: #ede9fe; color: #5b21b6; }
+.badge.zero { background: #fee2e2; color: #991b1b; }
+.badge.unchanged { background: #f1f5f9; color: #64748b; }
+
+.checkbox-cell { text-align: center; }
+.checkbox-cell input {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: #10b981;
+}
+
+/* ============ TOAST ============ */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 5000;
+    animation: slideUp 0.3s ease;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+.toast.success { background: linear-gradient(135deg, #10b981, #059669); }
+.toast.error { background: linear-gradient(135deg, #ef4444, #dc2626); }
+@keyframes slideUp {
+    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* ============ MODAL ============ */
+.modal-overlay {
+    display: flex;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.85);
+    z-index: 2000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+.modal-box {
+    background: white;
+    border-radius: 24px;
+    padding: 32px;
+    max-width: 460px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 25px 60px rgba(0,0,0,0.4);
+}
+.modal-box h2 {
+    font-size: 1.4rem;
+    color: #1e293b;
+    margin-bottom: 12px;
+}
+.modal-box p {
+    color: #475569;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+.modal-stat-row {
+    display: flex;
+    justify-content: space-around;
+    background: #f8fafc;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 20px;
+}
+.modal-stat { text-align: center; }
+.modal-stat-num {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: #10b981;
+}
+.modal-stat-lbl {
+    font-size: 0.7rem;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 600;
+}
+.modal-actions {
+    display: flex;
+    gap: 10px;
+}
+.modal-actions button {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.modal-btn-confirm {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+}
+.modal-btn-confirm:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(16,185,129,0.4); }
+.modal-btn-cancel {
+    background: #f1f5f9;
+    color: #475569;
+}
+.modal-btn-cancel:hover { background: #e2e8f0; }
+
+/* ============ LOADING ============ */
+.loading-overlay {
+    display: flex;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(255,255,255,0.95);
+    z-index: 6000;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 20px;
+}
+.spinner {
+    width: 50px; height: 50px;
+    border: 4px solid #e2e8f0;
+    border-top: 4px solid #10b981;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text {
+    color: #059669;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+/* ============ EMPTY ============ */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #94a3b8;
+}
+.empty-state-icon { font-size: 3rem; margin-bottom: 12px; }
+
+/* ============ RESPONSIVE ============ */
+@media (max-width: 768px) {
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .action-bar { flex-direction: column; align-items: stretch; }
+    .action-bar .btn-apply, .action-bar .btn-cancel { width: 100%; }
+    .stock-table { min-width: 700px; font-size: 12px; }
+    .stock-table th, .stock-table td { padding: 8px 6px; }
+    .drop-zone { padding: 40px 20px; }
+    .drop-zone-icon { font-size: 3rem; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<div class="header">
+    <div class="header-content">
+        <div class="logo">
+            <span class="logo-icon">📦</span>
+            <span>Stock Manager — Excel Import</span>
+        </div>
+        <div class="header-actions">
+            <button class="btn-header primary" onclick="document.getElementById('fileInput').click()">📁 Choose File</button>
+            <button class="btn-header" onclick="reloadStock()">🔄 Reload Stock</button>
+            <button class="btn-header" onclick="window.open('admin.html', '_blank')">👑 Admin</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- ============ DROP ZONE ============ -->
+    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+        <div class="drop-zone-icon">📥</div>
+        <div class="drop-zone-title">Drop your Excel file here</div>
+        <div class="drop-zone-sub">Supports .xlsx, .xls, .csv — from your office</div>
+        <button class="drop-zone-btn">📁 Choose Excel File</button>
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileSelect(event)">
+    </div>
+
+    <!-- ============ PREVIEW SECTION ============ -->
+    <div class="preview-section" id="previewSection">
+
+        <!-- Summary Card -->
+        <div class="summary-card">
+            <div class="summary-title">
+                <span>📊 Summary of Changes</span>
+                <span class="file-name-badge" id="fileNameBadge">—</span>
+            </div>
+            <div class="summary-grid">
+                <div class="summary-stat increase">
+                    <div class="summary-number" id="countIncrease">0</div>
+                    <div class="summary-label">🔺 Increased</div>
+                </div>
+                <div class="summary-stat decrease">
+                    <div class="summary-number" id="countDecrease">0</div>
+                    <div class="summary-label">🔻 Decreased</div>
+                </div>
+                <div class="summary-stat new-item">
+                    <div class="summary-number" id="countNew">0</div>
+                    <div class="summary-label">✨ New Items</div>
+                </div>
+                <div class="summary-stat zero">
+                    <div class="summary-number" id="countZero">0</div>
+                    <div class="summary-label">⛔ Now Zero</div>
+                </div>
+                <div class="summary-stat unchanged">
+                    <div class="summary-number" id="countUnchanged">0</div>
+                    <div class="summary-label">✅ Unchanged</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toolbar -->
+        <div class="toolbar">
+            <input type="text" id="searchInput" placeholder="🔍 Search by code or name..." oninput="applyFilters()">
+            <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">All</button>
+            <button class="filter-btn" data-filter="increase" onclick="setFilter('increase', this)">🔺 Increased</button>
+            <button class="filter-btn" data-filter="decrease" onclick="setFilter('decrease', this)">🔻 Decreased</button>
+            <button class="filter-btn" data-filter="new" onclick="setFilter('new', this)">✨ New</button>
+            <button class="filter-btn" data-filter="zero" onclick="setFilter('zero', this)">⛔ Zero</button>
+            <button class="filter-btn" data-filter="unchanged" onclick="setFilter('unchanged', this)">Show Unchanged</button>
+        </div>
+
+        <!-- Action Bar -->
+        <div class="action-bar">
+            <div class="action-info" id="selectedInfo">0 items selected for update</div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <button class="btn-cancel" onclick="cancelImport()">❌ Cancel</button>
+                <button class="btn-apply" id="applyBtn" onclick="showConfirmModal()">✅ Apply Changes</button>
+            </div>
+        </div>
+
+        <!-- Table -->
+        <div class="table-wrapper">
+            <table class="stock-table">
+                <thead>
+                    <tr>
+                        <th style="width:50px; text-align:center;">
+                            <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)" style="width:18px;height:18px;accent-color:#10b981;cursor:pointer;">
+                        </th>
+                        <th style="width:100px;">Code</th>
+                        <th>Item</th>
+                        <th style="width:110px;">Unit</th>
+                        <th style="width:90px; text-align:right;">Old</th>
+                        <th style="width:90px; text-align:right;">New</th>
+                        <th style="width:80px; text-align:right;">Δ</th>
+                        <th style="width:100px; text-align:center;">Status</th>
+                    </tr>
+                </thead>
+                <tbody id="previewBody"></tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+<!-- ============ LOADING OVERLAY ============ -->
+<div class="loading-overlay" id="loadingOverlay" style="display:none;">
+    <div class="spinner"></div>
+    <div class="loading-text" id="loadingText">Processing...</div>
+</div>
+
+<script>
+// ==================================================================
+// ============ STATE ==============================================
+// ==================================================================
+let parsedRows = [];          // [{ code, name, unit, stock, price }]
+let comparedRows = [];        // [{ code, name, unit, oldStock, newStock, delta, status, selected }]
+let currentFilter = 'all';
+let currentFileName = '';
+let firestoreStockCache = {}; // { code: { stockQty, minAlert } }
+
+// The single shared stock doc (all kitchens read from this)
+const SHARED_STOCK_DOC = "shared_stock";
+
+// ==================================================================
+// ============ EXCEL PARSING ======================================
+// ==================================================================
+function handleFileSelect(e) {
+    const file = e.target.files[0];
+    if (file) processFile(file);
+}
+
+function processFile(file) {
+    currentFileName = file.name;
+    showLoading("Reading file...");
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+            const jsonRows = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
+
+            if (!jsonRows.length) {
+                hideLoading();
+                showToast("❌ Excel file is empty", "error");
+                return;
+            }
+
+            parsedRows = parseExcelRows(jsonRows);
+            if (!parsedRows.length) {
+                hideLoading();
+                showToast("❌ Could not find required columns (Article No., Article, ACT SOH)", "error");
+                return;
+            }
+
+            document.getElementById('fileNameBadge').innerText = `${file.name} • ${parsedRows.length} rows`;
+            showToast(`📄 Loaded ${parsedRows.length} items from ${file.name}`, "success");
+
+            // Now compare with Firestore
+            compareWithFirestore();
+        } catch (err) {
+            console.error("Excel read error:", err);
+            hideLoading();
+            showToast("❌ Failed to read Excel file", "error");
+        }
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+/**
+ * Detect the correct column name from a set of possible aliases.
+ */
+function detectColumn(row, aliases) {
+    const keys = Object.keys(row);
+    for (const alias of aliases) {
+        const found = keys.find(k => k.trim().toLowerCase() === alias.toLowerCase());
+        if (found) return found;
+    }
+    // Fuzzy match: contains
+    for (const alias of aliases) {
+        const found = keys.find(k => k.trim().toLowerCase().includes(alias.toLowerCase()));
+        if (found) return found;
+    }
+    return null;
+}
+
+function parseExcelRows(rows) {
+    // Detect columns once from first row
+    const sample = rows[0];
+
+    const codeCol  = detectColumn(sample, ['Article No.', 'Article No', 'Code', 'Item Code', 'SKU', 'كود']);
+    const nameCol  = detectColumn(sample, ['Article', 'Item', 'Name', 'Description', 'الصنف', 'الاسم']);
+    const stockCol = detectColumn(sample, ['ACT SOH', 'SOH', 'Stock', 'Qty', 'Quantity', 'On Hand', 'الكمية', 'المخزون']);
+    const unitCol  = detectColumn(sample, ['Unit', 'UOM', 'الوحدة']);
+    const priceCol = detectColumn(sample, ['AVE', 'Price', 'Avg', 'Average', 'السعر']);
+
+    if (!codeCol || !nameCol || !stockCol) {
+        console.error("Missing required columns. Detected:", { codeCol, nameCol, stockCol });
+        return [];
+    }
+
+    console.log("✅ Detected columns:", { codeCol, nameCol, stockCol, unitCol, priceCol });
+
+    const out = [];
+    for (const r of rows) {
+        const code = String(r[codeCol] || '').trim();
+        if (!code) continue;
+
+        const name = String(r[nameCol] || '').trim();
+        const stockRaw = r[stockCol];
+        const stock = parseFloat(stockRaw);
+        if (isNaN(stock)) continue;
+
+        out.push({
+            code,
+            name,
+            unit: unitCol ? String(r[unitCol] || '').trim() : 'pcs',
+            stock: stock,
+            price: priceCol ? parseFloat(r[priceCol]) || 0 : 0
+        });
+    }
+    return out;
+}
+
+// ==================================================================
+// ============ COMPARE WITH FIRESTORE =============================
+// ==================================================================
+async function compareWithFirestore() {
+    showLoading("Loading current stock from database...");
+    try {
+        const doc = await db.collection("stock").doc(SHARED_STOCK_DOC).get();
+        const items = doc.exists ? (doc.data().items || {}) : {};
+        firestoreStockCache = items;
+    } catch (e) {
+        console.error("Firestore load error:", e);
+        firestoreStockCache = {};
+    }
+
+    // Compare each parsed row with Firestore
+    comparedRows = parsedRows.map(row => {
+        const existing = firestoreStockCache[row.code];
+        const oldStock = existing ? Number(existing.stockQty ?? 0) : null;
+
+        let status;
+        let delta = 0;
+
+        if (oldStock === null) {
+            status = 'new';
+        } else {
+            delta = Number((row.stock - oldStock).toFixed(3));
+            if (Math.abs(delta) < 0.001) status = 'unchanged';
+            else if (row.stock === 0) status = 'zero';
+            else if (delta > 0) status = 'increase';
+            else status = 'decrease';
+        }
+
+        return {
+            code: row.code,
+            name: row.name,
+            unit: row.unit,
+            oldStock: oldStock,
+            newStock: row.stock,
+            delta: delta,
+            status: status,
+            price: row.price,
+            selected: status !== 'unchanged'   // auto-select all changed rows
+        };
+    });
+
+    // Sort: changed first (increase, decrease, zero, new), then unchanged
+    const order = { increase: 0, decrease: 1, zero: 2, new: 3, unchanged: 4 };
+    comparedRows.sort((a, b) => {
+        const oa = order[a.status] ?? 5;
+        const ob = order[b.status] ?? 5;
+        if (oa !== ob) return oa - ob;
+        return (a.name || '').localeCompare(b.name || '');
+    });
+
+    hideLoading();
+    renderPreview();
+    document.getElementById('previewSection').classList.add('active');
+}
+
+// ==================================================================
+// ============ RENDER PREVIEW =====================================
+// ==================================================================
+function renderPreview() {
+    // Update summary counts
+    const counts = { increase: 0, decrease: 0, new: 0, zero: 0, unchanged: 0 };
+    comparedRows.forEach(r => counts[r.status]++);
+    document.getElementById('countIncrease').innerText = counts.increase;
+    document.getElementById('countDecrease').innerText = counts.decrease;
+    document.getElementById('countNew').innerText = counts.new;
+    document.getElementById('countZero').innerText = counts.zero;
+    document.getElementById('countUnchanged').innerText = counts.unchanged;
+
+    // Render table rows
+    const body = document.getElementById('previewBody');
+    const searchTerm = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
+
+    body.innerHTML = '';
+    let visibleCount = 0;
+
+    comparedRows.forEach((row, idx) => {
+        // Filter by status
+        if (currentFilter !== 'all' && currentFilter !== 'unchanged') {
+            if (row.status !== currentFilter) {
+                // When a specific filter is set (not 'all', not 'unchanged'), hide mismatches
+                if (currentFilter !== 'unchanged' && row.status === 'unchanged') return;
+                if (row.status !== currentFilter) return;
+            }
+        }
+        // When filter is 'all', hide unchanged by default (only show if user picks 'unchanged' or 'all' has show-unchanged flag)
+        if (currentFilter === 'all' && row.status === 'unchanged') {
+            // skip unless the user typed something matching
+            if (!searchTerm) return;
+        }
+
+        // Filter by search
+        if (searchTerm) {
+            const codeMatch = row.code.toLowerCase().includes(searchTerm);
+            const nameMatch = (row.name || '').toLowerCase().includes(searchTerm);
+            if (!codeMatch && !nameMatch) return;
+        }
+
+        visibleCount++;
+
+        const statusBadgeClass = row.status;
+        const statusBadgeText = {
+            increase: '🔺 Increased',
+            decrease: '🔻 Decreased',
+            new: '✨ New',
+            zero: '⛔ Zero',
+            unchanged: '✅ Unchanged'
+        }[row.status] || row.status;
+
+        const deltaText = row.delta > 0 ? `+${row.delta}` : (row.delta < 0 ? `${row.delta}` : '—');
+        const deltaClass = row.delta > 0 ? 'delta-up' : (row.delta < 0 ? 'delta-down' : 'delta-none');
+
+        const oldText = row.oldStock === null ? '—' : row.oldStock;
+
+        // Format numbers nicely
+        const newNum = Number(row.newStock).toLocaleString(undefined, { maximumFractionDigits: 3 });
+        const oldNum = row.oldStock === null ? '—' : Number(row.oldStock).toLocaleString(undefined, { maximumFractionDigits: 3 });
+        const deltaNum = row.delta === 0 ? '—' : (row.delta > 0 ? '+' : '') + Number(row.delta).toLocaleString(undefined, { maximumFractionDigits: 3 });
+
+        const rowClass = `row-${row.status}${row.status === 'unchanged' ? ' show' : ''}`;
+
+        body.innerHTML += `
+            <tr class="${rowClass}" data-code="${row.code}">
+                <td class="checkbox-cell">
+                    <input type="checkbox" ${row.selected ? 'checked' : ''} ${row.status === 'unchanged' ? 'disabled' : ''} onchange="toggleRow('${row.code}', this.checked)">
+                </td>
+                <td class="code-cell">${escapeHtml(row.code)}</td>
+                <td class="item-cell">${escapeHtml(row.name)}</td>
+                <td class="unit-cell">${escapeHtml(row.unit)}</td>
+                <td class="num-cell old-val">${oldNum}</td>
+                <td class="num-cell new-val">${newNum}</td>
+                <td class="num-cell delta-val ${deltaClass}">${deltaNum}</td>
+                <td style="text-align:center;"><span class="badge ${statusBadgeClass}">${statusBadgeText}</span></td>
+            </tr>
+        `;
+    });
+
+    if (visibleCount === 0) {
+        body.innerHTML = `<tr><td colspan="8"><div class="empty-state"><div class="empty-state-icon">🔍</div>No items match this filter</div></td></tr>`;
+    }
+
+    updateSelectedInfo();
+}
+
+function updateSelectedInfo() {
+    const selectedCount = comparedRows.filter(r => r.selected && r.status !== 'unchanged').length;
+    document.getElementById('selectedInfo').innerText = `${selectedCount} item${selectedCount !== 1 ? 's' : ''} selected for update`;
+    document.getElementById('applyBtn').disabled = selectedCount === 0;
+}
+
+function toggleRow(code, checked) {
+    const row = comparedRows.find(r => r.code === code);
+    if (row) { row.selected = checked; updateSelectedInfo(); }
+}
+
+function toggleSelectAll(checked) {
+    comparedRows.forEach(r => {
+        if (r.status !== 'unchanged') r.selected = checked;
+    });
+    renderPreview();
+}
+
+// ==================================================================
+// ============ FILTERS ============================================
+// ==================================================================
+function setFilter(filter, btn) {
+    currentFilter = filter;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    renderPreview();
+}
+
+function applyFilters() {
+    renderPreview();
+}
+
+// ==================================================================
+// ============ APPLY CHANGES ======================================
+// ==================================================================
+function showConfirmModal() {
+    const selectedCount = comparedRows.filter(r => r.selected && r.status !== 'unchanged').length;
+    if (selectedCount === 0) {
+        showToast("⚠️ No items selected", "error");
+        return;
+    }
+
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.innerHTML = `
+        <div class="modal-box">
+            <h2>✅ Confirm Import</h2>
+            <p>You are about to update <strong>${selectedCount}</strong> item${selectedCount !== 1 ? 's' : ''} in the shared stock.</p>
+            <div class="modal-stat-row">
+                <div class="modal-stat">
+                    <div class="modal-stat-num">${selectedCount}</div>
+                    <div class="modal-stat-lbl">Items</div>
+                </div>
+                <div class="modal-stat">
+                    <div class="modal-stat-num" id="totalDelta">—</div>
+                    <div class="modal-stat-lbl">Total Δ</div>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="modal-btn-cancel" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                <button class="modal-btn-confirm" onclick="applyChanges(this)">✅ Confirm</button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+async function applyChanges(btn) {
+    btn.disabled = true;
+    btn.innerText = "Applying...";
+
+    const selected = comparedRows.filter(r => r.selected && r.status !== 'unchanged');
+    if (selected.length === 0) {
+        showToast("⚠️ No items to apply", "error");
+        return;
+    }
+
+    try {
+        const docRef = db.collection("stock").doc(SHARED_STOCK_DOC);
+        const doc = await docRef.get();
+        const currentItems = doc.exists ? (doc.data().items || {}) : {};
+
+        // Build merged items: current + updates
+        const mergedItems = { ...currentItems };
+        for (const row of selected) {
+            mergedItems[row.code] = {
+                name: row.name,
+                unit: row.unit,
+                stockQty: row.newStock,
+                price: row.price,
+                minAlert: currentItems[row.code]?.minAlert ?? 0,
+                updatedAt: new Date().toISOString()
+            };
+        }
+
+        await docRef.set({
+            items: mergedItems,
+            lastImport: {
+                fileName: currentFileName,
+                importedAt: new Date().toISOString(),
+                changedCount: selected.length,
+                totalRows: parsedRows.length
+            }
+        }, { merge: false });
+
+        // Close modal
+        document.querySelectorAll('.modal-overlay').forEach(m => m.remove());
+
+        showToast(`✅ Updated ${selected.length} items successfully`, "success");
+
+        // Reload comparison (so numbers reflect new state)
+        setTimeout(() => {
+            resetToDropZone();
+        }, 1200);
+
+    } catch (e) {
+        console.error("Apply error:", e);
+        showToast("❌ Failed to save changes", "error");
+        btn.disabled = false;
+        btn.innerText = "✅ Confirm";
+    }
+}
+
+// ==================================================================
+// ============ CANCEL / RESET =====================================
+// ==================================================================
+function cancelImport() {
+    if (!confirm("Cancel this import? All changes will be lost.")) return;
+    resetToDropZone();
+}
+
+function resetToDropZone() {
+    parsedRows = [];
+    comparedRows = [];
+    currentFileName = '';
+    document.getElementById('fileInput').value = '';
+    document.getElementById('previewSection').classList.remove('active');
+    document.getElementById('searchInput').value = '';
+    document.getElementById('fileNameBadge').innerText = '—';
+    document.querySelectorAll('.filter-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.filter === 'all');
+    });
+    currentFilter = 'all';
+    showToast("🔄 Ready for new file", "success");
+}
+
+// ==================================================================
+// ============ RELOAD STOCK =======================================
+// ==================================================================
+async function reloadStock() {
+    showLoading("Reloading stock...");
+    try {
+        const doc = await db.collection("stock").doc(SHARED_STOCK_DOC).get();
+        firestoreStockCache = doc.exists ? (doc.data().items || {}) : {};
+        showToast(`✅ Loaded ${Object.keys(firestoreStockCache).length} items from database`, "success");
+    } catch (e) {
+        console.error(e);
+        showToast("❌ Failed to reload", "error");
+    }
+    hideLoading();
+}
+
+// ==================================================================
+// ============ UI HELPERS =========================================
+// ==================================================================
+function showLoading(text) {
+    document.getElementById('loadingText').innerText = text || 'Processing...';
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+function showToast(msg, type = '') {
+    const t = document.createElement('div');
+    t.className = 'toast' + (type ? ' ' + type : '');
+    t.innerText = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 2800);
+}
+
+function escapeHtml(str) {
+    return String(str || '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+}
+
+// ==================================================================
+// ============ DRAG & DROP ========================================
+// ==================================================================
+const dz = document.getElementById('dropZone');
+
+['dragenter', 'dragover'].forEach(evt =>
+    dz.addEventListener(evt, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dz.classList.add('dragover');
+    })
+);
+
+['dragleave', 'drop'].forEach(evt =>
+    dz.addEventListener(evt, (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        dz.classList.remove('dragover');
+    })
+);
+
+dz.addEventListener('drop', (e) => {
+    const file = e.dataTransfer.files[0];
+    if (file) processFile(file);
+});
+
+// ==================================================================
+// ============ INIT ===============================================
+// ==================================================================
+console.log("📦 Stock Manager loaded");
+</script>
+</body>
+</html>
