@@ -1,4 +1,4 @@
-ht<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -149,7 +149,7 @@ body.arabic .items-scroll-container { direction: rtl; }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
 .status-text { font-weight: 500; }
 
-/* ============ NEW: STOCK STYLES ============ */
+/* ============ STOCK STYLES ============ */
 .item-card.out-of-stock { background: #ffe5e5; border: 2px solid #ef9a9a; opacity: 0.85; position: relative; }
 .item-card.out-of-stock .item-name::after { content: " ❌ OUT OF STOCK"; color: #c62828; font-size: 0.68rem; font-weight: 700; }
 .item-card.out-of-stock .qty-btn,
@@ -260,13 +260,13 @@ const kitchenToFirestoreId = {
 };
 
 const kitchenToFileMap = {
-    "Hot Kitchen":    "itmes/hot-kitchen.json",
-    "Cold Kitchen":   "itmes/cold-kitchen.json",
-    "Pastry / Bakery":"itmes/pastry.json",
-    "Butchery":       "itmes/butchery.json",
-    "Beach House":    "itmes/beach-house.json",
-    "Nihon Kitchen":  "itmes/nihon-kitchen.json",
-    "Staff Kitchen":  "itmes/staff-kitchen.json"
+    "Hot Kitchen":     "iteme/hot-kitchen.json",
+    "Cold Kitchen":    "iteme/cold-kitchen.json",
+    "Pastry / Bakery": "iteme/pastry.json",
+    "Butchery":        "iteme/butchery.json",
+    "Beach House":     "iteme/beach-house.json",
+    "Nihon Kitchen":   "iteme/nihon-kitchen.json",
+    "Staff Kitchen":   "iteme/staff-kitchen.json"
 };
 
 let unlockedKitchens = {};
@@ -284,49 +284,45 @@ let autoRefreshInterval = null;
 let freehandModeActive = false;
 let freehandUnsubscribe = null;
 
-// ============ NEW: STOCK SYSTEM ============
-let kitchenStockCache = {};
-let stockUnsubscribes = {};
+// ============ STOCK SYSTEM (SHARED across all kitchens) ============
+const SHARED_STOCK_DOC = "shared_stock";
+let sharedStockCache = {};          // { code: { stockQty, minAlert, name, unit, price } }
+let sharedStockUnsubscribe = null;
 
 async function loadStockForKitchen(kitchen) {
+    // All kitchens read from the same shared stock doc
     try {
-        const kitchenId = kitchenToFirestoreId[kitchen];
-        const doc = await db.collection("stock").doc(kitchenId).get();
-        if (doc.exists && doc.data().items) {
-            kitchenStockCache[kitchen] = doc.data().items;
-        } else {
-            kitchenStockCache[kitchen] = {};
-        }
+        const doc = await db.collection("stock").doc(SHARED_STOCK_DOC).get();
+        sharedStockCache = (doc.exists && doc.data().items) ? doc.data().items : {};
     } catch (e) {
         console.error("Stock load error:", e);
-        kitchenStockCache[kitchen] = {};
+        sharedStockCache = {};
     }
 }
 
 function getStockQty(kitchen, code) {
-    const stock = kitchenStockCache[kitchen];
-    if (!stock || !stock[code]) return 999999;
-    return Number(stock[code].stockQty ?? 0);
+    if (!sharedStockCache || !sharedStockCache[code]) return 999999;
+    return Number(sharedStockCache[code].stockQty ?? 0);
 }
 
 function getStockMeta(kitchen, code) {
-    const stock = kitchenStockCache[kitchen];
-    if (!stock || !stock[code]) return { stockQty: 999999, minAlert: 0 };
+    if (!sharedStockCache || !sharedStockCache[code]) {
+        return { stockQty: 999999, minAlert: 0 };
+    }
     return {
-        stockQty: Number(stock[code].stockQty ?? 0),
-        minAlert: Number(stock[code].minAlert ?? 0)
+        stockQty: Number(sharedStockCache[code].stockQty ?? 0),
+        minAlert: Number(sharedStockCache[code].minAlert ?? 0)
     };
 }
 
 function subscribeToKitchenStock(kitchen) {
-    if (stockUnsubscribes[kitchen]) stockUnsubscribes[kitchen]();
-    const kitchenId = kitchenToFirestoreId[kitchen];
-    stockUnsubscribes[kitchen] = db.collection("stock").doc(kitchenId)
+    if (sharedStockUnsubscribe) sharedStockUnsubscribe();
+    sharedStockUnsubscribe = db.collection("stock").doc(SHARED_STOCK_DOC)
         .onSnapshot(doc => {
-            kitchenStockCache[kitchen] = doc.exists && doc.data().items ? doc.data().items : {};
-            if (currentKitchen === kitchen) {
-                renderItemsList(kitchen);
-                renderCart(kitchen);
+            sharedStockCache = (doc.exists && doc.data().items) ? doc.data().items : {};
+            if (currentKitchen) {
+                renderItemsList(currentKitchen);
+                renderCart(currentKitchen);
             }
         }, err => console.error("Stock listener error:", err));
 }
@@ -359,7 +355,7 @@ async function verifyKitchenPasswordWithFirestore(kitchenName, enteredPassword) 
 
 // ============ UI FUNCTIONS ============
 function t(key) { return translations[currentLang][key] || translations['en'][key] || key; }
-function escapeHtml(str) { return str ? str.replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])) : ''; }
+function escapeHtml(str) { return str ? String(str).replace(/[&<>]/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[m])) : ''; }
 function showToast(msg) { const toast = document.createElement("div"); toast.className = "toast"; toast.innerText = msg; document.body.appendChild(toast); setTimeout(() => toast.remove(), 2500); }
 function openAdmin() { window.open("admin.html", "_blank"); }
 
@@ -425,7 +421,7 @@ function getItemName(item) {
 
 function getItemStep(item) {
     if (item.step !== undefined) return item.step;
-    if (item.unit === "kg" || item.unit === "KG" || item.unit === "Kg") return 0.5;
+    if (item.unit === "kg" || item.unit === "KG" || item.unit === "Kg" || item.unit === "Kilogram") return 0.5;
     return 1;
 }
 
@@ -543,7 +539,7 @@ async function checkForDuplicateOrder(section, chefName, cartItems) {
     } catch(e) { console.error("Duplicate check error:", e); return { isDuplicate: false }; }
 }
 
-// ============ MODIFIED: submitRequest (with atomic stock deduction) ============
+// ============ SUBMIT REQUEST (with atomic stock deduction from SHARED doc) ============
 async function submitRequest(kitchen) {
     const chefName = chefNames[kitchen];
     const cart = kitchenData[kitchen].cart;
@@ -572,8 +568,7 @@ async function submitRequest(kitchen) {
         timestamp: Date.now()
     };
 
-    const kitchenId = kitchenToFirestoreId[kitchen];
-    const stockRef = db.collection("stock").doc(kitchenId);
+    const stockRef = db.collection("stock").doc(SHARED_STOCK_DOC);
     const reqRef = db.collection("kitchen_requests").doc();
     newRequest.firebaseId = reqRef.id;
 
@@ -632,7 +627,7 @@ async function loadItemsForKitchen(kitchen, forceRefresh = false) {
         let itemsArray = Array.isArray(data) ? data : (data.items || []);
         itemsArray = itemsArray.map(item => ({
             ...item, section: item.section || kitchen, price: item.AVE || item.price || 0,
-            name_ar: item.name_ar || item.name, step: item.step || (item.unit === "kg" ? 0.5 : 1)
+            name_ar: item.name_ar || item.name, step: item.step || (item.unit === "kg" || item.unit === "Kilogram" ? 0.5 : 1)
         }));
         kitchenItemsCache[kitchen] = itemsArray;
         return itemsArray;
@@ -658,7 +653,6 @@ function changeQuantity(kitchen, code, delta, maxLimit) {
     }
 }
 
-// ============ MODIFIED: addItemWithQuantity (with stock limits) ============
 function addItemWithQuantity(kitchen, code, itemName, unit, maxLimit, price, step) {
     const chefName = chefNames[kitchen];
     if (!chefName) { showToast("⚠️ Enter chef name first"); return; }
@@ -731,7 +725,7 @@ function addItemWithQuantity(kitchen, code, itemName, unit, maxLimit, price, ste
     renderItemsList(kitchen);
 }
 
-// ============ MODIFIED: filterItemsByFirstChar (with stock badges) ============
+// ============ FILTER ITEMS (with stock badges) ============
 function filterItemsByFirstChar(kitchen, searchChar) {
     const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
     const displayDiv = document.getElementById(`itemsDisplay_${kitchenId}`);
@@ -762,8 +756,9 @@ function filterItemsByFirstChar(kitchen, searchChar) {
         const currentQty = selectedQuantities[kitchen][item.code] || 0;
         const isSelected = addedItemsStatus[kitchen][item.code] || false;
         const { stockQty, minAlert } = getStockMeta(kitchen, item.code);
-        const isOutOfStock = stockQty !== 999999 && stockQty <= 0;
-        const isLowStock = !isOutOfStock && stockQty !== 999999 && minAlert > 0 && stockQty <= minAlert;
+        const isTracked = stockQty !== 999999;
+        const isOutOfStock = isTracked && stockQty <= 0;
+        const isLowStock = !isOutOfStock && isTracked && minAlert > 0 && stockQty <= minAlert;
 
         let cardClass = '';
         if (isOutOfStock) cardClass = 'out-of-stock';
@@ -778,14 +773,14 @@ function filterItemsByFirstChar(kitchen, searchChar) {
         const displayQty = stepValue === 0.5 ? currentQty.toFixed(1) : Math.floor(currentQty);
 
         let stockLabel, stockClass;
-        if (stockQty === 999999) { stockLabel = `📦 ∞`; stockClass = ''; }
+        if (!isTracked) { stockLabel = `📦 ∞`; stockClass = ''; }
         else if (isOutOfStock) { stockLabel = `📦 ${t('outOfStock')}`; stockClass = 'empty'; }
         else if (isLowStock) { stockLabel = `📦 ${stockQty} ${item.unit} (${t('low')})`; stockClass = 'low'; }
         else { stockLabel = `📦 ${stockQty} ${item.unit}`; stockClass = ''; }
 
-        const maxLabel = stockQty === 999999
+        const maxLabel = !isTracked
             ? (freehandModeActive ? '∞' : (item.maxLimit || 99))
-            : Math.min(item.maxLimit || 99, stockQty);
+            : Math.min(item.maxLimit || 9999, stockQty);
 
         html += `
         <div class="item-card ${cardClass}" id="itemCard_${kitchenId}_${safeCode}">
@@ -1052,10 +1047,12 @@ function startAutoRefresh() {
 
 async function manualRefresh() {
     showToast("🔄 Refreshing...");
+    await loadStockForKitchen(currentKitchen);
     await loadRequestsFromFirebase();
     if (currentKitchen) {
         loadMyRequests(currentKitchen);
         renderCart(currentKitchen);
+        renderItemsList(currentKitchen);
         if(document.getElementById(`historySection_${currentKitchen.replace(/\s/g, '_').replace(/\//g, '_')}`)?.style.display === "block") {
             loadOrderHistory(currentKitchen);
         }
@@ -1065,7 +1062,11 @@ async function manualRefresh() {
 async function forceReloadItems() {
     showToast("🔄 Reloading items...");
     for (const kitchen of kitchens) kitchenItemsCache[kitchen] = null;
-    if (currentKitchen) { await renderItemsList(currentKitchen); showToast(`✅ Reloaded items for ${currentKitchen}`); }
+    if (currentKitchen) {
+        await loadStockForKitchen(currentKitchen);
+        await renderItemsList(currentKitchen);
+        showToast(`✅ Reloaded items for ${currentKitchen}`);
+    }
 }
 
 function logout() {
