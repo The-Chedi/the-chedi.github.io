@@ -155,19 +155,43 @@ hr { border-color: #2a3a5a; margin: 15px 0; }
 
 <div id="mainContent" style="display:none;">
     <div class="header">
-        <h1>🛠️ DEVELOPER CONSOLE
-            <span class="badge">Edit Orders</span>
-            <span class="badge">Kitchen JSON</span>
-            <span class="badge">User Management</span>
-            <span class="badge badge-password">🔑 Kitchen Passwords</span>
-            <span class="badge badge-costlimit">💵 Cost Limit</span>
-            <span class="badge badge-freehand" id="freehandBadge">✋ Freehand: OFF</span>
-        </h1>
-        <div style="margin-top: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
-            <div style="font-size: 0.7rem;">⚠️ For Approved/Rejected/Accepted orders: Click "Restore to Pending" first</div>
-            <div class="user-menu"><span class="user-email" id="userEmailDisplay"></span><button class="btn btn-secondary btn-icon" onclick="logout()">🚪 Logout</button></div>
-        </div>
+    <h1>🛠️ DEVELOPER CONSOLE
+        <span class="badge">Edit Orders</span>
+        <span class="badge">Kitchen JSON</span>
+        <span class="badge">User Management</span>
+        <span class="badge badge-password">🔑 Kitchen Passwords</span>
+        <span class="badge badge-costlimit">💵 Cost Limit</span>
+        <span class="badge badge-freehand" id="freehandBadge">✋ Freehand: OFF</span>
+    </h1>
+
+    <!-- ============ QUICK LINKS ROW ============ -->
+    <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap; padding: 10px 14px; background: #0f172a; border-radius: 12px; border: 1px solid #2a3a5a;">
+        <span style="color: #00d4ff; font-weight: bold; font-size: 0.85rem; display: flex; align-items: center; gap: 6px; margin-right: 8px;">
+            🔗 Quick Links:
+        </span>
+        <button class="btn btn-primary" onclick="window.open('chef.html', '_blank')" style="font-size: 0.8rem; padding: 8px 18px;">
+            🍳 Chef Dashboard
+        </button>
+        <button class="btn btn-secondary" onclick="window.open('admin.html', '_blank')" style="font-size: 0.8rem; padding: 8px 18px;">
+            👑 Admin Dashboard
+        </button>
+        <button class="btn btn-success" onclick="window.open('stock.html', '_blank')" style="font-size: 0.8rem; padding: 8px 18px;">
+            📦 Stock Manager
+        </button>
+        <button class="btn btn-warning" onclick="window.open('json-matcher.html', '_blank')" style="font-size: 0.8rem; padding: 8px 18px;">
+            🔍 JSON Matcher
+        </button>
+        <button class="btn btn-secondary" onclick="window.location.reload()" style="font-size: 0.8rem; padding: 8px 18px;">
+            🔄 Reload Console
+        </button>
     </div>
+    <!-- ============ END QUICK LINKS ============ -->
+
+    <div style="margin-top: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+        <div style="font-size: 0.7rem;">⚠️ For Approved/Rejected/Accepted orders: Click "Restore to Pending" first</div>
+        <div class="user-menu"><span class="user-email" id="userEmailDisplay"></span><button class="btn btn-secondary btn-icon" onclick="logout()">🚪 Logout</button></div>
+    </div>
+</div>
     <div class="container">
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('orders')">📋 Edit Firestore Orders</button>
