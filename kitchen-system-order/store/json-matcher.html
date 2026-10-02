@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Excel ↔ JSON Matcher</title>
+<title>Excel ↔ JSON Matcher + New Item Editor</title>
 
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -76,6 +76,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex-wrap: wrap;
 }
 .step-num {
     background: #8b5cf6;
@@ -88,7 +89,21 @@ body {
     justify-content: center;
     font-size: 0.85rem;
     font-weight: 800;
+    flex-shrink: 0;
 }
+
+/* Progress indicator */
+.progress-pill {
+    background: #f1f5f9;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+    margin-left: auto;
+}
+.progress-pill.ok { background: #dcfce7; color: #15803d; }
+.progress-pill.warn { background: #fef3c7; color: #a16207; }
 
 .drop-zone {
     border: 3px dashed #cbd5e1;
@@ -115,10 +130,7 @@ body {
     color: #1e293b;
     margin-bottom: 6px;
 }
-.drop-sub {
-    font-size: 0.85rem;
-    color: #64748b;
-}
+.drop-sub { font-size: 0.85rem; color: #64748b; }
 
 .json-status-grid {
     display: grid;
@@ -345,6 +357,163 @@ body {
 }
 .btn-secondary:hover { background: #e2e8f0; }
 
+/* ============ NEW ITEM EDITOR ============ */
+.editor-list {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-top: 16px;
+}
+.editor-item {
+    background: #fafbfc;
+    border: 2px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 16px;
+    transition: all 0.2s;
+}
+.editor-item.assigned {
+    border-color: #10b981;
+    background: #f0fdf4;
+}
+.editor-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+}
+.editor-item-info {
+    flex: 1;
+    min-width: 200px;
+}
+.editor-item-code {
+    font-family: monospace;
+    font-size: 13px;
+    font-weight: 800;
+    color: #7c3aed;
+    background: #f5f3ff;
+    padding: 4px 10px;
+    border-radius: 8px;
+    display: inline-block;
+}
+.editor-item-name {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 0.95rem;
+    margin-top: 6px;
+}
+.editor-item-ave {
+    font-size: 0.75rem;
+    color: #d97706;
+    font-weight: 600;
+    margin-top: 2px;
+}
+.editor-badge-new {
+    background: #fef3c7;
+    color: #a16207;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+.editor-badge-assigned {
+    background: #dcfce7;
+    color: #15803d;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.editor-fields {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+.editor-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+.editor-field label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.editor-field input,
+.editor-field select {
+    padding: 8px 12px;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 13px;
+    font-family: inherit;
+    background: white;
+    transition: border 0.2s;
+}
+.editor-field input:focus,
+.editor-field select:focus {
+    outline: none;
+    border-color: #8b5cf6;
+}
+.editor-field input[dir="rtl"] {
+    text-align: right;
+    font-family: 'Cairo', 'Segoe UI', Tahoma, sans-serif;
+}
+
+.kitchen-picker {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding-top: 4px;
+}
+.kitchen-picker-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    width: 100%;
+    margin-bottom: 4px;
+}
+.kitchen-btn {
+    padding: 6px 14px;
+    border: 2px solid #e2e8f0;
+    background: white;
+    border-radius: 20px;
+    font-weight: 700;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #64748b;
+}
+.kitchen-btn:hover { border-color: #cbd5e1; transform: translateY(-1px); }
+.kitchen-btn.selected.hot { background: #dc2626; color: white; border-color: #dc2626; }
+.kitchen-btn.selected.cold { background: #2563eb; color: white; border-color: #2563eb; }
+.kitchen-btn.selected.pastry { background: #d97706; color: white; border-color: #d97706; }
+.kitchen-btn.selected.butchery { background: #7c3aed; color: white; border-color: #7c3aed; }
+.kitchen-btn.selected.beach { background: #059669; color: white; border-color: #059669; }
+.kitchen-btn.selected.nihon { background: #db2777; color: white; border-color: #db2777; }
+.kitchen-btn.selected.staff { background: #475569; color: white; border-color: #475569; }
+
+.json-preview {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: #1e293b;
+    color: #a7f3d0;
+    border-radius: 8px;
+    font-family: monospace;
+    font-size: 11px;
+    overflow-x: auto;
+    white-space: nowrap;
+}
+
+/* Toast */
 .toast {
     position: fixed;
     bottom: 20px;
@@ -449,6 +618,7 @@ body {
     .summary-grid { grid-template-columns: repeat(2, 1fr); }
     .step-card { padding: 18px; }
     .data-table { min-width: 600px; font-size: 11px; }
+    .editor-fields { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -458,7 +628,7 @@ body {
     <div class="header-content">
         <div class="logo">
             <span>🔍</span>
-            <span>Excel ↔ JSON Matcher</span>
+            <span>Excel ↔ JSON Matcher + Editor</span>
         </div>
         <div class="header-actions">
             <button class="btn-header primary" onclick="window.open('chef.html', '_blank')">🍳 Chef</button>
@@ -524,11 +694,11 @@ body {
                 </div>
                 <div class="summary-stat missing">
                     <div class="summary-num" id="statMissing">0</div>
-                    <div class="summary-label">❌ Excel Not in JSON</div>
+                    <div class="summary-label">➕ New / Missing</div>
                 </div>
                 <div class="summary-stat discontinued">
                     <div class="summary-num" id="statDiscontinued">0</div>
-                    <div class="summary-label">🗑️ JSON Not in Excel</div>
+                    <div class="summary-label">🗑️ Discontinued</div>
                 </div>
             </div>
 
@@ -541,7 +711,7 @@ body {
                     ✅ Matched <span class="badge" id="tabCountMatched">0</span>
                 </button>
                 <button class="tab" data-tab="missing" onclick="switchTab('missing')">
-                    ❌ New / Missing <span class="badge" id="tabCountMissing">0</span>
+                    ➕ New / Missing <span class="badge" id="tabCountMissing">0</span>
                 </button>
                 <button class="tab" data-tab="discontinued" onclick="switchTab('discontinued')">
                     🗑️ Discontinued <span class="badge" id="tabCountDiscontinued">0</span>
@@ -558,18 +728,47 @@ body {
             </div>
         </div>
 
-        <div class="step-card">
+        <!-- ============ NEW ITEM EDITOR ============ -->
+        <div class="step-card" id="editorSection">
             <div class="step-title">
                 <span class="step-num">4</span>
-                <span>Actions</span>
+                <span>➕ New Items Editor — Add Arabic / maxLimit / step / Kitchens</span>
+                <span class="progress-pill" id="editorProgress">0 / 0 configured</span>
             </div>
             <p style="font-size:0.85rem; color:#64748b; margin-bottom:14px;">
-                Download updated JSON files with discontinued items removed. Drop them into your <code>itmes/</code> folder on GitHub.
+                For each new item below, fill in the missing details and click the kitchen(s) it belongs to. Your edits are <strong>auto-saved</strong> locally — safe to close the browser.
+            </p>
+
+            <div class="action-row" style="margin-bottom: 16px;">
+                <button class="btn-action btn-secondary" onclick="clearEditorEdits()">
+                    🗑️ Clear All Edits
+                </button>
+                <button class="btn-action btn-secondary" onclick="autoAssignAllToKitchen()">
+                    ⚡ Bulk Assign → Choose Kitchen
+                </button>
+            </div>
+
+            <div id="editorEmptyState" class="empty-msg" style="display:none;">
+                <div class="empty-msg-icon">✨</div>
+                <p>No new items to configure — everything in Excel is already in the JSON files.</p>
+            </div>
+
+            <div class="editor-list" id="editorList"></div>
+        </div>
+
+        <!-- ============ DOWNLOAD ============ -->
+        <div class="step-card">
+            <div class="step-title">
+                <span class="step-num">5</span>
+                <span>Download Updated JSONs</span>
+            </div>
+            <p style="font-size:0.85rem; color:#64748b; margin-bottom:14px;">
+                Downloads all 7 JSON files with: ✅ matched items kept, 🗑️ discontinued removed, ➕ new items added to their assigned kitchens.
             </p>
 
             <div class="action-row">
                 <button class="btn-action btn-primary" onclick="downloadAllJsonZip()">
-                    📦 Download Filtered JSONs (ZIP)
+                    📦 Download All JSONs (ZIP)
                 </button>
                 <button class="btn-action btn-secondary" onclick="downloadReportCsv()">
                     📊 Download Report (CSV)
@@ -604,13 +803,13 @@ body {
 // ============ CONFIG =============================================
 // ==================================================================
 const KITCHENS = [
-    { name: "Hot Kitchen",     file: "itmes/hot-kitchen.json",     css: "hot" },
-    { name: "Cold Kitchen",    file: "itmes/cold-kitchen.json",    css: "cold" },
-    { name: "Pastry / Bakery", file: "itmes/pastry.json",          css: "pastry" },
-    { name: "Butchery",        file: "itmes/butchery.json",        css: "butchery" },
-    { name: "Beach House",     file: "itmes/beach-house.json",     css: "beach" },
-    { name: "Nihon Kitchen",   file: "itmes/nihon-kitchen.json",   css: "nihon" },
-    { name: "Staff Kitchen",   file: "itmes/staff-kitchen.json",   css: "staff" }
+    { name: "Hot Kitchen",     file: "itmes/hot-kitchen.json",     css: "hot",      icon: "🔥" },
+    { name: "Cold Kitchen",    file: "itmes/cold-kitchen.json",    css: "cold",     icon: "❄️" },
+    { name: "Pastry / Bakery", file: "itmes/pastry.json",          css: "pastry",   icon: "🍰" },
+    { name: "Butchery",        file: "itmes/butchery.json",        css: "butchery", icon: "🥩" },
+    { name: "Beach House",     file: "itmes/beach-house.json",     css: "beach",    icon: "🏖️" },
+    { name: "Nihon Kitchen",   file: "itmes/nihon-kitchen.json",   css: "nihon",    icon: "🍜" },
+    { name: "Staff Kitchen",   file: "itmes/staff-kitchen.json",   css: "staff",    icon: "👥" }
 ];
 
 // ==================================================================
@@ -618,7 +817,9 @@ const KITCHENS = [
 // ==================================================================
 let kitchenJsonData = {};
 let excelCodes = [];
-let excelItemNames = {};
+let excelItemNames = {};       // code -> name (from Excel)
+let excelItemAve = {};         // code -> AVE (from Excel)
+let excelItemUnit = {};        // code -> unit (from Excel)
 let excelCodeSet = new Set();
 let analysis = {
     matched: [],
@@ -626,6 +827,37 @@ let analysis = {
     discontinued: []
 };
 let currentTab = 'matched';
+
+// Editor state — user's edits for missing items
+// { code: { name_ar, maxLimit, step, kitchens: [names], unit, name, ave } }
+let editorData = {};
+
+// LocalStorage key for editor persistence
+const EDITOR_STORAGE_KEY = "jsonMatcherEditorData";
+
+// ==================================================================
+// ============ LOAD / SAVE EDITOR STATE ===========================
+// ==================================================================
+function loadEditorFromStorage() {
+    try {
+        const raw = localStorage.getItem(EDITOR_STORAGE_KEY);
+        if (raw) {
+            editorData = JSON.parse(raw);
+            console.log("[EDITOR] Loaded", Object.keys(editorData).length, "edits from storage");
+        }
+    } catch (e) {
+        console.warn("Failed to load editor data:", e);
+        editorData = {};
+    }
+}
+
+function saveEditorToStorage() {
+    try {
+        localStorage.setItem(EDITOR_STORAGE_KEY, JSON.stringify(editorData));
+    } catch (e) {
+        console.warn("Failed to save editor data:", e);
+    }
+}
 
 // ==================================================================
 // ============ LOAD JSON FILES ====================================
@@ -809,26 +1041,31 @@ async function processExcelFile(file) {
 
         const sample = rows[0];
         const codeColName = detectColumn(sample, ['Article No.', 'Article No', 'Code', 'Item Code', 'SKU', 'كود']);
+        const nameColName = detectColumn(sample, ['Article', 'Item', 'Name', 'Description', 'الصنف', 'الاسم']);
+        const aveColName  = detectColumn(sample, ['AVE', 'Price', 'Avg', 'Average', 'السعر']);
+        const unitColName = detectColumn(sample, ['Unit', 'UOM', 'الوحدة']);
+
         if (!codeColName) {
             hideLoading();
             showToast('❌ Could not find "Article No." column', 'error');
             return;
         }
 
-        const nameColName = detectColumn(sample, ['Article', 'Item', 'Name', 'Description', 'الصنف', 'الاسم']);
-
         excelCodes = [];
         excelCodeSet = new Set();
         excelItemNames = {};
+        excelItemAve = {};
+        excelItemUnit = {};
 
         rows.forEach(r => {
             const code = String(r[codeColName] || '').trim();
             if (!code) return;
-            const name = nameColName ? String(r[nameColName] || '').trim() : '';
             if (excelCodeSet.has(code)) return;
             excelCodes.push(code);
             excelCodeSet.add(code);
-            excelItemNames[code] = name;
+            excelItemNames[code] = nameColName ? String(r[nameColName] || '').trim() : '';
+            excelItemAve[code]   = aveColName  ? parseFloat(r[aveColName]) || 0 : 0;
+            excelItemUnit[code]  = unitColName ? String(r[unitColName] || '').trim() : 'pcs';
         });
 
         excelDropZone.classList.add('has-file');
@@ -873,7 +1110,6 @@ function analyze() {
         return;
     }
 
-    // Build maps: code -> [kitchens], code -> { name, kitchen }
     const codeToKitchens = new Map();
     const jsonItemMap = new Map();
 
@@ -891,7 +1127,6 @@ function analyze() {
     analysis.missing = [];
     analysis.discontinued = [];
 
-    // Matched = Excel codes that exist in JSON; Missing = Excel codes not in any JSON
     for (const code of excelCodes) {
         if (codeToKitchens.has(code)) {
             const info = jsonItemMap.get(code);
@@ -903,12 +1138,13 @@ function analyze() {
         } else {
             analysis.missing.push({
                 code,
-                name: excelItemNames[code] || ''
+                name: excelItemNames[code] || '',
+                ave: excelItemAve[code] || 0,
+                unit: excelItemUnit[code] || 'pcs'
             });
         }
     }
 
-    // Discontinued = JSON codes not in Excel
     for (const [code, info] of jsonItemMap.entries()) {
         if (!excelCodeSet.has(code)) {
             analysis.discontinued.push({
@@ -919,22 +1155,51 @@ function analyze() {
         }
     }
 
-    // Update summary numbers
     document.getElementById('statExcel').innerText = excelCodes.length;
     document.getElementById('statMatched').innerText = analysis.matched.length;
     document.getElementById('statMissing').innerText = analysis.missing.length;
     document.getElementById('statDiscontinued').innerText = analysis.discontinued.length;
 
-    // Kitchen breakdown
     renderKitchenSummary();
 
-    // Tab counts
     document.getElementById('tabCountMatched').innerText = analysis.matched.length;
     document.getElementById('tabCountMissing').innerText = analysis.missing.length;
     document.getElementById('tabCountDiscontinued').innerText = analysis.discontinued.length;
 
-    // Show results
     document.getElementById('resultsSection').classList.remove('hidden');
+
+    // Initialize editor data for any missing items not yet in storage
+    analysis.missing.forEach(m => {
+        if (!editorData[m.code]) {
+            // Try to auto-guess step from unit
+            const unitLower = (m.unit || '').toLowerCase();
+            const autoStep = (unitLower.includes('kg') || unitLower.includes('kilogram')) ? 0.5 : 1;
+            editorData[m.code] = {
+                name: m.name,
+                ave: m.ave,
+                unit: m.unit,
+                name_ar: "",
+                maxLimit: 99,
+                step: autoStep,
+                kitchens: []
+            };
+        } else {
+            // Keep user's edits but refresh name/ave/unit from latest Excel
+            editorData[m.code].name = m.name;
+            editorData[m.code].ave = m.ave;
+            editorData[m.code].unit = m.unit;
+        }
+    });
+
+    // Clean up editor data for items that are no longer missing
+    const missingCodes = new Set(analysis.missing.map(m => m.code));
+    Object.keys(editorData).forEach(code => {
+        if (!missingCodes.has(code)) delete editorData[code];
+    });
+
+    saveEditorToStorage();
+
+    renderEditor();
     renderCurrentTab();
 
     showToast('✅ Analysis complete', 'success');
@@ -962,6 +1227,203 @@ function renderKitchenSummary() {
 }
 
 // ==================================================================
+// ============ EDITOR RENDER ======================================
+// ==================================================================
+function renderEditor() {
+    const list = document.getElementById('editorList');
+    const emptyState = document.getElementById('editorEmptyState');
+
+    if (!analysis.missing.length) {
+        list.innerHTML = '';
+        emptyState.style.display = 'block';
+        updateEditorProgress();
+        return;
+    }
+
+    emptyState.style.display = 'none';
+
+    let html = '';
+    analysis.missing.forEach(m => {
+        const data = editorData[m.code] || {};
+        const isAssigned = (data.kitchens || []).length > 0;
+
+        // Kitchen buttons
+        const kitchenBtns = KITCHENS.map(k => {
+            const selected = (data.kitchens || []).includes(k.name);
+            return `<button class="kitchen-btn ${k.css} ${selected ? 'selected' : ''}"
+                        onclick="toggleKitchen('${m.code}', '${k.name}', this)">
+                        ${k.icon} ${k.name.replace(' Kitchen', '')}
+                    </button>`;
+        }).join('');
+
+        html += `
+            <div class="editor-item ${isAssigned ? 'assigned' : ''}" id="editor-item-${escapeHtml(m.code)}">
+                <div class="editor-item-header">
+                    <div class="editor-item-info">
+                        <span class="editor-item-code">${escapeHtml(m.code)}</span>
+                        <div class="editor-item-name">${escapeHtml(m.name)}</div>
+                        <div class="editor-item-ave">💰 AVE: ${(m.ave || 0).toFixed(2)} EGP · ${escapeHtml(m.unit)}</div>
+                    </div>
+                    ${isAssigned
+                        ? `<span class="editor-badge-assigned">✅ Assigned to ${data.kitchens.length}</span>`
+                        : `<span class="editor-badge-new">➕ New</span>`}
+                </div>
+
+                <div class="editor-fields">
+                    <div class="editor-field">
+                        <label>Arabic Name (اسم عربي)</label>
+                        <input type="text" dir="rtl"
+                            placeholder="مثال: ريب آي لحم روسي"
+                            value="${escapeHtml(data.name_ar || '')}"
+                            oninput="updateEditorField('${m.code}', 'name_ar', this.value)">
+                    </div>
+                    <div class="editor-field">
+                        <label>Max Limit</label>
+                        <input type="number" min="0" step="1"
+                            value="${data.maxLimit ?? 99}"
+                            oninput="updateEditorField('${m.code}', 'maxLimit', this.value)">
+                    </div>
+                    <div class="editor-field">
+                        <label>Step</label>
+                        <select onchange="updateEditorField('${m.code}', 'step', this.value)">
+                            <option value="0.5" ${data.step == 0.5 ? 'selected' : ''}>0.5</option>
+                            <option value="1" ${data.step == 1 || data.step === undefined ? 'selected' : ''}>1</option>
+                            <option value="0.25" ${data.step == 0.25 ? 'selected' : ''}>0.25</option>
+                            <option value="5" ${data.step == 5 ? 'selected' : ''}>5</option>
+                            <option value="10" ${data.step == 10 ? 'selected' : ''}>10</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="kitchen-picker">
+                    <div class="kitchen-picker-label">Assign to Kitchens:</div>
+                    ${kitchenBtns}
+                </div>
+
+                <div class="json-preview">${escapeHtml(buildItemJson(m.code, data))},</div>
+            </div>
+        `;
+    });
+
+    list.innerHTML = html;
+    updateEditorProgress();
+}
+
+function buildItemJson(code, data) {
+    const item = {
+        code: code,
+        name: data.name || '',
+        name_ar: data.name_ar || '',
+        unit: data.unit || 'pcs',
+        maxLimit: Number(data.maxLimit) || 99,
+        step: Number(data.step) || 1,
+        AVE: Number(data.ave) || 0
+    };
+    return JSON.stringify(item);
+}
+
+function updateEditorField(code, field, value) {
+    if (!editorData[code]) return;
+    if (field === 'maxLimit' || field === 'step') {
+        editorData[code][field] = Number(value);
+    } else {
+        editorData[code][field] = value;
+    }
+    // Update preview + progress (but don't re-render whole list to keep focus)
+    const itemEl = document.getElementById(`editor-item-${code}`);
+    if (itemEl) {
+        const preview = itemEl.querySelector('.json-preview');
+        if (preview) preview.textContent = buildItemJson(code, editorData[code]) + ',';
+    }
+    saveEditorToStorage();
+    updateEditorProgress();
+}
+
+function toggleKitchen(code, kitchenName, btnEl) {
+    if (!editorData[code]) return;
+    if (!editorData[code].kitchens) editorData[code].kitchens = [];
+
+    const arr = editorData[code].kitchens;
+    const idx = arr.indexOf(kitchenName);
+    if (idx >= 0) arr.splice(idx, 1);
+    else arr.push(kitchenName);
+
+    saveEditorToStorage();
+    renderEditor();
+}
+
+function updateEditorProgress() {
+    const total = analysis.missing.length;
+    const configured = analysis.missing.filter(m => {
+        const d = editorData[m.code];
+        return d && (d.kitchens || []).length > 0;
+    }).length;
+
+    const pill = document.getElementById('editorProgress');
+    pill.innerText = `${configured} / ${total} configured`;
+    pill.className = 'progress-pill' + (configured === total && total > 0 ? ' ok' : (configured < total ? ' warn' : ''));
+}
+
+function clearEditorEdits() {
+    showModal("Clear All Editor Edits?",
+        "This will reset all Arabic names, max limits, steps, and kitchen assignments. Continue?",
+        () => {
+            editorData = {};
+            analysis.missing.forEach(m => {
+                const unitLower = (m.unit || '').toLowerCase();
+                const autoStep = (unitLower.includes('kg') || unitLower.includes('kilogram')) ? 0.5 : 1;
+                editorData[m.code] = {
+                    name: m.name,
+                    ave: m.ave,
+                    unit: m.unit,
+                    name_ar: "",
+                    maxLimit: 99,
+                    step: autoStep,
+                    kitchens: []
+                };
+            });
+            saveEditorToStorage();
+            renderEditor();
+            closeModal();
+            showToast('🗑️ Edits cleared', 'success');
+        });
+}
+
+function autoAssignAllToKitchen() {
+    // Build kitchen choice modal
+    const btnHtml = KITCHENS.map(k =>
+        `<button class="kitchen-btn ${k.css}" style="padding:10px 20px; font-size:13px;"
+            onclick="applyBulkAssign('${k.name}')">
+            ${k.icon} ${k.name}
+        </button>`
+    ).join('');
+
+    document.getElementById('modalTitle').innerText = "⚡ Bulk Assign";
+    document.getElementById('modalMessage').innerHTML =
+        `Add all <strong>unassigned</strong> new items to which kitchen?<br><br>
+         <div style="display:flex; flex-wrap:wrap; gap:8px; justify-content:center;">${btnHtml}</div>`;
+
+    document.getElementById('modalOverlay').classList.add('active');
+    document.getElementById('modalConfirmBtn').style.display = 'none';
+}
+
+function applyBulkAssign(kitchenName) {
+    let count = 0;
+    Object.keys(editorData).forEach(code => {
+        if (!editorData[code].kitchens) editorData[code].kitchens = [];
+        if (editorData[code].kitchens.length === 0) {
+            editorData[code].kitchens.push(kitchenName);
+            count++;
+        }
+    });
+    saveEditorToStorage();
+    renderEditor();
+    closeModal();
+    document.getElementById('modalConfirmBtn').style.display = '';
+    showToast(`⚡ Assigned ${count} items to ${kitchenName}`, 'success');
+}
+
+// ==================================================================
 // ============ TABS / TABLE RENDER ================================
 // ==================================================================
 function switchTab(tab) {
@@ -984,7 +1446,7 @@ function renderCurrentTab() {
         columns = ['Code', 'Name', 'Found In Kitchens'];
         rows = analysis.matched;
     } else if (currentTab === 'missing') {
-        columns = ['Code', 'Name', 'Status'];
+        columns = ['Code', 'Name', 'AVE', 'Unit'];
         rows = analysis.missing;
     } else {
         columns = ['Code', 'Name', 'Kitchen'];
@@ -1021,10 +1483,16 @@ function renderCurrentTab() {
         });
     } else if (currentTab === 'missing') {
         rows.forEach(r => {
+            const d = editorData[r.code] || {};
+            const assignedCount = (d.kitchens || []).length;
+            const assignedBadge = assignedCount > 0
+                ? `<span style="color:#059669; font-weight:700;">✅ ${assignedCount} kitchen(s)</span>`
+                : `<span style="color:#dc2626;">—</span>`;
             html += `<tr>
                 <td class="code-cell">${escapeHtml(r.code)}</td>
-                <td>${escapeHtml(r.name || '—')}</td>
-                <td style="color:#dc2626; font-weight:600;">❌ Not in any kitchen JSON</td>
+                <td>${escapeHtml(r.name)}</td>
+                <td>${(r.ave || 0).toFixed(2)}</td>
+                <td>${escapeHtml(r.unit)}</td>
             </tr>`;
         });
     } else {
@@ -1045,7 +1513,7 @@ function renderCurrentTab() {
 // ============ DOWNLOAD ACTIONS ===================================
 // ==================================================================
 function formatJsonOnePerLine(items) {
-    if (!items || !items.length) return "[]\n";
+    if (!items || !items.length) return "[\n]\n";
 
     const lines = items.map(item => {
         const ordered = {};
@@ -1063,6 +1531,25 @@ function formatJsonOnePerLine(items) {
 }
 
 async function downloadAllJsonZip() {
+    // Warn about unassigned new items
+    const unassigned = analysis.missing.filter(m => {
+        const d = editorData[m.code];
+        return !d || !d.kitchens || d.kitchens.length === 0;
+    });
+
+    if (unassigned.length > 0) {
+        showModal("⚠️ Unassigned Items",
+            `You have <strong>${unassigned.length}</strong> new item(s) without any kitchen assigned. They will NOT be added to any JSON.<br><br>Continue anyway?`,
+            () => actuallyDownloadZip());
+        return;
+    }
+
+    actuallyDownloadZip();
+}
+
+async function actuallyDownloadZip() {
+    closeModal();
+
     if (!window.JSZip) {
         showLoading("Loading ZIP library...");
         await loadScript('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js');
@@ -1074,25 +1561,51 @@ async function downloadAllJsonZip() {
         const zip = new JSZip();
         let removedTotal = 0;
         let keptTotal = 0;
+        let addedTotal = 0;
+
+        // Build new items per kitchen
+        const newItemsByKitchen = {};
+        KITCHENS.forEach(k => newItemsByKitchen[k.name] = []);
+
+        analysis.missing.forEach(m => {
+            const d = editorData[m.code];
+            if (!d || !d.kitchens || d.kitchens.length === 0) return;
+            const item = {
+                code: m.code,
+                name: d.name || m.name,
+                name_ar: d.name_ar || "",
+                unit: d.unit || m.unit || "pcs",
+                maxLimit: Number(d.maxLimit) || 99,
+                step: Number(d.step) || 1,
+                AVE: Number(d.ave) || 0
+            };
+            d.kitchens.forEach(kName => {
+                if (newItemsByKitchen[kName]) {
+                    newItemsByKitchen[kName].push(item);
+                    addedTotal++;
+                }
+            });
+        });
 
         for (const [kitchen, items] of Object.entries(kitchenJsonData)) {
+            // Keep only items in Excel
             const filtered = items.filter(it => excelCodeSet.has(it.code));
             removedTotal += (items.length - filtered.length);
             keptTotal += filtered.length;
 
+            // Add new items for this kitchen
+            const newItems = newItemsByKitchen[kitchen] || [];
+            const combined = [...filtered, ...newItems];
+
             const info = KITCHENS.find(x => x.name === kitchen);
             let filename;
-            if (info) {
-                filename = info.file.split('/').pop();
-            } else {
-                filename = kitchen.replace(/[^a-z0-9]/gi, '-').toLowerCase() + '.json';
-            }
+            if (info) filename = info.file.split('/').pop();
+            else filename = kitchen.replace(/[^a-z0-9]/gi, '-').toLowerCase() + '.json';
 
-            zip.file(filename, formatJsonOnePerLine(filtered));
+            zip.file(filename, formatJsonOnePerLine(combined));
         }
 
         const blob = await zip.generateAsync({ type: 'blob' });
-
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -1101,7 +1614,7 @@ async function downloadAllJsonZip() {
         URL.revokeObjectURL(url);
 
         hideLoading();
-        showToast(`✅ ZIP ready — ${keptTotal} items kept, ${removedTotal} removed`, 'success');
+        showToast(`✅ ${keptTotal} kept · ${addedTotal} added · ${removedTotal} removed`, 'success');
 
     } catch (e) {
         console.error(e);
@@ -1111,16 +1624,18 @@ async function downloadAllJsonZip() {
 }
 
 function downloadReportCsv() {
-    let csv = "Section,Code,Name,Kitchen(s),Status\n";
+    let csv = "Section,Code,Name,AVE,Unit,Kitchen(s),Status\n";
 
     analysis.matched.forEach(r => {
-        csv += `"Matched","${r.code}","${(r.name||'').replace(/"/g,'""')}","${r.kitchens.join(' | ')}","In Excel & JSON"\n`;
+        csv += `"Matched","${r.code}","${(r.name||'').replace(/"/g,'""')}","","","${r.kitchens.join(' | ')}","In Excel & JSON"\n`;
     });
     analysis.missing.forEach(r => {
-        csv += `"Missing","${r.code}","${(r.name||'').replace(/"/g,'""')}","","In Excel, missing from all JSONs"\n`;
+        const d = editorData[r.code] || {};
+        const kitchens = (d.kitchens || []).join(' | ');
+        csv += `"New","${r.code}","${(r.name||'').replace(/"/g,'""')}","${(r.ave||0).toFixed(2)}","${r.unit||''}","${kitchens}","Added to assigned kitchens"\n`;
     });
     analysis.discontinued.forEach(r => {
-        csv += `"Discontinued","${r.code}","${(r.name||'').replace(/"/g,'""')}","${r.kitchen}","In JSON, not in Excel — will be removed"\n`;
+        csv += `"Discontinued","${r.code}","${(r.name||'').replace(/"/g,'""')}","","","${r.kitchen}","Removed from JSON"\n`;
     });
 
     const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8' });
@@ -1134,24 +1649,31 @@ function downloadReportCsv() {
 }
 
 function resetAll() {
-    showModal("Reset Everything?", "This will clear all loaded JSONs and Excel. Continue?", () => {
-        kitchenJsonData = {};
-        excelCodes = [];
-        excelCodeSet = new Set();
-        excelItemNames = {};
-        analysis = { matched: [], missing: [], discontinued: [] };
-        currentTab = 'matched';
+    showModal("Reset Everything?",
+        "This will clear JSONs, Excel, editor edits, and analysis. Continue?",
+        () => {
+            kitchenJsonData = {};
+            excelCodes = [];
+            excelCodeSet = new Set();
+            excelItemNames = {};
+            excelItemAve = {};
+            excelItemUnit = {};
+            editorData = {};
+            analysis = { matched: [], missing: [], discontinued: [] };
+            currentTab = 'matched';
 
-        document.getElementById('jsonStatusGrid').innerHTML = '';
-        document.getElementById('excelDropZone').classList.remove('has-file');
-        document.getElementById('excelDropText').innerText = 'Drop Excel file here or click to select';
-        document.getElementById('excelInput').value = '';
-        document.getElementById('resultsSection').classList.add('hidden');
+            localStorage.removeItem(EDITOR_STORAGE_KEY);
 
-        closeModal();
-        fetchAllJsons();
-        showToast('🔄 Reset complete', 'success');
-    });
+            document.getElementById('jsonStatusGrid').innerHTML = '';
+            document.getElementById('excelDropZone').classList.remove('has-file');
+            document.getElementById('excelDropText').innerText = 'Drop Excel file here or click to select';
+            document.getElementById('excelInput').value = '';
+            document.getElementById('resultsSection').classList.add('hidden');
+
+            closeModal();
+            fetchAllJsons();
+            showToast('🔄 Reset complete', 'success');
+        });
 }
 
 // ==================================================================
@@ -1188,23 +1710,26 @@ function loadScript(src) {
 }
 
 function showModal(title, message, onConfirm) {
-    document.getElementById('modalTitle').innerText = title;
-    document.getElementById('modalMessage').innerText = message;
+    document.getElementById('modalTitle').innerHTML = title;
+    document.getElementById('modalMessage').innerHTML = message;
     document.getElementById('modalOverlay').classList.add('active');
+    document.getElementById('modalConfirmBtn').style.display = '';
     document.getElementById('modalConfirmBtn').onclick = () => {
         closeModal();
-        onConfirm();
+        if (onConfirm) onConfirm();
     };
 }
 function closeModal() {
     document.getElementById('modalOverlay').classList.remove('active');
+    document.getElementById('modalConfirmBtn').style.display = '';
 }
 
 // ==================================================================
 // ============ INIT ===============================================
 // ==================================================================
+loadEditorFromStorage();
 fetchAllJsons();
-console.log("🔍 Excel ↔ JSON Matcher ready");
+console.log("🔍 Excel ↔ JSON Matcher + Editor ready");
 </script>
 </body>
 </html>
