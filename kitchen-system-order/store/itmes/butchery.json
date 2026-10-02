@@ -17,6 +17,7 @@
 {"code":"131008","name":"Fish Fillet Seabass","name_ar":"فيليه سمك القاروص","unit":"kg","maxLimit":40,"step":0.5,"AVE":433.437},
 {"code":"161153","name":"Garlic Powder (PURE)","name_ar":"ثوم بودرة (نقي)","unit":"kg","maxLimit":1,"step":0.5,"AVE":166.6},
 {"code":"161154","name":"Ginger Powder (PURE)","name_ar":"زنجبيل بودرة (نقي)","unit":"kg","maxLimit":1,"step":0.5,"AVE":323.4},
+{"code":"155072","name":"ice cream Belgian chocolate Haagen-Dazs pkt 100ML","name_ar":"ايس كريم بالشوكولاتة البلجيكية","unit":"Each","maxLimit":10,"step":1,"AVE":119},
 {"code":"112010","name":"Lamb FORE shin Australian","name_ar":"لحم خروف فور شين أسترالي","unit":"Kilogram","maxLimit":4,"step":0.5,"AVE":630},
 {"code":"112022","name":"Lamb Rack French Cut (Australian)","name_ar":"لام راك خروف فرنسي (أسترالي)","unit":"Kilogram","maxLimit":0,"step":1,"AVE":1850},
 {"code":"132044","name":"Mussels Whole Shell (Al Jazira)","name_ar":"بلح البحر","unit":"kg","maxLimit":3,"step":1,"AVE":273.57706},
