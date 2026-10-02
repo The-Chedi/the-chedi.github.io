@@ -70,7 +70,7 @@ input:focus { outline: none; border-color: #3498db; }
 .status-rejected { background: #e74c3c; color: white; }
 .status-partial { background: #8e44ad; color: white; }
 
-.cart-stats { background: #e8f4fd; padding: 10px 12px; border-radius: 10px; margin-bottom: 12px; display: flex; justify-content: space-between; font-weight: 500; font-size: 12px; flex-wrap: wrap; gap: 10px; }
+.cart-stats { background: #e8f4fd; padding: 10px 12px; border-radius: 10px; margin-bottom: 12px; display: flex; justify-content: space-between; font-weight: 500; font-size: 12px; flex-wrap: wrap; gap: 10px; align-items: center; }
 .empty-state { text-align: center; padding: 30px; color: #999; font-size: 13px; }
 .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: #333; color: white; padding: 10px 20px; border-radius: 30px; font-size: 12px; z-index: 1000; animation: slideUp 0.3s ease; }
 @keyframes slideUp { from { opacity: 0; transform: translateX(-50%) translateY(20px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
@@ -146,6 +146,7 @@ body.arabic .items-scroll-container { direction: rtl; }
 .freehand-status { display: inline-flex; align-items: center; gap: 6px; margin-left: 12px; background: rgba(0,0,0,0.3); padding: 4px 10px; border-radius: 30px; font-size: 0.7rem; }
 .status-light { width: 12px; height: 12px; border-radius: 50%; background: #dc2626; transition: all 0.3s ease; }
 .status-light.active { background: #10b981; box-shadow: 0 0 8px #10b981; animation: pulse 1.5s infinite; }
+.status-light.cost-mode { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; animation: pulse 1.5s infinite; }
 @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); } 70% { box-shadow: 0 0 0 8px rgba(16, 185, 129, 0); } 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); } }
 .status-text { font-weight: 500; }
 
@@ -160,6 +161,12 @@ body.arabic .items-scroll-container { direction: rtl; }
 .item-stock.empty { background: #ffcdd2; color: #b71c1c; animation: stockPulse 1.5s infinite; }
 @keyframes stockPulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
 .stock-warn { font-size: 0.65rem; color: #b71c1c; margin-top: 2px; font-weight: 600; }
+
+/* ============ COST LIMIT STYLES ============ */
+.cost-limit-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-weight: 700; font-size: 12px; background: #f1f5f9; color: #475569; }
+.cost-limit-badge.ok { background: #dcfce7; color: #15803d; }
+.cost-limit-badge.warn { background: #fef3c7; color: #a16207; }
+.cost-limit-badge.over { background: #fee2e2; color: #991b1b; }
 </style>
 </head>
 <body>
@@ -199,7 +206,7 @@ const translations = {
     en: {
         chef: "Chef", chefInfo: "Chef Information", chefName: "Chef Name",
         enterChefName: "Enter chef name", required: "Required", items: "Items",
-        searchByFirstChar: "Search by first character", searchPlaceholder: "Type a letter (e.g., 'T')",
+        searchByFirstChar: "Search by name or code", searchPlaceholder: "Type to search…",
         currentRequest: "Current Request", totalQty: "Total Qty", totalItems: "Items",
         totalValue: "Total Value", submit: "Submit", export: "Export", clear: "Clear",
         myRequests: "Kitchen Orders", orderHistory: "Completed Orders History",
@@ -210,7 +217,7 @@ const translations = {
         rejected: "Rejected", pending: "Pending", partial: "Partial",
         by: "by", admin: "Admin", egp: "EGP", allItems: "All Items",
         noItems: "No items", noRequests: "No orders yet",
-        noHistory: "No completed orders yet (orders approved/rejected by admin will appear here)",
+        noHistory: "No completed orders yet",
         enterChefNameToSee: "Enter chef name to see items", totalValueLabel: "Total Value",
         submitted: "SUBMITTED", chefLabel: "CHEF", waitingForAdmin: "Waiting for admin",
         approvedBy: "Approved by", reason: "Reason:", fromDate: "From Date",
@@ -223,7 +230,7 @@ const translations = {
     ar: {
         chef: "شيف", chefInfo: "معلومات الشيف", chefName: "اسم الشيف",
         enterChefName: "أدخل اسم الشيف", required: "مطلوب", items: "الأصناف",
-        searchByFirstChar: "البحث بالحرف الأول", searchPlaceholder: "اكتب حرف (مثال: أ)",
+        searchByFirstChar: "بحث بالاسم أو الكود", searchPlaceholder: "اكتب للبحث…",
         currentRequest: "الطلب الحالي", totalQty: "الكمية الإجمالية", totalItems: "عدد الأصناف",
         totalValue: "القيمة الإجمالية", submit: "إرسال", export: "تصدير", clear: "مسح",
         myRequests: "طلبات المطبخ", orderHistory: "سجل الطلبات المكتملة",
@@ -234,7 +241,7 @@ const translations = {
         rejected: "مرفوض", pending: "قيد الانتظار", partial: "موافقة جزئية",
         by: "بواسطة", admin: "المدير", egp: "جنيه", allItems: "جميع الأصناف",
         noItems: "لا توجد أصناف", noRequests: "لا توجد طلبات بعد",
-        noHistory: "لا توجد طلبات مكتملة بعد (الطلبات التي تمت الموافقة أو الرفض من المدير ستظهر هنا)",
+        noHistory: "لا توجد طلبات مكتملة بعد",
         enterChefNameToSee: "أدخل اسم الشيف لعرض الأصناف", totalValueLabel: "القيمة الإجمالية",
         submitted: "تاريخ الإرسال", chefLabel: "الشيف", waitingForAdmin: "بانتظار المدير",
         approvedBy: "تمت الموافقة بواسطة", reason: "السبب:", fromDate: "من تاريخ",
@@ -281,16 +288,21 @@ let selectedQuantities = {};
 let addedItemsStatus = {};
 let currentItemsList = [];
 let autoRefreshInterval = null;
+
+// ============ MODES ============
 let freehandModeActive = false;
 let freehandUnsubscribe = null;
 
-// ============ STOCK SYSTEM (SHARED across all kitchens) ============
+let costLimitModeActive = false;
+let kitchenCostLimits = {};
+let costLimitUnsubscribe = null;
+
+// ============ STOCK SYSTEM ============
 const SHARED_STOCK_DOC = "shared_stock";
-let sharedStockCache = {};          // { code: { stockQty, minAlert, name, unit, price } }
+let sharedStockCache = {};
 let sharedStockUnsubscribe = null;
 
 async function loadStockForKitchen(kitchen) {
-    // All kitchens read from the same shared stock doc
     try {
         const doc = await db.collection("stock").doc(SHARED_STOCK_DOC).get();
         sharedStockCache = (doc.exists && doc.data().items) ? doc.data().items : {};
@@ -321,7 +333,7 @@ function subscribeToKitchenStock(kitchen) {
         .onSnapshot(doc => {
             sharedStockCache = (doc.exists && doc.data().items) ? doc.data().items : {};
             if (currentKitchen) {
-                renderItemsList(currentKitchen);
+                renderItemsList(currentKitchen, true);
                 renderCart(currentKitchen);
             }
         }, err => console.error("Stock listener error:", err));
@@ -362,23 +374,38 @@ function openAdmin() { window.open("admin.html", "_blank"); }
 function updateFreehandStatusIndicator() {
     const statusLight = document.getElementById('statusLight');
     const statusText = document.getElementById('statusText');
-    if (statusLight && statusText) {
-        if (freehandModeActive) {
-            statusLight.className = 'status-light active';
-            statusText.innerHTML = '🟢 Freehand: ON';
-            statusText.style.color = '#10b981';
-        } else {
-            statusLight.className = 'status-light inactive';
-            statusText.innerHTML = '⚫ Freehand: OFF';
-            statusText.style.color = '#999';
-        }
+    if (!statusLight || !statusText) return;
+
+    if (freehandModeActive && costLimitModeActive) {
+        statusLight.className = 'status-light active';
+        statusText.innerHTML = '🟢 Freehand: ON · 💵 Cost Limit: ON';
+        statusText.style.color = '#10b981';
+    } else if (freehandModeActive) {
+        statusLight.className = 'status-light active';
+        statusText.innerHTML = '🟢 Freehand: ON';
+        statusText.style.color = '#10b981';
+    } else if (costLimitModeActive) {
+        statusLight.className = 'status-light cost-mode';
+        statusText.innerHTML = '💵 Cost Limit: ON';
+        statusText.style.color = '#f59e0b';
+    } else {
+        statusLight.className = 'status-light';
+        statusText.innerHTML = '⚫ Freehand: OFF';
+        statusText.style.color = '#999';
     }
 }
 
 function updateFreehandUI() {
     updateFreehandStatusIndicator();
     if (currentKitchen) {
-        renderItemsList(currentKitchen);
+        renderItemsList(currentKitchen, true);
+        renderCart(currentKitchen);
+    }
+}
+
+function updateCostLimitUI() {
+    updateFreehandStatusIndicator();
+    if (currentKitchen) {
         renderCart(currentKitchen);
     }
 }
@@ -389,6 +416,30 @@ function initFreehandModeListener() {
         freehandModeActive = doc.exists ? doc.data().freehandMode === true : false;
         updateFreehandUI();
     }, (error) => console.error("Error listening to freehand mode:", error));
+}
+
+function initCostLimitListener() {
+    if (costLimitUnsubscribe) costLimitUnsubscribe();
+    costLimitUnsubscribe = db.collection("settings").doc("cost_limits").onSnapshot((doc) => {
+        if (doc.exists) {
+            costLimitModeActive = doc.data().costLimitMode === true;
+            kitchenCostLimits = doc.data().limits || {};
+        } else {
+            costLimitModeActive = false;
+            kitchenCostLimits = {};
+        }
+        updateCostLimitUI();
+    }, (error) => console.error("Error listening to cost limits:", error));
+}
+
+function getKitchenCostLimit(kitchen) {
+    const kitchenId = kitchenToFirestoreId[kitchen];
+    return Number(kitchenCostLimits[kitchenId] ?? 0);
+}
+
+function getCartTotalValue(kitchen) {
+    const cart = kitchenData[kitchen].cart;
+    return cart.reduce((sum, i) => sum + (i.qty * (i.price || 0)), 0);
 }
 
 function toggleLanguage() {
@@ -402,7 +453,7 @@ function toggleLanguage() {
         document.getElementById('langToggleBtn').innerHTML = '🇸🇦 العربية';
     }
     if(currentKitchen) {
-        renderItemsList(currentKitchen);
+        renderItemsList(currentKitchen, true);
         renderCart(currentKitchen);
         loadMyRequests(currentKitchen);
         if(document.getElementById(`historySection_${currentKitchen.replace(/\s/g, '_').replace(/\//g, '_')}`)?.style.display === "block") {
@@ -425,7 +476,7 @@ function getItemStep(item) {
     return 1;
 }
 
-// ============ STORAGE FUNCTIONS ============
+// ============ STORAGE ============
 function loadChefNames() {
     const saved = localStorage.getItem("chefNames");
     if(saved) { const parsed = JSON.parse(saved); kitchens.forEach(kitchen => { chefNames[kitchen] = parsed[kitchen] || ""; }); }
@@ -495,15 +546,6 @@ async function loadRequestsFromFirebase() {
     } catch (error) { document.getElementById("syncStatus").innerHTML = "⚠️ Offline mode"; }
 }
 
-async function saveRequestToFirebase(request) {
-    try {
-        await db.collection("kitchen_requests").add(request);
-        showToast("✅ Request saved!");
-        await loadRequestsFromFirebase();
-        if (currentKitchen) { loadMyRequests(currentKitchen); loadOrderHistory(currentKitchen); }
-    } catch (error) { showToast("❌ Error saving"); }
-}
-
 function getOverallStatus(items) {
     if (!items || !items.length) return "pending";
     const approved = items.filter(i => i.status === "approved").length;
@@ -539,7 +581,7 @@ async function checkForDuplicateOrder(section, chefName, cartItems) {
     } catch(e) { console.error("Duplicate check error:", e); return { isDuplicate: false }; }
 }
 
-// ============ SUBMIT REQUEST (with atomic stock deduction from SHARED doc) ============
+// ============ SUBMIT REQUEST ============
 async function submitRequest(kitchen) {
     const chefName = chefNames[kitchen];
     const cart = kitchenData[kitchen].cart;
@@ -552,6 +594,18 @@ async function submitRequest(kitchen) {
         showToast(`🚫 ${t('duplicateBlocked')}!`);
         alert(message);
         return;
+    }
+
+    // Cost limit check
+    if (costLimitModeActive) {
+        const limit = getKitchenCostLimit(kitchen);
+        const total = getCartTotalValue(kitchen);
+        if (limit > 0 && total > limit) {
+            const overBy = total - limit;
+            showToast(`❌ Over limit: ${total.toFixed(2)} / ${limit} EGP`);
+            alert(`❌ COST LIMIT EXCEEDED\n\nKitchen limit: ${limit} EGP\nYour order: ${total.toFixed(2)} EGP\nOver by: ${overBy.toFixed(2)} EGP\n\nPlease remove items and try again.`);
+            return;
+        }
     }
 
     const newRequest = {
@@ -580,7 +634,7 @@ async function submitRequest(kitchen) {
 
             for (const cartItem of cart) {
                 const entry = stockData[cartItem.code];
-                if (!entry) continue; // untracked → unlimited
+                if (!entry) continue;
                 const current = Number(entry.stockQty ?? 0);
                 if (current < cartItem.qty) {
                     throw new Error(`Not enough stock for ${cartItem.name} (have ${current}, need ${cartItem.qty})`);
@@ -610,38 +664,30 @@ async function submitRequest(kitchen) {
     if (currentKitchen) {
         loadMyRequests(currentKitchen);
         loadOrderHistory(currentKitchen);
-        renderItemsList(currentKitchen);
+        renderItemsList(currentKitchen, true);
     }
 }
 
-// ============ ITEMS FUNCTIONS ============
+// ============ ITEMS ============
 async function loadItemsForKitchen(kitchen, forceRefresh = false) {
     if (kitchenItemsCache[kitchen] && !forceRefresh) return kitchenItemsCache[kitchen];
     const fileName = kitchenToFileMap[kitchen];
-    console.log(`[DEBUG] Loading ${kitchen} from ${fileName}`);
-    if (!fileName) { console.warn(`[DEBUG] No file mapping for ${kitchen}`); return []; }
+    if (!fileName) return [];
     const url = `${fileName}?t=${Date.now()}`;
-    console.log(`[DEBUG] Full URL:`, new URL(url, location.href).href);
     try {
         const response = await fetch(url);
-        console.log(`[DEBUG] HTTP ${response.status}`);
-        if (!response.ok) { console.warn(`[DEBUG] Not OK`); return []; }
+        if (!response.ok) return [];
         const raw = await response.text();
-        console.log(`[DEBUG] Raw length: ${raw.length}`);
-        console.log(`[DEBUG] First 200:`, raw.slice(0, 200));
+        if (!raw.trim()) return [];
         const data = JSON.parse(raw);
         let itemsArray = Array.isArray(data) ? data : (data.items || []);
-        console.log(`[DEBUG] Parsed: ${itemsArray.length} items`);
         itemsArray = itemsArray.map(item => ({
             ...item, section: item.section || kitchen, price: item.AVE || item.price || 0,
             name_ar: item.name_ar || item.name, step: item.step || (item.unit === "kg" || item.unit === "Kilogram" ? 0.5 : 1)
         }));
         kitchenItemsCache[kitchen] = itemsArray;
         return itemsArray;
-    } catch (error) { 
-        console.error(`[DEBUG] ERROR:`, error);
-        return []; 
-    }
+    } catch (error) { return []; }
 }
 
 function getItemsForKitchen(kitchen) { return kitchenItemsCache[kitchen] || []; }
@@ -651,7 +697,8 @@ function changeQuantity(kitchen, code, delta, maxLimit) {
     let current = selectedQuantities[kitchen][code] || 0;
     let newQty = parseFloat((current + delta).toFixed(1));
     if (newQty < 0) newQty = 0;
-    if (!freehandModeActive && newQty > maxLimit) newQty = maxLimit;
+    const unlimited = freehandModeActive || costLimitModeActive;
+    if (!unlimited && newQty > maxLimit) newQty = maxLimit;
     selectedQuantities[kitchen][code] = newQty;
     const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
     const safeCode = (code || "").replace(/[^a-zA-Z0-9]/g, '_');
@@ -684,11 +731,12 @@ function addItemWithQuantity(kitchen, code, itemName, unit, maxLimit, price, ste
     const currentQty = existing ? existing.qty : 0;
 
     const itemMax = item.maxLimit || maxLimit;
+    const unlimited = freehandModeActive || costLimitModeActive;
     let maxAllowed;
     if (stockQty === 999999) {
-        maxAllowed = freehandModeActive ? 999999 : itemMax;
+        maxAllowed = unlimited ? 999999 : itemMax;
     } else {
-        maxAllowed = Math.min(freehandModeActive ? stockQty : itemMax, stockQty);
+        maxAllowed = Math.min(unlimited ? stockQty : itemMax, stockQty);
     }
 
     const remaining = maxAllowed - currentQty;
@@ -732,27 +780,28 @@ function addItemWithQuantity(kitchen, code, itemName, unit, maxLimit, price, ste
 
     renderCart(kitchen);
     saveCart();
-    renderItemsList(kitchen);
+    renderItemsList(kitchen, true);
 }
 
-// ============ FILTER ITEMS (with stock badges) ============
-function filterItemsByFirstChar(kitchen, searchChar) {
+// ============ FILTER (multi-char search) ============
+function filterItemsByFirstChar(kitchen, searchText) {
     const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
     const displayDiv = document.getElementById(`itemsDisplay_${kitchenId}`);
     if (!displayDiv) return;
 
     let filteredItems = currentItemsList;
-    if (searchChar && searchChar.trim().length > 0) {
-        const lowerChar = searchChar.trim().toLowerCase();
+    if (searchText && searchText.trim().length > 0) {
+        const q = searchText.trim().toLowerCase();
         filteredItems = currentItemsList.filter(item => {
-            const itemName = (getItemName(item) || "").toLowerCase();
+            const itemNameEn = (item.name || "").toLowerCase();
+            const itemNameAr = (item.name_ar || "").toLowerCase();
             const itemCode = (item.code || "").toLowerCase();
-            return itemName.startsWith(lowerChar) || itemCode.startsWith(lowerChar);
+            return itemNameEn.includes(q) || itemNameAr.includes(q) || itemCode.includes(q);
         });
     }
 
     if (!filteredItems.length) {
-        displayDiv.innerHTML = `<div class="empty-state">🔍 ${currentLang === 'ar' ? 'لا توجد أصناف تبدأ بـ' : 'No items starting with'} "${searchChar}"</div>`;
+        displayDiv.innerHTML = `<div class="empty-state">🔍 ${currentLang === 'ar' ? 'لا توجد أصناف تحتوي على' : 'No items matching'} "${escapeHtml(searchText)}"</div>`;
         return;
     }
 
@@ -769,6 +818,7 @@ function filterItemsByFirstChar(kitchen, searchChar) {
         const isTracked = stockQty !== 999999;
         const isOutOfStock = isTracked && stockQty <= 0;
         const isLowStock = !isOutOfStock && isTracked && minAlert > 0 && stockQty <= minAlert;
+        const unlimitedByMode = freehandModeActive || costLimitModeActive;
 
         let cardClass = '';
         if (isOutOfStock) cardClass = 'out-of-stock';
@@ -789,8 +839,8 @@ function filterItemsByFirstChar(kitchen, searchChar) {
         else { stockLabel = `📦 ${stockQty} ${item.unit}`; stockClass = ''; }
 
         const maxLabel = !isTracked
-            ? (freehandModeActive ? '∞' : (item.maxLimit || 99))
-            : Math.min(item.maxLimit || 9999, stockQty);
+            ? (unlimitedByMode ? '∞' : (item.maxLimit || 99))
+            : Math.min(unlimitedByMode ? 9999 : (item.maxLimit || 9999), stockQty);
 
         html += `
         <div class="item-card ${cardClass}" id="itemCard_${kitchenId}_${safeCode}">
@@ -804,8 +854,8 @@ function filterItemsByFirstChar(kitchen, searchChar) {
                 </div>
                 <div class="item-meta">
                     <span class="item-unit">${item.unit || "pcs"}</span>
-                    <div class="item-max" style="color:${freehandModeActive ? '#10b981' : '#e67e22'};">
-                        ${t('max')} ${freehandModeActive ? '∞' : maxLabel}
+                    <div class="item-max" style="color:${unlimitedByMode ? '#10b981' : '#e67e22'};">
+                        ${t('max')} ${unlimitedByMode ? '∞' : maxLabel}
                     </div>
                     <div class="item-step">Step: ${stepText}</div>
                 </div>
@@ -847,21 +897,46 @@ function filterItemsByFirstChar(kitchen, searchChar) {
     });
 }
 
-async function renderItemsList(kitchen) {
+// ============ RENDER ITEMS LIST (with scroll preservation) ============
+async function renderItemsList(kitchen, preserveScroll = false) {
     const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
     const container = document.getElementById(`itemsListContainer_${kitchenId}`);
     if (!container) return;
+
+    const scrollContainer = container.querySelector('.items-scroll-container');
+    const oldScrollTop = preserveScroll && scrollContainer ? scrollContainer.scrollTop : 0;
+    const searchInput = document.getElementById(`searchInput_${kitchenId}`);
+    const oldSearchText = preserveScroll && searchInput ? searchInput.value : "";
+    const wasFocused = preserveScroll && document.activeElement?.id === `searchInput_${kitchenId}`;
+
     const chefName = chefNames[kitchen];
     if (!chefName) { container.innerHTML = `<div class="empty-state">⚠️ ${t('enterChefNameToSee')}</div>`; return; }
     let items = await loadItemsForKitchen(kitchen, false);
     if (!items.length) { container.innerHTML = `<div class="empty-state">📭 ${t('noItems')} ${kitchen}</div>`; return; }
     currentItemsList = items;
-    container.innerHTML = `<div class="input-group"><label>🔍 ${t('searchByFirstChar')}</label><input type="text" id="searchInput_${kitchenId}" placeholder="${t('searchPlaceholder')}" maxlength="1" autocomplete="off"></div><div id="itemsDisplay_${kitchenId}"></div>`;
-    filterItemsByFirstChar(kitchen, "");
-    document.getElementById(`searchInput_${kitchenId}`).addEventListener('input', (e) => filterItemsByFirstChar(kitchen, e.target.value));
+
+    container.innerHTML = `<div class="input-group"><label>🔍 ${t('searchByFirstChar')}</label><input type="text" id="searchInput_${kitchenId}" placeholder="${t('searchPlaceholder')}" autocomplete="off"></div><div id="itemsDisplay_${kitchenId}"></div>`;
+
+    filterItemsByFirstChar(kitchen, oldSearchText);
+
+    const newSearchInput = document.getElementById(`searchInput_${kitchenId}`);
+    if (newSearchInput) {
+        if (oldSearchText) newSearchInput.value = oldSearchText;
+        newSearchInput.addEventListener('input', (e) => filterItemsByFirstChar(kitchen, e.target.value));
+        if (wasFocused) newSearchInput.focus();
+    }
+
+    if (preserveScroll && oldScrollTop > 0) {
+        const newScrollContainer = container.querySelector('.items-scroll-container');
+        if (newScrollContainer) {
+            requestAnimationFrame(() => {
+                newScrollContainer.scrollTop = oldScrollTop;
+            });
+        }
+    }
 }
 
-// ============ CART FUNCTIONS ============
+// ============ CART ============
 function renderCart(kitchen) {
     const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
     const cart = kitchenData[kitchen].cart;
@@ -870,6 +945,23 @@ function renderCart(kitchen) {
     document.getElementById(`totalItems_${kitchenId}`).innerText = totalQty.toFixed(1);
     document.getElementById(`lineCount_${kitchenId}`).innerText = cart.length;
     document.getElementById(`totalValue_${kitchenId}`).innerText = totalValue.toFixed(2);
+
+    const limitEl = document.getElementById(`costLimit_${kitchenId}`);
+    if (limitEl) {
+        if (costLimitModeActive) {
+            const limit = getKitchenCostLimit(kitchen);
+            const pct = limit > 0 ? (totalValue / limit) * 100 : 0;
+            let cls = 'ok';
+            if (pct >= 100) cls = 'over';
+            else if (pct >= 80) cls = 'warn';
+            limitEl.style.display = 'inline-block';
+            limitEl.className = `cost-limit-badge ${cls}`;
+            limitEl.innerHTML = `💵 ${totalValue.toFixed(2)} / ${limit} EGP`;
+        } else {
+            limitEl.style.display = 'none';
+        }
+    }
+
     const desktopBody = document.getElementById(`cartTableDesktop_${kitchenId}`);
     if (desktopBody) {
         if (cart.length === 0) { desktopBody.innerHTML = `<tr><td colspan="7" style="text-align:center;">${t('noItems')}</td></tr>`; }
@@ -884,8 +976,24 @@ function renderCart(kitchen) {
     }
 }
 
-function removeItem(kitchen, index) { kitchenData[kitchen].cart.splice(index, 1); renderCart(kitchen); saveCart(); renderItemsList(kitchen); showToast("Item removed"); }
-function clearCart(kitchen) { if (confirm("Clear all items?")) { kitchenData[kitchen].cart = []; renderCart(kitchen); saveCart(); renderItemsList(kitchen); showToast("Cart cleared"); } }
+function removeItem(kitchen, index) {
+    kitchenData[kitchen].cart.splice(index, 1);
+    renderCart(kitchen);
+    saveCart();
+    renderItemsList(kitchen, true);
+    showToast("Item removed");
+}
+
+function clearCart(kitchen) {
+    if (confirm("Clear all items?")) {
+        kitchenData[kitchen].cart = [];
+        renderCart(kitchen);
+        saveCart();
+        renderItemsList(kitchen, true);
+        showToast("Cart cleared");
+    }
+}
+
 function exportToExcel(kitchen) {
     const cart = kitchenData[kitchen].cart;
     if (!cart.length) { showToast("No items"); return; }
@@ -899,7 +1007,7 @@ function exportToExcel(kitchen) {
     showToast("Exporting...");
 }
 
-// ============ REQUEST DISPLAY FUNCTIONS ============
+// ============ REQUEST DISPLAY ============
 function loadMyRequests(kitchen) {
     const kitchenId = kitchen.replace(/\s/g, '_').replace(/\//g, '_');
     const container = document.getElementById(`myRequestsDesktop_${kitchenId}`);
@@ -1012,7 +1120,7 @@ function createKitchenPage(kitchen) {
     return `<div class="kitchen-page" id="page_${id}"><div class="card"><h3>👨‍🍳 ${t('chefInfo')} - ${kitchen}</h3><div class="input-group"><label>${t('chefName')} <span class="required">*</span></label><input type="text" id="chefName_${id}" placeholder="${t('enterChefName')}" onchange="onChefNameChange('${kitchen}')"></div></div>
     <div class="card"><h3>📦 ${kitchen} ${t('items')} <span style="font-size:11px;">(${t('searchByFirstChar')})</span></h3><div id="itemsListContainer_${id}"></div></div>
     <div class="card"><h3>🛒 ${t('currentRequest')} <button class="history-toggle-btn" onclick="toggleHistory('${kitchen}')">📜 ${t('viewHistory')}</button></h3>
-    <div class="cart-stats"><span>📦 ${t('totalQty')}: <strong id="totalItems_${id}">0</strong></span><span>📋 ${t('totalItems')}: <strong id="lineCount_${id}">0</strong></span><span>💰 ${t('totalValue')}: <strong id="totalValue_${id}">0.00</strong> ${t('egp')}</span></div>
+    <div class="cart-stats"><span>📦 ${t('totalQty')}: <strong id="totalItems_${id}">0</strong></span><span>📋 ${t('totalItems')}: <strong id="lineCount_${id}">0</strong></span><span>💰 ${t('totalValue')}: <strong id="totalValue_${id}">0.00</strong> ${t('egp')}</span><span id="costLimit_${id}" style="display:none;"></span></div>
     <div class="desktop-table-view"><div class="table-wrapper"><table class="cart-table"><thead><tr><th>${t('code')}</th><th>${t('item')}</th><th>${t('qty')}</th><th>${t('unit')}</th><th>${t('price')}</th><th>${t('total')}</th><th></th></tr></thead><tbody id="cartTableDesktop_${id}"></tbody></table></div></div>
     <div class="button-group"><button class="btn btn-success" onclick="submitRequest('${kitchen}')">📤 ${t('submit')}</button><button class="btn btn-warning" onclick="exportToExcel('${kitchen}')">📎 ${t('export')}</button><button class="btn btn-danger" onclick="clearCart('${kitchen}')">🗑️ ${t('clear')}</button></div></div>
     <div class="card"><h3>📜 ${t('myRequests')} <span style="font-size:11px;">(${t('showsAdminPrice')})</span></h3><div id="myRequestsDesktop_${id}"></div></div>
@@ -1062,7 +1170,7 @@ async function manualRefresh() {
     if (currentKitchen) {
         loadMyRequests(currentKitchen);
         renderCart(currentKitchen);
-        renderItemsList(currentKitchen);
+        renderItemsList(currentKitchen, true);
         if(document.getElementById(`historySection_${currentKitchen.replace(/\s/g, '_').replace(/\//g, '_')}`)?.style.display === "block") {
             loadOrderHistory(currentKitchen);
         }
@@ -1074,7 +1182,7 @@ async function forceReloadItems() {
     for (const kitchen of kitchens) kitchenItemsCache[kitchen] = null;
     if (currentKitchen) {
         await loadStockForKitchen(currentKitchen);
-        await renderItemsList(currentKitchen);
+        await renderItemsList(currentKitchen, true);
         showToast(`✅ Reloaded items for ${currentKitchen}`);
     }
 }
@@ -1098,6 +1206,7 @@ startAutoRefresh();
 loadRequestsFromFirebase();
 loadLastSelectedKitchen();
 initFreehandModeListener();
+initCostLimitListener();
 
 db.collection("kitchen_requests").onSnapshot(() => { loadRequestsFromFirebase(); });
 </script>
