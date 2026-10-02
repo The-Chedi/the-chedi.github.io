@@ -1,1 +1,1213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Excel ↔ JSON Matcher</title>
 
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #f0f4f8;
+    min-height: 100vh;
+}
+
+.header {
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    color: white;
+    padding: 14px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+}
+.header-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+.logo {
+    font-size: 1.2rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-header {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    padding: 8px 16px;
+    border-radius: 25px;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 12px;
+    transition: all 0.2s;
+}
+.btn-header:hover { background: rgba(255,255,255,0.35); transform: translateY(-1px); }
+.btn-header.primary { background: rgba(255,255,255,0.95); color: #6d28d9; }
+
+.container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* Step cards */
+.step-card {
+    background: white;
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+    border-left: 5px solid #8b5cf6;
+}
+.step-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.step-num {
+    background: #8b5cf6;
+    color: white;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 800;
+}
+
+/* Drop zone */
+.drop-zone {
+    border: 3px dashed #cbd5e1;
+    border-radius: 14px;
+    padding: 30px 20px;
+    text-align: center;
+    transition: all 0.3s;
+    cursor: pointer;
+    background: #fafbfc;
+}
+.drop-zone:hover, .drop-zone.dragover {
+    border-color: #8b5cf6;
+    background: #f5f3ff;
+}
+.drop-zone.has-file {
+    border-color: #10b981;
+    background: #f0fdf4;
+    border-style: solid;
+}
+.drop-icon { font-size: 3rem; margin-bottom: 10px; }
+.drop-text {
+    font-size: 1rem;
+    font-weight: 600;
+    color: #1e293b;
+    margin-bottom: 6px;
+}
+.drop-sub {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+/* Status list */
+.json-status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+    margin-top: 15px;
+}
+.json-status-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    font-size: 0.85rem;
+}
+.json-status-item.loading { background: #fef3c7; border-color: #fcd34d; }
+.json-status-item.ok { background: #f0fdf4; border-color: #86efac; }
+.json-status-item.error { background: #fef2f2; border-color: #fca5a5; }
+.json-status-item .icon { font-size: 1.1rem; }
+.json-status-item .name { flex: 1; font-weight: 600; color: #1e293b; }
+.json-status-item .count { font-size: 0.75rem; color: #64748b; font-family: monospace; }
+
+/* Summary */
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 12px;
+    margin-bottom: 20px;
+}
+.summary-stat {
+    background: #f8fafc;
+    padding: 16px;
+    border-radius: 12px;
+    text-align: center;
+    border-left: 4px solid #cbd5e1;
+}
+.summary-stat.matched { border-left-color: #10b981; background: #f0fdf4; }
+.summary-stat.missing { border-left-color: #ef4444; background: #fef2f2; }
+.summary-stat.discontinued { border-left-color: #f59e0b; background: #fffbeb; }
+.summary-stat.total { border-left-color: #8b5cf6; background: #f5f3ff; }
+.summary-num {
+    font-size: 2rem;
+    font-weight: 800;
+    line-height: 1;
+    color: #1e293b;
+}
+.summary-stat.matched .summary-num { color: #059669; }
+.summary-stat.missing .summary-num { color: #dc2626; }
+.summary-stat.discontinued .summary-num { color: #d97706; }
+.summary-stat.total .summary-num { color: #7c3aed; }
+.summary-label {
+    font-size: 0.7rem;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-top: 6px;
+    letter-spacing: 0.5px;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 0;
+}
+.tab {
+    padding: 12px 20px;
+    background: none;
+    border: none;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    color: #64748b;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s;
+    margin-bottom: -2px;
+}
+.tab:hover { color: #8b5cf6; }
+.tab.active {
+    color: #8b5cf6;
+    border-bottom-color: #8b5cf6;
+}
+.tab .badge {
+    background: #e2e8f0;
+    color: #475569;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    margin-left: 6px;
+}
+.tab.active .badge { background: #8b5cf6; color: white; }
+
+/* Table */
+.table-wrapper {
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    overflow-x: auto;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 700px;
+}
+.data-table thead { background: #f8fafc; position: sticky; top: 0; z-index: 2; }
+.data-table th {
+    padding: 12px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 700;
+    color: #475569;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid #e2e8f0;
+}
+.data-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 12px;
+    vertical-align: middle;
+}
+.data-table tbody tr:hover { background: #f8fafc; }
+.code-cell {
+    font-family: monospace;
+    font-size: 12px;
+    color: #475569;
+    font-weight: 600;
+}
+.kitchen-tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-weight: 700;
+    margin: 2px 2px 2px 0;
+}
+.kitchen-tag.hot { background: #fee2e2; color: #dc2626; }
+.kitchen-tag.cold { background: #dbeafe; color: #2563eb; }
+.kitchen-tag.pastry { background: #fef3c7; color: #d97706; }
+.kitchen-tag.butchery { background: #ede9fe; color: #7c3aed; }
+.kitchen-tag.beach { background: #d1fae5; color: #059669; }
+.kitchen-tag.nihon { background: #fce7f3; color: #db2777; }
+.kitchen-tag.staff { background: #f1f5f9; color: #475569; }
+
+.search-box {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 13px;
+    margin-bottom: 12px;
+}
+.search-box:focus { outline: none; border-color: #8b5cf6; }
+
+.empty-msg {
+    text-align: center;
+    padding: 40px 20px;
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+.empty-msg-icon { font-size: 3rem; margin-bottom: 10px; }
+
+/* Kitchen summary list */
+.kitchen-summary-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+}
+.kitchen-summary-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    flex-wrap: wrap;
+}
+.kitchen-summary-row .kname {
+    flex: 1;
+    font-weight: 700;
+    color: #1e293b;
+    min-width: 140px;
+}
+.kitchen-summary-row .stat {
+    font-size: 0.8rem;
+    font-family: monospace;
+    color: #475569;
+}
+
+/* Action buttons */
+.action-row {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+}
+.btn-action {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-primary {
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    color: white;
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(139,92,246,0.4); }
+.btn-primary:disabled {
+    background: #cbd5e1;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+}
+.btn-secondary {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #e2e8f0;
+}
+.btn-secondary:hover { background: #e2e8f0; }
+
+/* Toast */
+.toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: white;
+    padding: 12px 24px;
+    border-radius: 30px;
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 5000;
+    animation: slideUp 0.3s ease;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+.toast.success { background: linear-gradient(135deg, #10b981, #059669); }
+.toast.error { background: linear-gradient(135deg, #ef4444, #dc2626); }
+@keyframes slideUp {
+    from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+    to { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
+/* Loading */
+.loading-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(255,255,255,0.9);
+    z-index: 6000;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 16px;
+}
+.loading-overlay.active { display: flex; }
+.spinner {
+    width: 50px; height: 50px;
+    border: 4px solid #e2e8f0;
+    border-top: 4px solid #8b5cf6;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Modal */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.85);
+    z-index: 7000;
+    justify-content: center;
+    align-items: center;
+    padding: 20px;
+}
+.modal-overlay.active { display: flex; }
+.modal-box {
+    background: white;
+    border-radius: 20px;
+    padding: 30px;
+    max-width: 500px;
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+.modal-box h2 {
+    font-size: 1.3rem;
+    color: #1e293b;
+    margin-bottom: 12px;
+}
+.modal-box p {
+    color: #475569;
+    font-size: 0.9rem;
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+.modal-actions {
+    display: flex;
+    gap: 10px;
+}
+.modal-actions button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 30px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+}
+.modal-btn-primary {
+    background: linear-gradient(135deg, #8b5cf6, #6d28d9);
+    color: white;
+}
+.modal-btn-cancel {
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.hidden { display: none !important; }
+
+@media (max-width: 768px) {
+    .summary-grid { grid-template-columns: repeat(2, 1fr); }
+    .step-card { padding: 18px; }
+    .data-table { min-width: 600px; font-size: 11px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<div class="header">
+    <div class="header-content">
+        <div class="logo">
+            <span>🔍</span>
+            <span>Excel ↔ JSON Matcher</span>
+        </div>
+        <div class="header-actions">
+            <button class="btn-header primary" onclick="window.open('chef.html', '_blank')">🍳 Chef</button>
+            <button class="btn-header" onclick="window.open('admin.html', '_blank')">👑 Admin</button>
+            <button class="btn-header" onclick="window.open('stock.html', '_blank')">📦 Stock</button>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+
+    <!-- ============ STEP 1: Load JSONs ============ -->
+    <div class="step-card">
+        <div class="step-title">
+            <span class="step-num">1</span>
+            <span>Load Kitchen JSON Files</span>
+        </div>
+        <p style="font-size:0.85rem; color:#64748b; margin-bottom:14px;">
+            Auto-fetching from <code>itmes/*.json</code>. If any file fails, use the manual upload below.
+        </p>
+
+        <div id="jsonStatusGrid" class="json-status-grid"></div>
+
+        <div class="action-row">
+            <button class="btn-action btn-secondary" onclick="fetchAllJsons()">
+                🔄 Retry Auto-Fetch
+            </button>
+            <button class="btn-action btn-secondary" onclick="document.getElementById('manualJsonInput').click()">
+                📁 Upload JSONs Manually
+            </button>
+            <input type="file" id="manualJsonInput" accept=".json" multiple style="display:none" onchange="handleManualJsonUpload(event)">
+        </div>
+    </div>
+
+    <!-- ============ STEP 2: Upload Excel ============ -->
+    <div class="step-card">
+        <div class="step-title">
+            <span class="step-num">2</span>
+            <span>Upload Excel (Codes from Office)</span>
+        </div>
+        <div class="drop-zone" id="excelDropZone" onclick="document.getElementById('excelInput').click()">
+            <div class="drop-icon">📥</div>
+            <div class="drop-text" id="excelDropText">Drop Excel file here or click to select</div>
+            <div class="drop-sub">Supports .xlsx, .xls, .csv — must include "Article No." column</div>
+            <input type="file" id="excelInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleExcelSelect(event)">
+        </div>
+    </div>
+
+    <!-- ============ STEP 3: Results ============ -->
+    <div id="resultsSection" class="hidden">
+
+        <!-- Summary -->
+        <div class="step-card">
+            <div class="step-title">
+                <span class="step-num">3</span>
+                <span>Analysis Results</span>
+            </div>
+
+            <div class="summary-grid">
+                <div class="summary-stat total">
+                    <div class="summary-num" id="statExcel">0</div>
+                    <div class="summary-label">Excel Codes</div>
+                </div>
+                <div class="summary-stat matched">
+                    <div class="summary-num" id="statMatched">0</div>
+                    <div class="summary-label">✅ Matched</div>
+                </div>
+                <div class="summary-stat missing">
+                    <div class="summary-num" id="statMissing">0</div>
+                    <div class="summary-label">❌ Excel Not in JSON</div>
+                </div>
+                <div class="summary-stat discontinued">
+                    <div class="summary-num" id="statDiscontinued">0</div>
+                    <div class="summary-label">🗑️ JSON Not in Excel</div>
+                </div>
+            </div>
+
+            <div class="kitchen-summary-list" id="kitchenSummaryList"></div>
+        </div>
+
+        <!-- Detail tabs -->
+        <div class="step-card">
+            <div class="tabs">
+                <button class="tab active" data-tab="matched" onclick="switchTab('matched')">
+                    ✅ Matched <span class="badge" id="tabCountMatched">0</span>
+                </button>
+                <button class="tab" data-tab="missing" onclick="switchTab('missing')">
+                    ❌ New / Missing <span class="badge" id="tabCountMissing">0</span>
+                </button>
+                <button class="tab" data-tab="discontinued" onclick="switchTab('discontinued')">
+                    🗑️ Discontinued <span class="badge" id="tabCountDiscontinued">0</span>
+                </button>
+            </div>
+
+            <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search by code or name..." oninput="renderCurrentTab()">
+
+            <div class="table-wrapper" id="tableWrapper">
+                <table class="data-table">
+                    <thead id="tableHead"></thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="step-card">
+            <div class="step-title">
+                <span class="step-num">4</span>
+                <span>Actions</span>
+            </div>
+            <p style="font-size:0.85rem; color:#64748b; margin-bottom:14px;">
+                Download updated JSON files with discontinued items removed. Drop them into your <code>itmes/</code> folder on GitHub.
+            </p>
+
+            <div class="action-row">
+                <button class="btn-action btn-primary" onclick="downloadAllJsonZip()">
+                    📦 Download Filtered JSONs (ZIP)
+                </button>
+                <button class="btn-action btn-secondary" onclick="downloadReportCsv()">
+                    📊 Download Report (CSV)
+                </button>
+                <button class="btn-action btn-secondary" onclick="resetAll()">
+                    🔄 Reset / Start Over
+                </button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+    <div style="font-weight:700; color:#6d28d9;" id="loadingText">Processing...</div>
+</div>
+
+<!-- Modal for confirm -->
+<div class="modal-overlay" id="modalOverlay">
+    <div class="modal-box">
+        <h2 id="modalTitle">Confirm</h2>
+        <p id="modalMessage"></p>
+        <div class="modal-actions">
+            <button class="modal-btn-cancel" onclick="closeModal()">Cancel</button>
+            <button class="modal-btn-primary" id="modalConfirmBtn">Confirm</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// ==================================================================
+// ============ CONFIG =============================================
+// ==================================================================
+const KITCHENS = [
+    { name: "Hot Kitchen",     file: "itmes/hot-kitchen.json",     css: "hot" },
+    { name: "Cold Kitchen",    file: "itmes/cold-kitchen.json",    css: "cold" },
+    { name: "Pastry / Bakery", file: "itmes/pastry.json",          css: "pastry" },
+    { name: "Butchery",        file: "itmes/butchery.json",        css: "butchery" },
+    { name: "Beach House",     file: "itmes/beach-house.json",     css: "beach" },
+    { name: "Nihon Kitchen",   file: "itmes/nihon-kitchen.json",   css: "nihon" },
+    { name: "Staff Kitchen",   file: "itmes/staff-kitchen.json",   css: "staff" }
+];
+
+// ==================================================================
+// ============ STATE ==============================================
+// ==================================================================
+let kitchenJsonData = {};    // { "Hot Kitchen": [items...], ... }
+let excelCodes = [];         // ["110148", "110052", ...]
+let excelCodeSet = new Set();
+let analysis = {
+    matched: [],             // [{ code, name, kitchens: [...] }]
+    missing: [],             // [{ code }] (in Excel but not in any JSON)
+    discontinued: []         // [{ code, name, kitchen }] (in JSON but not in Excel)
+};
+let currentTab = 'matched';
+
+// ==================================================================
+// ============ LOAD JSON FILES ====================================
+// ==================================================================
+async function fetchAllJsons() {
+    const grid = document.getElementById('jsonStatusGrid');
+    grid.innerHTML = '';
+    kitchenJsonData = {};
+
+    // Build status items
+    KITCHENS.forEach(k => {
+        const el = document.createElement('div');
+        el.className = 'json-status-item loading';
+        el.id = `json-status-${k.css}`;
+        el.innerHTML = `
+            <span class="icon">⏳</span>
+            <span class="name">${k.name}</span>
+            <span class="count">loading...</span>
+        `;
+        grid.appendChild(el);
+    });
+
+    // Fetch in parallel
+    const results = await Promise.all(KITCHENS.map(async (k) => {
+        try {
+            const res = await fetch(`${k.file}?t=${Date.now()}`);
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const raw = await res.text();
+            if (!raw.trim()) throw new Error("Empty file");
+            let data = JSON.parse(raw);
+            // Handle various formats
+            let arr = [];
+            if (Array.isArray(data)) arr = data;
+            else if (data && Array.isArray(data.items)) arr = data.items;
+            else if (data && Array.isArray(data.data)) arr = data.data;
+            else if (data && typeof data === 'object') {
+                // Maybe keyed by code
+                const keys = Object.keys(data);
+                arr = keys.map(code => ({ code, ...(typeof data[code] === 'object' ? data[code] : { name: data[code] }) }));
+            }
+
+            arr = arr
+                .filter(it => it && typeof it === 'object')
+                .map(it => ({
+                    ...it,
+                    code: String(it.code || it.Code || it["Article No."] || '').trim(),
+                    name: it.name || it.Name || it.article || it.Article || ''
+                }))
+                .filter(it => it.code);
+
+            return { kitchen: k, ok: true, items: arr };
+        } catch (e) {
+            return { kitchen: k, ok: false, error: e.message, items: [] };
+        }
+    }));
+
+    // Update UI + store
+    results.forEach(r => {
+        const el = document.getElementById(`json-status-${r.kitchen.css}`);
+        if (r.ok) {
+            el.className = 'json-status-item ok';
+            el.innerHTML = `
+                <span class="icon">✅</span>
+                <span class="name">${r.kitchen.name}</span>
+                <span class="count">${r.items.length} items</span>
+            `;
+            kitchenJsonData[r.kitchen.name] = r.items;
+        } else {
+            el.className = 'json-status-item error';
+            el.innerHTML = `
+                <span class="icon">❌</span>
+                <span class="name">${r.kitchen.name}</span>
+                <span class="count" title="${r.error}">${r.error}</span>
+            `;
+        }
+    });
+
+    const loaded = Object.keys(kitchenJsonData).length;
+    if (loaded > 0) {
+        showToast(`✅ Loaded ${loaded} JSON file(s)`, 'success');
+    } else {
+        showToast('⚠️ No JSON files loaded — try manual upload', 'error');
+    }
+}
+
+// ==================================================================
+// ============ MANUAL JSON UPLOAD =================================
+// ==================================================================
+async function handleManualJsonUpload(event) {
+    const files = Array.from(event.target.files || []);
+    if (!files.length) return;
+
+    for (const file of files) {
+        try {
+            const text = await file.text();
+            const data = JSON.parse(text);
+            let arr = [];
+            if (Array.isArray(data)) arr = data;
+            else if (data && Array.isArray(data.items)) arr = data.items;
+            else if (data && typeof data === 'object') {
+                const keys = Object.keys(data);
+                arr = keys.map(code => ({ code, ...(typeof data[code] === 'object' ? data[code] : { name: data[code] }) }));
+            }
+            arr = arr
+                .filter(it => it && typeof it === 'object')
+                .map(it => ({
+                    ...it,
+                    code: String(it.code || it.Code || it["Article No."] || '').trim(),
+                    name: it.name || it.Name || it.article || it.Article || ''
+                }))
+                .filter(it => it.code);
+
+            // Determine which kitchen this belongs to
+            const k = KITCHENS.find(x => file.name.toLowerCase().includes(x.file.split('/').pop().replace('.json', '').toLowerCase()));
+            const kitchenName = k ? k.name : `Custom: ${file.name}`;
+
+            kitchenJsonData[kitchenName] = arr;
+
+            // Update status grid
+            const grid = document.getElementById('jsonStatusGrid');
+            if (k) {
+                const el = document.getElementById(`json-status-${k.css}`);
+                if (el) {
+                    el.className = 'json-status-item ok';
+                    el.innerHTML = `
+                        <span class="icon">✅</span>
+                        <span class="name">${k.name}</span>
+                        <span class="count">${arr.length} items (manual)</span>
+                    `;
+                }
+            } else {
+                const el = document.createElement('div');
+                el.className = 'json-status-item ok';
+                el.innerHTML = `
+                    <span class="icon">✅</span>
+                    <span class="name">${kitchenName}</span>
+                    <span class="count">${arr.length} items</span>
+                `;
+                grid.appendChild(el);
+            }
+        } catch (e) {
+            showToast(`❌ Failed to parse ${file.name}`, 'error');
+        }
+    }
+    showToast(`✅ Added ${files.length} manual file(s)`, 'success');
+}
+
+// ==================================================================
+// ============ EXCEL HANDLING =====================================
+// ==================================================================
+const excelDropZone = document.getElementById('excelDropZone');
+
+['dragenter', 'dragover'].forEach(evt =>
+    excelDropZone.addEventListener(evt, (e) => {
+        e.preventDefault(); e.stopPropagation();
+        excelDropZone.classList.add('dragover');
+    })
+);
+['dragleave', 'drop'].forEach(evt =>
+    excelDropZone.addEventListener(evt, (e) => {
+        e.preventDefault(); e.stopPropagation();
+        excelDropZone.classList.remove('dragover');
+    })
+);
+excelDropZone.addEventListener('drop', (e) => {
+    const file = e.dataTransfer.files[0];
+    if (file) processExcelFile(file);
+});
+
+function handleExcelSelect(event) {
+    const file = event.target.files[0];
+    if (file) processExcelFile(file);
+}
+
+async function processExcelFile(file) {
+    showLoading("Reading Excel...");
+    try {
+        const data = new Uint8Array(await file.arrayBuffer());
+        const workbook = XLSX.read(data, { type: 'array' });
+        const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
+
+        if (!rows.length) {
+            hideLoading();
+            showToast('❌ Excel file is empty', 'error');
+            return;
+        }
+
+        // Find the code column (Article No. / Code / Article No)
+        const sample = rows[0];
+        const codeColName = detectColumn(sample, ['Article No.', 'Article No', 'Code', 'Item Code', 'SKU', 'كود']);
+        if (!codeColName) {
+            hideLoading();
+            showToast('❌ Could not find "Article No." column', 'error');
+            return;
+        }
+
+        excelCodes = rows
+            .map(r => String(r[codeColName] || '').trim())
+            .filter(c => c && c !== '');
+        excelCodeSet = new Set(excelCodes);
+
+        // Update drop zone
+        excelDropZone.classList.add('has-file');
+        document.getElementById('excelDropText').innerHTML =
+            `✅ <strong>${file.name}</strong> — ${excelCodes.length} codes loaded`;
+
+        hideLoading();
+        showToast(`✅ Loaded ${excelCodes.length} codes`, 'success');
+
+        // Auto-analyze
+        analyze();
+
+    } catch (e) {
+        console.error(e);
+        hideLoading();
+        showToast('❌ Failed to read Excel: ' + e.message, 'error');
+    }
+}
+
+function detectColumn(row, aliases) {
+    const keys = Object.keys(row);
+    for (const alias of aliases) {
+        const found = keys.find(k => k.trim().toLowerCase() === alias.toLowerCase());
+        if (found) return found;
+    }
+    for (const alias of aliases) {
+        const found = keys.find(k => k.trim().toLowerCase().includes(alias.toLowerCase()));
+        if (found) return found;
+    }
+    return null;
+}
+
+// ==================================================================
+// ============ ANALYSIS ===========================================
+// ==================================================================
+function analyze() {
+    if (!excelCodes.length) {
+        showToast('⚠️ Upload Excel first', 'error');
+        return;
+    }
+    if (!Object.keys(kitchenJsonData).length) {
+        showToast('⚠️ No JSON files loaded', 'error');
+        return;
+    }
+
+    // Build map: code -> [kitchens]
+    const codeToKitchens = new Map();
+    const jsonItemMap = new Map();  // code -> { name, kitchen }
+
+    for (const [kitchen, items] of Object.entries(kitchenJsonData)) {
+        for (const item of items) {
+            if (!codeToKitchens.has(item.code)) codeToKitchens.set(item.code, []);
+            codeToKitchens.get(item.code).push(kitchen);
+            if (!jsonItemMap.has(item.code)) {
+                jsonItemMap.set(item.code, { name: item.name, kitchen });
+            }
+        }
+    }
+
+    analysis.matched = [];
+    analysis.missing = [];
+    analysis.discontinued = [];
+
+    // Matched = Excel codes that exist in JSON
+    for (const code of excelCodes) {
+        if (codeToKitchens.has(code)) {
+            const info = jsonItemMap.get(code);
+            analysis.matched.push({
+                code,
+                name: info?.name || '',
+                kitchens: codeToKitchens.get(code)
+            });
+        } else {
+            analysis.missing.push({ code });
+        }
+    }
+
+    // Discontinued = JSON codes not in Excel
+    for (const [code, info] of jsonItemMap.entries()) {
+        if (!excelCodeSet.has(code)) {
+            analysis.discontinued.push({
+                code,
+                name: info.name,
+                kitchen: info.kitchen
+            });
+        }
+    }
+
+    // Update summary numbers
+    document.getElementById('statExcel').innerText = excelCodes.length;
+    document.getElementById('statMatched').innerText = analysis.matched.length;
+    document.getElementById('statMissing').innerText = analysis.missing.length;
+    document.getElementById('statDiscontinued').innerText = analysis.discontinued.length;
+
+    // Kitchen breakdown
+    renderKitchenSummary();
+
+    // Tab counts
+    document.getElementById('tabCountMatched').innerText = analysis.matched.length;
+    document.getElementById('tabCountMissing').innerText = analysis.missing.length;
+    document.getElementById('tabCountDiscontinued').innerText = analysis.discontinued.length;
+
+    // Show results
+    document.getElementById('resultsSection').classList.remove('hidden');
+    renderCurrentTab();
+
+    showToast('✅ Analysis complete', 'success');
+}
+
+function renderKitchenSummary() {
+    const container = document.getElementById('kitchenSummaryList');
+    container.innerHTML = '';
+    for (const [kitchen, items] of Object.entries(kitchenJsonData)) {
+        const total = items.length;
+        const matchedInKitchen = items.filter(it => excelCodeSet.has(it.code)).length;
+        const toRemove = total - matchedInKitchen;
+        const k = KITCHENS.find(x => x.name === kitchen);
+        const css = k ? k.css : 'staff';
+
+        container.innerHTML += `
+            <div class="kitchen-summary-row">
+                <span class="kitchen-tag ${css}">${kitchen}</span>
+                <span class="stat">📦 ${total} items</span>
+                <span class="stat" style="color:#059669;">✅ ${matchedInKitchen} matched</span>
+                <span class="stat" style="color:#d97706;">🗑️ ${toRemove} to remove</span>
+            </div>
+        `;
+    }
+}
+
+// ==================================================================
+// ============ TABS / TABLE RENDER ================================
+// ==================================================================
+function switchTab(tab) {
+    currentTab = tab;
+    document.querySelectorAll('.tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.tab === tab);
+    });
+    renderCurrentTab();
+}
+
+function renderCurrentTab() {
+    const search = (document.getElementById('searchBox')?.value || '').toLowerCase().trim();
+    const head = document.getElementById('tableHead');
+    const body = document.getElementById('tableBody');
+
+    let rows = [];
+    let columns = [];
+
+    if (currentTab === 'matched') {
+        columns = ['Code', 'Name', 'Found In Kitchens'];
+        rows = analysis.matched;
+    } else if (currentTab === 'missing') {
+        columns = ['Code', 'Status'];
+        rows = analysis.missing;
+    } else {
+        columns = ['Code', 'Name', 'Kitchen'];
+        rows = analysis.discontinued;
+    }
+
+    // Filter by search
+    if (search) {
+        rows = rows.filter(r => {
+            return (r.code || '').toLowerCase().includes(search) ||
+                   (r.name || '').toLowerCase().includes(search);
+        });
+    }
+
+    // Head
+    head.innerHTML = '<tr>' + columns.map(c => `<th>${c}</th>`).join('') + '</tr>';
+
+    // Body
+    if (!rows.length) {
+        body.innerHTML = `<tr><td colspan="${columns.length}"><div class="empty-msg"><div class="empty-msg-icon">📭</div>No results</div></td></tr>`;
+        return;
+    }
+
+    let html = '';
+    if (currentTab === 'matched') {
+        rows.forEach(r => {
+            const tags = r.kitchens.map(k => {
+                const info = KITCHENS.find(x => x.name === k);
+                const css = info ? info.css : 'staff';
+                return `<span class="kitchen-tag ${css}">${k}</span>`;
+            }).join('');
+            html += `<tr>
+                <td class="code-cell">${escapeHtml(r.code)}</td>
+                <td>${escapeHtml(r.name)}</td>
+                <td>${tags}</td>
+            </tr>`;
+        });
+    } else if (currentTab === 'missing') {
+        rows.forEach(r => {
+            html += `<tr>
+                <td class="code-cell">${escapeHtml(r.code)}</td>
+                <td style="color:#dc2626; font-weight:600;">❌ Not in any kitchen JSON</td>
+            </tr>`;
+        });
+    } else {
+        rows.forEach(r => {
+            const info = KITCHENS.find(x => x.name === r.kitchen);
+            const css = info ? info.css : 'staff';
+            html += `<tr>
+                <td class="code-cell">${escapeHtml(r.code)}</td>
+                <td>${escapeHtml(r.name)}</td>
+                <td><span class="kitchen-tag ${css}">${r.kitchen}</span></td>
+            </tr>`;
+        });
+    }
+    body.innerHTML = html;
+}
+
+// ==================================================================
+// ============ DOWNLOAD ACTIONS ===================================
+// ==================================================================
+async function downloadAllJsonZip() {
+    if (!window.JSZip) {
+        // Load JSZip dynamically
+        showLoading("Loading ZIP library...");
+        await loadScript('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js');
+    }
+
+    showLoading("Building ZIP...");
+
+    try {
+        const zip = new JSZip();
+        let removedTotal = 0;
+        let keptTotal = 0;
+
+        for (const [kitchen, items] of Object.entries(kitchenJsonData)) {
+            // Keep only items whose code is in Excel
+            const filtered = items.filter(it => excelCodeSet.has(it.code));
+            removedTotal += (items.length - filtered.length);
+            keptTotal += filtered.length;
+
+            // Determine filename
+            const info = KITCHENS.find(x => x.name === kitchen);
+            let filename;
+            if (info) {
+                filename = info.file.split('/').pop();  // e.g. hot-kitchen.json
+            } else {
+                filename = kitchen.replace(/[^a-z0-9]/gi, '-').toLowerCase() + '.json';
+            }
+
+            // Format JSON (2-space indent for readability)
+            zip.file(filename, JSON.stringify(filtered, null, 2));
+        }
+
+        const blob = await zip.generateAsync({ type: 'blob' });
+
+        // Download
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `itmes-updated-${new Date().toISOString().slice(0,10)}.zip`;
+        a.click();
+        URL.revokeObjectURL(url);
+
+        hideLoading();
+        showToast(`✅ ZIP ready — ${keptTotal} items kept, ${removedTotal} removed`, 'success');
+
+    } catch (e) {
+        console.error(e);
+        hideLoading();
+        showToast('❌ Failed to build ZIP: ' + e.message, 'error');
+    }
+}
+
+function downloadReportCsv() {
+    let csv = "Section,Code,Name,Kitchen(s),Status\n";
+
+    analysis.matched.forEach(r => {
+        csv += `"Matched","${r.code}","${(r.name||'').replace(/"/g,'""')}","${r.kitchens.join(' | ')}","In Excel & JSON"\n`;
+    });
+    analysis.missing.forEach(r => {
+        csv += `"Missing","${r.code}","","","In Excel, missing from all JSONs"\n`;
+    });
+    analysis.discontinued.forEach(r => {
+        csv += `"Discontinued","${r.code}","${(r.name||'').replace(/"/g,'""')}","${r.kitchen}","In JSON, not in Excel — will be removed"\n`;
+    });
+
+    const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `json-match-report-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('✅ Report downloaded', 'success');
+}
+
+function resetAll() {
+    showModal("Reset Everything?", "This will clear all loaded JSONs and Excel. Continue?", () => {
+        kitchenJsonData = {};
+        excelCodes = [];
+        excelCodeSet = new Set();
+        analysis = { matched: [], missing: [], discontinued: [] };
+        currentTab = 'matched';
+
+        document.getElementById('jsonStatusGrid').innerHTML = '';
+        document.getElementById('excelDropZone').classList.remove('has-file');
+        document.getElementById('excelDropText').innerText = 'Drop Excel file here or click to select';
+        document.getElementById('excelInput').value = '';
+        document.getElementById('resultsSection').classList.add('hidden');
+
+        closeModal();
+        fetchAllJsons();
+        showToast('🔄 Reset complete', 'success');
+    });
+}
+
+// ==================================================================
+// ============ HELPERS ============================================
+// ==================================================================
+function showLoading(text) {
+    document.getElementById('loadingText').innerText = text || 'Processing...';
+    document.getElementById('loadingOverlay').classList.add('active');
+}
+function hideLoading() {
+    document.getElementById('loadingOverlay').classList.remove('active');
+}
+
+function showToast(msg, type = '') {
+    const t = document.createElement('div');
+    t.className = 'toast' + (type ? ' ' + type : '');
+    t.innerText = msg;
+    document.body.appendChild(t);
+    setTimeout(() => t.remove(), 3000);
+}
+
+function escapeHtml(str) {
+    return String(str || '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+}
+
+function loadScript(src) {
+    return new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = reject;
+        document.head.appendChild(s);
+    });
+}
+
+function showModal(title, message, onConfirm) {
+    document.getElementById('modalTitle').innerText = title;
+    document.getElementById('modalMessage').innerText = message;
+    document.getElementById('modalOverlay').classList.add('active');
+    document.getElementById('modalConfirmBtn').onclick = () => {
+        closeModal();
+        onConfirm();
+    };
+}
+function closeModal() {
+    document.getElementById('modalOverlay').classList.remove('active');
+}
+
+// ==================================================================
+// ============ INIT ===============================================
+// ==================================================================
+fetchAllJsons();
+console.log("🔍 Excel ↔ JSON Matcher ready");
+</script>
+</body>
+</html>
