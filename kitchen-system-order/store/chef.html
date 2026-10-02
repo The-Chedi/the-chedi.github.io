@@ -167,9 +167,7 @@ body.arabic .items-scroll-container { direction: rtl; }
 .cost-limit-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-weight: 700; font-size: 12px; background: #f1f5f9; color: #475569; transition: all 0.3s ease; }
 .cost-limit-badge.ok { background: #dcfce7; color: #15803d; }
 .cost-limit-badge.warn { background: #fef3c7; color: #a16207; }
-.cost-limit-badge.over { background: #fee2e2; color: #991b1b; animation: pulseRed 1.5s infinite; }
-@keyframes pulseRed { 0%,100% { box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.4); } 50% { box-shadow: 0 0 0 8px rgba(220, 38, 38, 0); } }
-.cost-limit-banner { padding: 10px 14px; border-radius: 10px; margin-bottom: 12px; font-size: 13px; font-weight: 600; line-height: 1.5; }
+.cost-limit-badge.over { background: #fee2e2; color: #991b1b; }
 </style>
 </head>
 <body>
@@ -592,34 +590,19 @@ async function submitRequest(kitchen) {
     if (!chefName) { showToast("⚠️ Enter chef name first"); return; }
     if (cart.length === 0) { showToast("No items to submit"); return; }
 
-    // ============ COST LIMIT CHECK ============
+    // ============ COST LIMIT CHECK (final safety net) ============
     if (costLimitModeActive) {
         const limit = getKitchenCostLimit(kitchen);
         const total = getCartTotalValue(kitchen);
         if (limit > 0 && total > limit) {
             const overBy = total - limit;
             showToast(`❌ Order exceeds limit: ${total.toFixed(2)} / ${limit} EGP`);
-            
-            // Flash the badge
-            const badge = document.getElementById(`costLimit_${kitchen.replace(/\s/g, '_').replace(/\//g, '_')}`);
-            if (badge) {
-                badge.style.animation = 'none';
-                badge.style.transform = 'scale(1.5)';
-                setTimeout(() => {
-                    badge.style.transform = '';
-                    badge.style.animation = '';
-                }, 600);
-            }
-            
             alert(
-                `╔══════════════════════════════════════╗\n` +
-                `║   ❌ COST LIMIT EXCEEDED             ║\n` +
-                `╚══════════════════════════════════════╝\n\n` +
+                `❌ COST LIMIT EXCEEDED\n\n` +
                 `💰 Kitchen limit:   ${limit.toFixed(2)} EGP\n` +
                 `🛒 Your order:      ${total.toFixed(2)} EGP\n` +
                 `⚠️  Over by:        ${overBy.toFixed(2)} EGP\n\n` +
-                `Please remove some items before submitting.\n\n` +
-                `💡 Tip: Watch the live budget banner above your cart.`
+                `Please remove some items before submitting.`
             );
             return;
         }
@@ -739,7 +722,7 @@ function addItemWithQuantity(kitchen, code, itemName, unit, maxLimit, price, ste
     const chefName = chefNames[kitchen];
     if (!chefName) { showToast("⚠️ Enter chef name first"); return; }
 
-    // ============ COST LIMIT PRE-CHECK (block adding items that would exceed) ============
+    // ============ COST LIMIT PRE-CHECK (block if adding would exceed) ============
     if (costLimitModeActive) {
         const limit = getKitchenCostLimit(kitchen);
         if (limit > 0) {
@@ -751,21 +734,12 @@ function addItemWithQuantity(kitchen, code, itemName, unit, maxLimit, price, ste
 
             if (projectedTotal > limit) {
                 const remaining = Math.max(0, limit - currentTotal);
-                showToast(`❌ Adding ${itemName} would exceed limit! Only ${remaining.toFixed(2)} EGP remaining`);
-                alert(
-                    `❌ CANNOT ADD — WOULD EXCEED LIMIT\n\n` +
-                    `💰 Kitchen limit:   ${limit.toFixed(2)} EGP\n` +
-                    `🛒 Current cart:    ${currentTotal.toFixed(2)} EGP\n` +
-                    `➕ Adding:          ${newItemCost.toFixed(2)} EGP (${qty} × ${itemPrice.toFixed(2)})\n` +
-                    `📊 Would total:     ${projectedTotal.toFixed(2)} EGP\n\n` +
-                    `⚠️  Over by:        ${(projectedTotal - limit).toFixed(2)} EGP\n\n` +
-                    `💡 Reduce the quantity or remove other items first.`
-                );
+                showToast(`❌ Cannot add — only ${remaining.toFixed(2)} EGP remaining`);
                 return;
             }
         }
     }
-    // ============ END COST LIMIT PRE-CHECK ============
+    // ============ END PRE-CHECK ============
 
     const { stockQty } = getStockMeta(kitchen, code);
     if (stockQty <= 0 && stockQty !== 999999) {
@@ -999,60 +973,28 @@ function renderCart(kitchen) {
     document.getElementById(`lineCount_${kitchenId}`).innerText = cart.length;
     document.getElementById(`totalValue_${kitchenId}`).innerText = totalValue.toFixed(2);
 
-    // ============ COST LIMIT BADGE ============
+    // ============ COST LIMIT BADGE (small, in cart stats) ============
     const limitEl = document.getElementById(`costLimit_${kitchenId}`);
     if (limitEl) {
         if (costLimitModeActive) {
             const limit = getKitchenCostLimit(kitchen);
-            const pct = limit > 0 ? (totalValue / limit) * 100 : 0;
-            let cls = 'ok';
-            if (pct >= 100) cls = 'over';
-            else if (pct >= 80) cls = 'warn';
-            limitEl.style.display = 'inline-block';
-            limitEl.className = `cost-limit-badge ${cls}`;
-            limitEl.innerHTML = `💵 ${totalValue.toFixed(2)} / ${limit} EGP`;
+            if (limit > 0) {
+                const pct = (totalValue / limit) * 100;
+                let cls = 'ok';
+                if (pct >= 100) cls = 'over';
+                else if (pct >= 80) cls = 'warn';
+                limitEl.style.display = 'inline-block';
+                limitEl.className = `cost-limit-badge ${cls}`;
+                limitEl.innerHTML = `💵 ${totalValue.toFixed(2)} / ${limit} EGP`;
+            } else {
+                limitEl.style.display = 'none';
+            }
         } else {
             limitEl.style.display = 'none';
         }
     }
 
-    // ============ LIVE COST LIMIT BANNER ============
-    const banner = document.getElementById(`costLimitBanner_${kitchenId}`);
-    if (banner) {
-        if (costLimitModeActive) {
-            const limit = getKitchenCostLimit(kitchen);
-            if (limit > 0) {
-                const pct = (totalValue / limit) * 100;
-                const remaining = Math.max(0, limit - totalValue);
-                
-                if (pct >= 100) {
-                    banner.style.display = 'block';
-                    banner.style.background = '#fee2e2';
-                    banner.style.color = '#991b1b';
-                    banner.style.border = '2px solid #fca5a5';
-                    banner.innerHTML = `❌ <strong>OVER LIMIT!</strong> You are ${(totalValue - limit).toFixed(2)} EGP over the limit of ${limit} EGP. Remove items to submit.`;
-                } else if (pct >= 80) {
-                    banner.style.display = 'block';
-                    banner.style.background = '#fef3c7';
-                    banner.style.color = '#92400e';
-                    banner.style.border = '2px solid #fcd34d';
-                    banner.innerHTML = `⚠️ <strong>Approaching limit!</strong> Only ${remaining.toFixed(2)} EGP remaining (${pct.toFixed(0)}% of ${limit} EGP used).`;
-                } else {
-                    banner.style.display = 'block';
-                    banner.style.background = '#dcfce7';
-                    banner.style.color = '#166534';
-                    banner.style.border = '2px solid #86efac';
-                    banner.innerHTML = `✅ <strong>Budget OK:</strong> ${remaining.toFixed(2)} EGP remaining (${pct.toFixed(0)}% of ${limit} EGP used).`;
-                }
-            } else {
-                banner.style.display = 'none';
-            }
-        } else {
-            banner.style.display = 'none';
-        }
-    }
-
-    // ============ DISABLE SUBMIT BUTTON IF OVER LIMIT ============
+    // ============ SUBMIT BUTTON: RED + DISABLED when over limit ============
     const pageEl = document.getElementById(`page_${kitchenId}`);
     if (pageEl) {
         const submitBtn = pageEl.querySelector('.btn-success');
@@ -1060,20 +1002,35 @@ function renderCart(kitchen) {
             if (costLimitModeActive) {
                 const limit = getKitchenCostLimit(kitchen);
                 if (limit > 0 && totalValue > limit) {
+                    // OVER LIMIT → red + disabled
                     submitBtn.disabled = true;
-                    submitBtn.style.opacity = '0.55';
+                    submitBtn.style.background = '#e74c3c';
+                    submitBtn.style.color = '#fff';
+                    submitBtn.style.opacity = '1';
                     submitBtn.style.cursor = 'not-allowed';
-                    submitBtn.innerHTML = `❌ Over Limit (${totalValue.toFixed(0)} / ${limit} EGP)`;
+                    submitBtn.style.transform = 'none';
+                    submitBtn.style.boxShadow = 'none';
+                    submitBtn.innerHTML = `🚫 Over Limit (${totalValue.toFixed(2)} / ${limit} EGP) — Remove items`;
                 } else {
+                    // UNDER LIMIT → normal green
                     submitBtn.disabled = false;
+                    submitBtn.style.background = '#27ae60';
+                    submitBtn.style.color = '#fff';
                     submitBtn.style.opacity = '1';
                     submitBtn.style.cursor = 'pointer';
+                    submitBtn.style.transform = '';
+                    submitBtn.style.boxShadow = '';
                     submitBtn.innerHTML = `📤 ${t('submit')}`;
                 }
             } else {
+                // Cost limit mode OFF → normal
                 submitBtn.disabled = false;
+                submitBtn.style.background = '#27ae60';
+                submitBtn.style.color = '#fff';
                 submitBtn.style.opacity = '1';
                 submitBtn.style.cursor = 'pointer';
+                submitBtn.style.transform = '';
+                submitBtn.style.boxShadow = '';
                 submitBtn.innerHTML = `📤 ${t('submit')}`;
             }
         }
@@ -1238,7 +1195,6 @@ function createKitchenPage(kitchen) {
     <div class="card"><h3>📦 ${kitchen} ${t('items')} <span style="font-size:11px;">(${t('searchByFirstChar')})</span></h3><div id="itemsListContainer_${id}"></div></div>
     <div class="card"><h3>🛒 ${t('currentRequest')} <button class="history-toggle-btn" onclick="toggleHistory('${kitchen}')">📜 ${t('viewHistory')}</button></h3>
     <div class="cart-stats"><span>📦 ${t('totalQty')}: <strong id="totalItems_${id}">0</strong></span><span>📋 ${t('totalItems')}: <strong id="lineCount_${id}">0</strong></span><span>💰 ${t('totalValue')}: <strong id="totalValue_${id}">0.00</strong> ${t('egp')}</span><span id="costLimit_${id}" style="display:none;"></span></div>
-    <div id="costLimitBanner_${id}" style="display:none;"></div>
     <div class="desktop-table-view"><div class="table-wrapper"><table class="cart-table"><thead><tr><th>${t('code')}</th><th>${t('item')}</th><th>${t('qty')}</th><th>${t('unit')}</th><th>${t('price')}</th><th>${t('total')}</th><th></th></tr></thead><tbody id="cartTableDesktop_${id}"></tbody></table></div></div>
     <div class="button-group"><button class="btn btn-success" onclick="submitRequest('${kitchen}')">📤 ${t('submit')}</button><button class="btn btn-warning" onclick="exportToExcel('${kitchen}')">📎 ${t('export')}</button><button class="btn btn-danger" onclick="clearCart('${kitchen}')">🗑️ ${t('clear')}</button></div></div>
     <div class="card"><h3>📜 ${t('myRequests')} <span style="font-size:11px;">(${t('showsAdminPrice')})</span></h3><div id="myRequestsDesktop_${id}"></div></div>
