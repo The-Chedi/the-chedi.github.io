@@ -356,7 +356,6 @@ body {
 }
 .btn-secondary:hover { background: #e2e8f0; }
 
-/* ============ NEW ITEM EDITOR ============ */
 .editor-list {
     display: flex;
     flex-direction: column;
@@ -716,6 +715,22 @@ body {
                 </button>
             </div>
 
+            <div id="discontinuedToolbar" style="display:none; padding: 12px; background:#fafbfc; border-radius:10px; margin-bottom:12px; align-items:center; gap:10px; flex-wrap:wrap;">
+                <span class="progress-pill" id="discontinuedProgress">No changes</span>
+                <button class="btn-action btn-secondary" style="padding:8px 16px; font-size:12px;" onclick="restoreAllDiscontinued()">
+                    ↩️ Restore All Visible
+                </button>
+                <button class="btn-action btn-secondary" style="padding:8px 16px; font-size:12px; background:#fef2f2; color:#dc2626; border-color:#fca5a5;" onclick="deleteAllVisible()">
+                    🗑️ Delete All Visible
+                </button>
+                <button class="btn-action btn-secondary" style="padding:8px 16px; font-size:12px;" onclick="clearRestored()">
+                    🔄 Clear All Marks
+                </button>
+                <button class="btn-action btn-secondary" style="padding:8px 16px; font-size:12px;" onclick="undoAllDeletes()">
+                    ↩️ Undo All Deletes
+                </button>
+            </div>
+
             <input type="text" class="search-box" id="searchBox" placeholder="🔍 Search by code or name..." oninput="renderCurrentTab()">
 
             <div class="table-wrapper" id="tableWrapper">
@@ -759,8 +774,12 @@ body {
                 <span>Download Updated JSONs</span>
             </div>
             <p style="font-size:0.85rem; color:#64748b; margin-bottom:14px;">
-                Downloads all 7 JSON files with: ✅ matched items kept, 🗑️ discontinued removed, ➕ new items added to their assigned kitchens.<br>
-                Output is <strong>sorted alphabetically A → Z by item name</strong>.
+                Downloads all 7 JSON files with:
+                ✅ matched items kept ·
+                ↩️ restored items kept ·
+                🗑️ deleted items removed ·
+                ➕ new items added to assigned kitchens ·
+                📊 sorted A → Z by name.
             </p>
 
             <div class="action-row">
@@ -825,16 +844,16 @@ let analysis = {
 };
 let currentTab = 'matched';
 let editorData = {};
+let restoredItems = {};
+let deletedItems = {};
 
 const EDITOR_STORAGE_KEY = "jsonMatcherEditorData";
+const RESTORED_STORAGE_KEY = "jsonMatcherRestoredItems";
+const DELETED_STORAGE_KEY = "jsonMatcherDeletedItems";
 
 // ==================================================================
 // ============ ROBUST NUMBER PARSER ===============================
 // ==================================================================
-/**
- * Robust number parser.
- * Handles: 1950, "1950.5", "1,950.50", "1950 EGP", "1,950.50 EGP", " 1950 ", "", "N/A"
- */
 function parseNumber(val) {
     if (val === null || val === undefined) return 0;
     if (typeof val === 'number') return isFinite(val) ? val : 0;
@@ -842,10 +861,8 @@ function parseNumber(val) {
     let str = String(val).trim();
     if (!str) return 0;
 
-    // Remove everything except digits, dot, minus
     str = str.replace(/[^\d.\-]/g, '');
 
-    // Handle multiple dots — keep only last one
     const lastDot = str.lastIndexOf('.');
     if (lastDot !== -1) {
         str = str.slice(0, lastDot).replace(/\./g, '') + '.' + str.slice(lastDot + 1);
@@ -856,27 +873,57 @@ function parseNumber(val) {
 }
 
 // ==================================================================
-// ============ LOAD / SAVE EDITOR STATE ===========================
+// ============ STORAGE HELPERS ====================================
 // ==================================================================
 function loadEditorFromStorage() {
     try {
         const raw = localStorage.getItem(EDITOR_STORAGE_KEY);
         if (raw) {
             editorData = JSON.parse(raw);
-            console.log("[EDITOR] Loaded", Object.keys(editorData).length, "edits from storage");
+            console.log("[EDITOR] Loaded", Object.keys(editorData).length, "edits");
         }
     } catch (e) {
         console.warn("Failed to load editor data:", e);
         editorData = {};
     }
 }
-
 function saveEditorToStorage() {
+    try { localStorage.setItem(EDITOR_STORAGE_KEY, JSON.stringify(editorData)); }
+    catch (e) { console.warn("Failed to save editor data:", e); }
+}
+
+function loadRestoredFromStorage() {
     try {
-        localStorage.setItem(EDITOR_STORAGE_KEY, JSON.stringify(editorData));
+        const raw = localStorage.getItem(RESTORED_STORAGE_KEY);
+        if (raw) {
+            restoredItems = JSON.parse(raw);
+            console.log("[RESTORE] Loaded", Object.keys(restoredItems).length, "restored");
+        }
     } catch (e) {
-        console.warn("Failed to save editor data:", e);
+        console.warn("Failed to load restored:", e);
+        restoredItems = {};
     }
+}
+function saveRestoredToStorage() {
+    try { localStorage.setItem(RESTORED_STORAGE_KEY, JSON.stringify(restoredItems)); }
+    catch (e) { console.warn("Failed to save restored:", e); }
+}
+
+function loadDeletedFromStorage() {
+    try {
+        const raw = localStorage.getItem(DELETED_STORAGE_KEY);
+        if (raw) {
+            deletedItems = JSON.parse(raw);
+            console.log("[DELETE] Loaded", Object.keys(deletedItems).length, "deleted");
+        }
+    } catch (e) {
+        console.warn("Failed to load deleted:", e);
+        deletedItems = {};
+    }
+}
+function saveDeletedToStorage() {
+    try { localStorage.setItem(DELETED_STORAGE_KEY, JSON.stringify(deletedItems)); }
+    catch (e) { console.warn("Failed to save deleted:", e); }
 }
 
 // ==================================================================
@@ -951,11 +998,8 @@ async function fetchAllJsons() {
     });
 
     const loaded = Object.keys(kitchenJsonData).length;
-    if (loaded > 0) {
-        showToast(`✅ Loaded ${loaded} JSON file(s)`, 'success');
-    } else {
-        showToast('⚠️ No JSON files loaded — try manual upload', 'error');
-    }
+    if (loaded > 0) showToast(`✅ Loaded ${loaded} JSON file(s)`, 'success');
+    else showToast('⚠️ No JSON files loaded — try manual upload', 'error');
 }
 
 // ==================================================================
@@ -987,7 +1031,6 @@ async function handleManualJsonUpload(event) {
 
             const k = KITCHENS.find(x => file.name.toLowerCase().includes(x.file.split('/').pop().replace('.json', '').toLowerCase()));
             const kitchenName = k ? k.name : `Custom: ${file.name}`;
-
             kitchenJsonData[kitchenName] = arr;
 
             const grid = document.getElementById('jsonStatusGrid');
@@ -1091,7 +1134,7 @@ async function processExcelFile(file) {
             excelItemUnit[code]  = unitColName ? String(r[unitColName] || '').trim() : 'pcs';
         });
 
-        console.log("[EXCEL] Parsed", excelCodes.length, "codes. Sample AVE:", 
+        console.log("[EXCEL] Parsed", excelCodes.length, "codes. Sample AVE:",
             excelCodes[0], "→", excelItemAve[excelCodes[0]]);
 
         excelDropZone.classList.add('has-file');
@@ -1110,22 +1153,12 @@ async function processExcelFile(file) {
     }
 }
 
-/**
- * Improved column detection:
- * 1. Exact match (case-insensitive, trimmed)
- * 2. Starts-with match (word boundary)
- * 3. Includes (fallback)
- */
 function detectColumn(row, aliases) {
     const keys = Object.keys(row);
-
-    // 1. Exact
     for (const alias of aliases) {
         const found = keys.find(k => k.trim().toLowerCase() === alias.toLowerCase());
         if (found) return found;
     }
-
-    // 2. Starts-with (stricter than includes)
     for (const alias of aliases) {
         const found = keys.find(k => {
             const kLower = k.trim().toLowerCase();
@@ -1137,13 +1170,10 @@ function detectColumn(row, aliases) {
         });
         if (found) return found;
     }
-
-    // 3. Includes (last resort)
     for (const alias of aliases) {
         const found = keys.find(k => k.trim().toLowerCase().includes(alias.toLowerCase()));
         if (found) return found;
     }
-
     return null;
 }
 
@@ -1218,6 +1248,7 @@ function analyze() {
 
     document.getElementById('resultsSection').classList.remove('hidden');
 
+    // Initialize editor entries for missing items
     analysis.missing.forEach(m => {
         if (!editorData[m.code]) {
             const unitLower = (m.unit || '').toLowerCase();
@@ -1238,14 +1269,28 @@ function analyze() {
         }
     });
 
+    // Cleanup stale editor entries
     const missingCodes = new Set(analysis.missing.map(m => m.code));
     Object.keys(editorData).forEach(code => {
         if (!missingCodes.has(code)) delete editorData[code];
     });
 
+    // Cleanup stale restore/delete entries
+    const discontinuedCodes = new Set(analysis.discontinued.map(d => d.code));
+    Object.keys(restoredItems).forEach(code => {
+        if (!discontinuedCodes.has(code)) delete restoredItems[code];
+    });
+    Object.keys(deletedItems).forEach(code => {
+        if (!discontinuedCodes.has(code)) delete deletedItems[code];
+    });
+
     saveEditorToStorage();
+    saveRestoredToStorage();
+    saveDeletedToStorage();
+
     renderEditor();
     renderCurrentTab();
+    updateDiscontinuedActions();
 
     showToast('✅ Analysis complete', 'success');
 }
@@ -1256,16 +1301,28 @@ function renderKitchenSummary() {
     for (const [kitchen, items] of Object.entries(kitchenJsonData)) {
         const total = items.length;
         const matchedInKitchen = items.filter(it => excelCodeSet.has(it.code)).length;
-        const toRemove = total - matchedInKitchen;
+        const restoredInKitchen = items.filter(it => !excelCodeSet.has(it.code) && restoredItems[it.code] && !deletedItems[it.code]).length;
+        const deletedInKitchen = items.filter(it => deletedItems[it.code]).length;
+        const toRemove = total - matchedInKitchen - restoredInKitchen;
+
         const k = KITCHENS.find(x => x.name === kitchen);
         const css = k ? k.css : 'staff';
+
+        const restoredBadge = restoredInKitchen > 0
+            ? `<span class="stat" style="color:#0ea5e9;">↩️ ${restoredInKitchen} restored</span>`
+            : '';
+        const deletedBadge = deletedInKitchen > 0
+            ? `<span class="stat" style="color:#dc2626;">❌ ${deletedInKitchen} deleted</span>`
+            : '';
 
         container.innerHTML += `
             <div class="kitchen-summary-row">
                 <span class="kitchen-tag ${css}">${kitchen}</span>
                 <span class="stat">📦 ${total} items</span>
                 <span class="stat" style="color:#059669;">✅ ${matchedInKitchen} matched</span>
-                <span class="stat" style="color:#d97706;">🗑️ ${toRemove} to remove</span>
+                ${restoredBadge}
+                ${deletedBadge}
+                <span class="stat" style="color:#d97706;">🗑️ ${toRemove} auto-remove</span>
             </div>
         `;
     }
@@ -1385,12 +1442,10 @@ function updateEditorField(code, field, value) {
 function toggleKitchen(code, kitchenName, btnEl) {
     if (!editorData[code]) return;
     if (!editorData[code].kitchens) editorData[code].kitchens = [];
-
     const arr = editorData[code].kitchens;
     const idx = arr.indexOf(kitchenName);
     if (idx >= 0) arr.splice(idx, 1);
     else arr.push(kitchenName);
-
     saveEditorToStorage();
     renderEditor();
 }
@@ -1401,7 +1456,6 @@ function updateEditorProgress() {
         const d = editorData[m.code];
         return d && (d.kitchens || []).length > 0;
     }).length;
-
     const pill = document.getElementById('editorProgress');
     pill.innerText = `${configured} / ${total} configured`;
     pill.className = 'progress-pill' + (configured === total && total > 0 ? ' ok' : (configured < total ? ' warn' : ''));
@@ -1466,6 +1520,115 @@ function applyBulkAssign(kitchenName) {
 }
 
 // ==================================================================
+// ============ RESTORE / DELETE ===================================
+// ==================================================================
+function toggleRestore(code) {
+    if (restoredItems[code]) {
+        delete restoredItems[code];
+    } else {
+        restoredItems[code] = true;
+        delete deletedItems[code];
+        saveDeletedToStorage();
+    }
+    saveRestoredToStorage();
+    renderCurrentTab();
+    updateDiscontinuedActions();
+    renderKitchenSummary();
+}
+
+function toggleDelete(code) {
+    if (deletedItems[code]) {
+        delete deletedItems[code];
+    } else {
+        deletedItems[code] = true;
+        delete restoredItems[code];
+        saveRestoredToStorage();
+    }
+    saveDeletedToStorage();
+    renderCurrentTab();
+    updateDiscontinuedActions();
+    renderKitchenSummary();
+}
+
+function restoreAllDiscontinued() {
+    const search = (document.getElementById('searchBox')?.value || '').toLowerCase().trim();
+    let rows = analysis.discontinued;
+    if (search) {
+        rows = rows.filter(r =>
+            (r.code || '').toLowerCase().includes(search) ||
+            (r.name || '').toLowerCase().includes(search)
+        );
+    }
+    rows.forEach(r => {
+        restoredItems[r.code] = true;
+        delete deletedItems[r.code];
+    });
+    saveRestoredToStorage();
+    saveDeletedToStorage();
+    renderCurrentTab();
+    updateDiscontinuedActions();
+    renderKitchenSummary();
+    showToast(`↩️ Restored ${rows.length} item(s)`, 'success');
+}
+
+function deleteAllVisible() {
+    const search = (document.getElementById('searchBox')?.value || '').toLowerCase().trim();
+    let rows = analysis.discontinued;
+    if (search) {
+        rows = rows.filter(r =>
+            (r.code || '').toLowerCase().includes(search) ||
+            (r.name || '').toLowerCase().includes(search)
+        );
+    }
+    if (!confirm(`Delete ${rows.length} item(s)? They will be removed from the JSON.`)) return;
+    rows.forEach(r => {
+        deletedItems[r.code] = true;
+        delete restoredItems[r.code];
+    });
+    saveDeletedToStorage();
+    saveRestoredToStorage();
+    renderCurrentTab();
+    updateDiscontinuedActions();
+    renderKitchenSummary();
+    showToast(`🗑️ Deleted ${rows.length} item(s)`, 'success');
+}
+
+function undoAllDeletes() {
+    deletedItems = {};
+    saveDeletedToStorage();
+    renderCurrentTab();
+    updateDiscontinuedActions();
+    renderKitchenSummary();
+    showToast('↩️ All deletes undone', 'success');
+}
+
+function clearRestored() {
+    if (!confirm("Clear all Restore/Delete marks? All discontinued items return to default (will be removed on download).")) return;
+    restoredItems = {};
+    deletedItems = {};
+    saveRestoredToStorage();
+    saveDeletedToStorage();
+    renderCurrentTab();
+    updateDiscontinuedActions();
+    renderKitchenSummary();
+    showToast('🔄 All marks cleared', 'success');
+}
+
+function updateDiscontinuedActions() {
+    const restoredCount = Object.keys(restoredItems).length;
+    const deletedCount = Object.keys(deletedItems).length;
+    const pill = document.getElementById('discontinuedProgress');
+    if (pill) {
+        let text = '';
+        if (restoredCount > 0) text += `↩️ ${restoredCount} restored`;
+        if (deletedCount > 0) text += (text ? ' · ' : '') + `🗑️ ${deletedCount} deleted`;
+        if (!text) text = 'No changes';
+        pill.innerText = text;
+        pill.className = 'progress-pill' + ((restoredCount + deletedCount) > 0 ? ' ok' : '');
+    }
+}
+
+// ==================================================================
 // ============ TABS / TABLE RENDER ================================
 // ==================================================================
 function switchTab(tab) {
@@ -1473,7 +1636,14 @@ function switchTab(tab) {
     document.querySelectorAll('.tab').forEach(t => {
         t.classList.toggle('active', t.dataset.tab === tab);
     });
+
+    const toolbar = document.getElementById('discontinuedToolbar');
+    if (toolbar) {
+        toolbar.style.display = (tab === 'discontinued') ? 'flex' : 'none';
+    }
+
     renderCurrentTab();
+    if (tab === 'discontinued') updateDiscontinuedActions();
 }
 
 function renderCurrentTab() {
@@ -1491,15 +1661,15 @@ function renderCurrentTab() {
         columns = ['Code', 'Name', 'AVE', 'Unit'];
         rows = analysis.missing;
     } else {
-        columns = ['Code', 'Name', 'Kitchen'];
+        columns = ['Code', 'Name', 'Kitchen', 'Action'];
         rows = analysis.discontinued;
     }
 
     if (search) {
-        rows = rows.filter(r => {
-            return (r.code || '').toLowerCase().includes(search) ||
-                   (r.name || '').toLowerCase().includes(search);
-        });
+        rows = rows.filter(r =>
+            (r.code || '').toLowerCase().includes(search) ||
+            (r.name || '').toLowerCase().includes(search)
+        );
     }
 
     head.innerHTML = '<tr>' + columns.map(c => `<th>${c}</th>`).join('') + '</tr>';
@@ -1536,10 +1706,38 @@ function renderCurrentTab() {
         rows.forEach(r => {
             const info = KITCHENS.find(x => x.name === r.kitchen);
             const css = info ? info.css : 'staff';
-            html += `<tr>
+            const isRestored = restoredItems[r.code] === true;
+            const isDeleted = deletedItems[r.code] === true;
+
+            let rowStyle = '';
+            if (isRestored) rowStyle = 'background:#f0fdf4;';
+            else if (isDeleted) rowStyle = 'background:#fef2f2;';
+
+            const restoreBtn = isRestored
+                ? `<button onclick="toggleRestore('${r.code}')"
+                        style="background:#10b981; color:white; border:none; padding:6px 12px; border-radius:20px; font-weight:700; font-size:11px; cursor:pointer; margin-right:4px;">
+                        ✅ Restored
+                   </button>`
+                : `<button onclick="toggleRestore('${r.code}')"
+                        style="background:#f0fdf4; color:#15803d; border:2px solid #86efac; padding:6px 12px; border-radius:20px; font-weight:700; font-size:11px; cursor:pointer; margin-right:4px;">
+                        ↩️ Restore
+                   </button>`;
+
+            const deleteBtn = isDeleted
+                ? `<button onclick="toggleDelete('${r.code}')"
+                        style="background:#dc2626; color:white; border:none; padding:6px 12px; border-radius:20px; font-weight:700; font-size:11px; cursor:pointer;">
+                        ❌ Deleted
+                   </button>`
+                : `<button onclick="toggleDelete('${r.code}')"
+                        style="background:#fef2f2; color:#dc2626; border:2px solid #fca5a5; padding:6px 12px; border-radius:20px; font-weight:700; font-size:11px; cursor:pointer;">
+                        🗑️ Delete
+                   </button>`;
+
+            html += `<tr style="${rowStyle}">
                 <td class="code-cell">${escapeHtml(r.code)}</td>
                 <td>${escapeHtml(r.name)}</td>
                 <td><span class="kitchen-tag ${css}">${r.kitchen}</span></td>
+                <td style="white-space:nowrap;">${restoreBtn}${deleteBtn}</td>
             </tr>`;
         });
     }
@@ -1547,7 +1745,7 @@ function renderCurrentTab() {
 }
 
 // ==================================================================
-// ============ DOWNLOAD ACTIONS ===================================
+// ============ DOWNLOAD ===========================================
 // ==================================================================
 function formatJsonOnePerLine(items) {
     if (!items || !items.length) return "[\n]\n";
@@ -1624,16 +1822,18 @@ async function actuallyDownloadZip() {
         });
 
         for (const [kitchen, items] of Object.entries(kitchenJsonData)) {
-            // Keep only items in Excel
-            const filtered = items.filter(it => excelCodeSet.has(it.code));
+            // Keep: in Excel OR restored — UNLESS deleted
+            const filtered = items.filter(it => {
+                if (deletedItems[it.code] === true) return false;
+                return excelCodeSet.has(it.code) || restoredItems[it.code] === true;
+            });
             removedTotal += (items.length - filtered.length);
             keptTotal += filtered.length;
 
-            // Add new items for this kitchen
             const newItems = newItemsByKitchen[kitchen] || [];
             const combined = [...filtered, ...newItems];
 
-            // ============ SORT ALPHABETICALLY BY NAME (A → Z) ============
+            // Sort A → Z by name
             combined.sort((a, b) => {
                 const nameA = String(a.name || "").trim().toLowerCase();
                 const nameB = String(b.name || "").trim().toLowerCase();
@@ -1657,7 +1857,10 @@ async function actuallyDownloadZip() {
         URL.revokeObjectURL(url);
 
         hideLoading();
-        showToast(`✅ ${keptTotal} kept · ${addedTotal} added · ${removedTotal} removed · sorted A-Z`, 'success');
+
+        const restoredCount = Object.keys(restoredItems).length;
+        const deletedCount = Object.keys(deletedItems).length;
+        showToast(`✅ ${keptTotal} kept (↩️${restoredCount} · ❌${deletedCount}) · ➕${addedTotal} · 🗑️${removedTotal} removed`, 'success');
 
     } catch (e) {
         console.error(e);
@@ -1678,7 +1881,10 @@ function downloadReportCsv() {
         csv += `"New","${r.code}","${(r.name||'').replace(/"/g,'""')}","${parseNumber(r.ave).toFixed(2)}","${r.unit||''}","${kitchens}","Added to assigned kitchens"\n`;
     });
     analysis.discontinued.forEach(r => {
-        csv += `"Discontinued","${r.code}","${(r.name||'').replace(/"/g,'""')}","","","${r.kitchen}","Removed from JSON"\n`;
+        let status = "Removed from JSON";
+        if (restoredItems[r.code]) status = "RESTORED — kept in JSON";
+        else if (deletedItems[r.code]) status = "Explicitly DELETED";
+        csv += `"Discontinued","${r.code}","${(r.name||'').replace(/"/g,'""')}","","","${r.kitchen}","${status}"\n`;
     });
 
     const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8' });
@@ -1693,7 +1899,7 @@ function downloadReportCsv() {
 
 function resetAll() {
     showModal("Reset Everything?",
-        "This will clear JSONs, Excel, editor edits, and analysis. Continue?",
+        "This will clear JSONs, Excel, editor edits, restore/delete marks, and analysis. Continue?",
         () => {
             kitchenJsonData = {};
             excelCodes = [];
@@ -1702,16 +1908,21 @@ function resetAll() {
             excelItemAve = {};
             excelItemUnit = {};
             editorData = {};
+            restoredItems = {};
+            deletedItems = {};
             analysis = { matched: [], missing: [], discontinued: [] };
             currentTab = 'matched';
 
             localStorage.removeItem(EDITOR_STORAGE_KEY);
+            localStorage.removeItem(RESTORED_STORAGE_KEY);
+            localStorage.removeItem(DELETED_STORAGE_KEY);
 
             document.getElementById('jsonStatusGrid').innerHTML = '';
             document.getElementById('excelDropZone').classList.remove('has-file');
             document.getElementById('excelDropText').innerText = 'Drop Excel file here or click to select';
             document.getElementById('excelInput').value = '';
             document.getElementById('resultsSection').classList.add('hidden');
+            document.getElementById('discontinuedToolbar').style.display = 'none';
 
             closeModal();
             fetchAllJsons();
@@ -1729,7 +1940,6 @@ function showLoading(text) {
 function hideLoading() {
     document.getElementById('loadingOverlay').classList.remove('active');
 }
-
 function showToast(msg, type = '') {
     const t = document.createElement('div');
     t.className = 'toast' + (type ? ' ' + type : '');
@@ -1737,11 +1947,9 @@ function showToast(msg, type = '') {
     document.body.appendChild(t);
     setTimeout(() => t.remove(), 3000);
 }
-
 function escapeHtml(str) {
     return String(str || '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 }
-
 function loadScript(src) {
     return new Promise((resolve, reject) => {
         const s = document.createElement('script');
@@ -1751,7 +1959,6 @@ function loadScript(src) {
         document.head.appendChild(s);
     });
 }
-
 function showModal(title, message, onConfirm) {
     document.getElementById('modalTitle').innerHTML = title;
     document.getElementById('modalMessage').innerHTML = message;
@@ -1771,6 +1978,8 @@ function closeModal() {
 // ============ INIT ===============================================
 // ==================================================================
 loadEditorFromStorage();
+loadRestoredFromStorage();
+loadDeletedFromStorage();
 fetchAllJsons();
 console.log("🔍 Excel ↔ JSON Matcher + Editor ready");
 </script>
