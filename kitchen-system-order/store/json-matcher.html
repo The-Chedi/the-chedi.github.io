@@ -60,7 +60,6 @@ body {
     padding: 20px;
 }
 
-/* Step cards */
 .step-card {
     background: white;
     border-radius: 16px;
@@ -91,7 +90,6 @@ body {
     font-weight: 800;
 }
 
-/* Drop zone */
 .drop-zone {
     border: 3px dashed #cbd5e1;
     border-radius: 14px;
@@ -122,7 +120,6 @@ body {
     color: #64748b;
 }
 
-/* Status list */
 .json-status-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
@@ -146,7 +143,6 @@ body {
 .json-status-item .name { flex: 1; font-weight: 600; color: #1e293b; }
 .json-status-item .count { font-size: 0.75rem; color: #64748b; font-family: monospace; }
 
-/* Summary */
 .summary-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
@@ -183,7 +179,6 @@ body {
     letter-spacing: 0.5px;
 }
 
-/* Tabs */
 .tabs {
     display: flex;
     gap: 8px;
@@ -219,7 +214,6 @@ body {
 }
 .tab.active .badge { background: #8b5cf6; color: white; }
 
-/* Table */
 .table-wrapper {
     background: white;
     border-radius: 12px;
@@ -290,7 +284,6 @@ body {
 }
 .empty-msg-icon { font-size: 3rem; margin-bottom: 10px; }
 
-/* Kitchen summary list */
 .kitchen-summary-list {
     display: flex;
     flex-direction: column;
@@ -319,7 +312,6 @@ body {
     color: #475569;
 }
 
-/* Action buttons */
 .action-row {
     display: flex;
     gap: 12px;
@@ -353,7 +345,6 @@ body {
 }
 .btn-secondary:hover { background: #e2e8f0; }
 
-/* Toast */
 .toast {
     position: fixed;
     bottom: 20px;
@@ -376,7 +367,6 @@ body {
     to { opacity: 1; transform: translateX(-50%) translateY(0); }
 }
 
-/* Loading */
 .loading-overlay {
     display: none;
     position: fixed;
@@ -399,7 +389,6 @@ body {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* Modal */
 .modal-overlay {
     display: none;
     position: fixed;
@@ -465,7 +454,6 @@ body {
 </head>
 <body>
 
-<!-- ============ HEADER ============ -->
 <div class="header">
     <div class="header-content">
         <div class="logo">
@@ -482,7 +470,6 @@ body {
 
 <div class="container">
 
-    <!-- ============ STEP 1: Load JSONs ============ -->
     <div class="step-card">
         <div class="step-title">
             <span class="step-num">1</span>
@@ -505,7 +492,6 @@ body {
         </div>
     </div>
 
-    <!-- ============ STEP 2: Upload Excel ============ -->
     <div class="step-card">
         <div class="step-title">
             <span class="step-num">2</span>
@@ -519,10 +505,8 @@ body {
         </div>
     </div>
 
-    <!-- ============ STEP 3: Results ============ -->
     <div id="resultsSection" class="hidden">
 
-        <!-- Summary -->
         <div class="step-card">
             <div class="step-title">
                 <span class="step-num">3</span>
@@ -551,7 +535,6 @@ body {
             <div class="kitchen-summary-list" id="kitchenSummaryList"></div>
         </div>
 
-        <!-- Detail tabs -->
         <div class="step-card">
             <div class="tabs">
                 <button class="tab active" data-tab="matched" onclick="switchTab('matched')">
@@ -575,7 +558,6 @@ body {
             </div>
         </div>
 
-        <!-- Actions -->
         <div class="step-card">
             <div class="step-title">
                 <span class="step-num">4</span>
@@ -601,13 +583,11 @@ body {
     </div>
 </div>
 
-<!-- Loading overlay -->
 <div class="loading-overlay" id="loadingOverlay">
     <div class="spinner"></div>
     <div style="font-weight:700; color:#6d28d9;" id="loadingText">Processing...</div>
 </div>
 
-<!-- Modal for confirm -->
 <div class="modal-overlay" id="modalOverlay">
     <div class="modal-box">
         <h2 id="modalTitle">Confirm</h2>
@@ -636,14 +616,14 @@ const KITCHENS = [
 // ==================================================================
 // ============ STATE ==============================================
 // ==================================================================
-let kitchenJsonData = {};    // { "Hot Kitchen": [items...], ... }
-let excelCodes = [];         // ["110148", "110052", ...]
-let excelItemNames = {};   
+let kitchenJsonData = {};
+let excelCodes = [];
+let excelItemNames = {};
 let excelCodeSet = new Set();
 let analysis = {
-    matched: [],             // [{ code, name, kitchens: [...] }]
-    missing: [],             // [{ code }] (in Excel but not in any JSON)
-    discontinued: []         // [{ code, name, kitchen }] (in JSON but not in Excel)
+    matched: [],
+    missing: [],
+    discontinued: []
 };
 let currentTab = 'matched';
 
@@ -655,7 +635,6 @@ async function fetchAllJsons() {
     grid.innerHTML = '';
     kitchenJsonData = {};
 
-    // Build status items
     KITCHENS.forEach(k => {
         const el = document.createElement('div');
         el.className = 'json-status-item loading';
@@ -668,7 +647,6 @@ async function fetchAllJsons() {
         grid.appendChild(el);
     });
 
-    // Fetch in parallel
     const results = await Promise.all(KITCHENS.map(async (k) => {
         try {
             const res = await fetch(`${k.file}?t=${Date.now()}`);
@@ -676,13 +654,11 @@ async function fetchAllJsons() {
             const raw = await res.text();
             if (!raw.trim()) throw new Error("Empty file");
             let data = JSON.parse(raw);
-            // Handle various formats
             let arr = [];
             if (Array.isArray(data)) arr = data;
             else if (data && Array.isArray(data.items)) arr = data.items;
             else if (data && Array.isArray(data.data)) arr = data.data;
             else if (data && typeof data === 'object') {
-                // Maybe keyed by code
                 const keys = Object.keys(data);
                 arr = keys.map(code => ({ code, ...(typeof data[code] === 'object' ? data[code] : { name: data[code] }) }));
             }
@@ -702,7 +678,6 @@ async function fetchAllJsons() {
         }
     }));
 
-    // Update UI + store
     results.forEach(r => {
         const el = document.getElementById(`json-status-${r.kitchen.css}`);
         if (r.ok) {
@@ -758,13 +733,11 @@ async function handleManualJsonUpload(event) {
                 }))
                 .filter(it => it.code);
 
-            // Determine which kitchen this belongs to
             const k = KITCHENS.find(x => file.name.toLowerCase().includes(x.file.split('/').pop().replace('.json', '').toLowerCase()));
             const kitchenName = k ? k.name : `Custom: ${file.name}`;
 
             kitchenJsonData[kitchenName] = arr;
 
-            // Update status grid
             const grid = document.getElementById('jsonStatusGrid');
             if (k) {
                 const el = document.getElementById(`json-status-${k.css}`);
@@ -834,7 +807,6 @@ async function processExcelFile(file) {
             return;
         }
 
-        // Find the code column (Article No. / Code / Article No)
         const sample = rows[0];
         const codeColName = detectColumn(sample, ['Article No.', 'Article No', 'Code', 'Item Code', 'SKU', 'كود']);
         if (!codeColName) {
@@ -843,24 +815,22 @@ async function processExcelFile(file) {
             return;
         }
 
-        // Also capture the name column
         const nameColName = detectColumn(sample, ['Article', 'Item', 'Name', 'Description', 'الصنف', 'الاسم']);
-        
+
         excelCodes = [];
         excelCodeSet = new Set();
-        excelItemNames = {};     // { code: name }
-        
+        excelItemNames = {};
+
         rows.forEach(r => {
             const code = String(r[codeColName] || '').trim();
             if (!code) return;
             const name = nameColName ? String(r[nameColName] || '').trim() : '';
-            if (excelCodeSet.has(code)) return;   // skip duplicates
+            if (excelCodeSet.has(code)) return;
             excelCodes.push(code);
             excelCodeSet.add(code);
             excelItemNames[code] = name;
         });
 
-        // Update drop zone
         excelDropZone.classList.add('has-file');
         document.getElementById('excelDropText').innerHTML =
             `✅ <strong>${file.name}</strong> — ${excelCodes.length} codes loaded`;
@@ -868,7 +838,6 @@ async function processExcelFile(file) {
         hideLoading();
         showToast(`✅ Loaded ${excelCodes.length} codes`, 'success');
 
-        // Auto-analyze
         analyze();
 
     } catch (e) {
@@ -894,26 +863,19 @@ function detectColumn(row, aliases) {
 // ==================================================================
 // ============ ANALYSIS ===========================================
 // ==================================================================
-// Matched = Excel codes that exist in JSON
-    for (const code of excelCodes) {
-        if (codeToKitchens.has(code)) {
-            const info = jsonItemMap.get(code);
-            analysis.matched.push({
-                code,
-                name: info?.name || excelItemNames[code] || '',
-                kitchens: codeToKitchens.get(code)
-            });
-        } else {
-            analysis.missing.push({
-                code,
-                name: excelItemNames[code] || ''   // ← from Excel
-            });
-        }
+function analyze() {
+    if (!excelCodes.length) {
+        showToast('⚠️ Upload Excel first', 'error');
+        return;
+    }
+    if (!Object.keys(kitchenJsonData).length) {
+        showToast('⚠️ No JSON files loaded', 'error');
+        return;
     }
 
-    // Build map: code -> [kitchens]
+    // Build maps: code -> [kitchens], code -> { name, kitchen }
     const codeToKitchens = new Map();
-    const jsonItemMap = new Map();  // code -> { name, kitchen }
+    const jsonItemMap = new Map();
 
     for (const [kitchen, items] of Object.entries(kitchenJsonData)) {
         for (const item of items) {
@@ -929,17 +891,20 @@ function detectColumn(row, aliases) {
     analysis.missing = [];
     analysis.discontinued = [];
 
-    // Matched = Excel codes that exist in JSON
+    // Matched = Excel codes that exist in JSON; Missing = Excel codes not in any JSON
     for (const code of excelCodes) {
         if (codeToKitchens.has(code)) {
             const info = jsonItemMap.get(code);
             analysis.matched.push({
                 code,
-                name: info?.name || '',
+                name: info?.name || excelItemNames[code] || '',
                 kitchens: codeToKitchens.get(code)
             });
         } else {
-            analysis.missing.push({ code });
+            analysis.missing.push({
+                code,
+                name: excelItemNames[code] || ''
+            });
         }
     }
 
@@ -1019,14 +984,13 @@ function renderCurrentTab() {
         columns = ['Code', 'Name', 'Found In Kitchens'];
         rows = analysis.matched;
     } else if (currentTab === 'missing') {
-        columns = ['Code','Name', 'Status'];
+        columns = ['Code', 'Name', 'Status'];
         rows = analysis.missing;
     } else {
         columns = ['Code', 'Name', 'Kitchen'];
         rows = analysis.discontinued;
     }
 
-    // Filter by search
     if (search) {
         rows = rows.filter(r => {
             return (r.code || '').toLowerCase().includes(search) ||
@@ -1034,10 +998,8 @@ function renderCurrentTab() {
         });
     }
 
-    // Head
     head.innerHTML = '<tr>' + columns.map(c => `<th>${c}</th>`).join('') + '</tr>';
 
-    // Body
     if (!rows.length) {
         body.innerHTML = `<tr><td colspan="${columns.length}"><div class="empty-msg"><div class="empty-msg-icon">📭</div>No results</div></td></tr>`;
         return;
@@ -1082,37 +1044,26 @@ function renderCurrentTab() {
 // ==================================================================
 // ============ DOWNLOAD ACTIONS ===================================
 // ==================================================================
- /**
- * Format items as one compact JSON object per line:
- * {"code": "...", "name": "...", ...},
- * {"code": "...", "name": "...", ...},
- * ...
- */
 function formatJsonOnePerLine(items) {
     if (!items || !items.length) return "[]\n";
 
     const lines = items.map(item => {
-        // Preserve key order: code, name, name_ar, unit, maxLimit, step, AVE
         const ordered = {};
         const preferred = ["code", "name", "name_ar", "unit", "maxLimit", "step", "AVE"];
         preferred.forEach(k => {
             if (item[k] !== undefined) ordered[k] = item[k];
         });
-        // Include any other keys
         Object.keys(item).forEach(k => {
             if (!(k in ordered)) ordered[k] = item[k];
         });
-
-        // Compact JSON — no spaces, one line
         return JSON.stringify(ordered);
     });
 
-    // Join with ",\n" and wrap in [ ... ]
     return "[\n" + lines.join(",\n") + "\n]\n";
-}   
+}
+
 async function downloadAllJsonZip() {
     if (!window.JSZip) {
-        // Load JSZip dynamically
         showLoading("Loading ZIP library...");
         await loadScript('https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js');
     }
@@ -1125,27 +1076,23 @@ async function downloadAllJsonZip() {
         let keptTotal = 0;
 
         for (const [kitchen, items] of Object.entries(kitchenJsonData)) {
-            // Keep only items whose code is in Excel
             const filtered = items.filter(it => excelCodeSet.has(it.code));
             removedTotal += (items.length - filtered.length);
             keptTotal += filtered.length;
 
-            // Determine filename
             const info = KITCHENS.find(x => x.name === kitchen);
             let filename;
             if (info) {
-                filename = info.file.split('/').pop();  // e.g. hot-kitchen.json
+                filename = info.file.split('/').pop();
             } else {
                 filename = kitchen.replace(/[^a-z0-9]/gi, '-').toLowerCase() + '.json';
             }
 
-            // Format JSON (2-space indent for readability)
             zip.file(filename, formatJsonOnePerLine(filtered));
         }
 
         const blob = await zip.generateAsync({ type: 'blob' });
 
-        // Download
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -1170,7 +1117,7 @@ function downloadReportCsv() {
         csv += `"Matched","${r.code}","${(r.name||'').replace(/"/g,'""')}","${r.kitchens.join(' | ')}","In Excel & JSON"\n`;
     });
     analysis.missing.forEach(r => {
-    csv += `"Missing","${r.code}","${(r.name||'').replace(/"/g,'""')}","","In Excel, missing from all JSONs"\n`;
+        csv += `"Missing","${r.code}","${(r.name||'').replace(/"/g,'""')}","","In Excel, missing from all JSONs"\n`;
     });
     analysis.discontinued.forEach(r => {
         csv += `"Discontinued","${r.code}","${(r.name||'').replace(/"/g,'""')}","${r.kitchen}","In JSON, not in Excel — will be removed"\n`;
@@ -1191,6 +1138,7 @@ function resetAll() {
         kitchenJsonData = {};
         excelCodes = [];
         excelCodeSet = new Set();
+        excelItemNames = {};
         analysis = { matched: [], missing: [], discontinued: [] };
         currentTab = 'matched';
 
