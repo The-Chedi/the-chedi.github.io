@@ -638,6 +638,7 @@ const KITCHENS = [
 // ==================================================================
 let kitchenJsonData = {};    // { "Hot Kitchen": [items...], ... }
 let excelCodes = [];         // ["110148", "110052", ...]
+let excelItemNames = {};   
 let excelCodeSet = new Set();
 let analysis = {
     matched: [],             // [{ code, name, kitchens: [...] }]
@@ -842,10 +843,22 @@ async function processExcelFile(file) {
             return;
         }
 
-        excelCodes = rows
-            .map(r => String(r[codeColName] || '').trim())
-            .filter(c => c && c !== '');
-        excelCodeSet = new Set(excelCodes);
+        // Also capture the name column
+        const nameColName = detectColumn(sample, ['Article', 'Item', 'Name', 'Description', 'الصنف', 'الاسم']);
+        
+        excelCodes = [];
+        excelCodeSet = new Set();
+        excelItemNames = {};     // { code: name }
+        
+        rows.forEach(r => {
+            const code = String(r[codeColName] || '').trim();
+            if (!code) return;
+            const name = nameColName ? String(r[nameColName] || '').trim() : '';
+            if (excelCodeSet.has(code)) return;   // skip duplicates
+            excelCodes.push(code);
+            excelCodeSet.add(code);
+            excelItemNames[code] = name;
+        });
 
         // Update drop zone
         excelDropZone.classList.add('has-file');
@@ -881,14 +894,21 @@ function detectColumn(row, aliases) {
 // ==================================================================
 // ============ ANALYSIS ===========================================
 // ==================================================================
-function analyze() {
-    if (!excelCodes.length) {
-        showToast('⚠️ Upload Excel first', 'error');
-        return;
-    }
-    if (!Object.keys(kitchenJsonData).length) {
-        showToast('⚠️ No JSON files loaded', 'error');
-        return;
+// Matched = Excel codes that exist in JSON
+    for (const code of excelCodes) {
+        if (codeToKitchens.has(code)) {
+            const info = jsonItemMap.get(code);
+            analysis.matched.push({
+                code,
+                name: info?.name || excelItemNames[code] || '',
+                kitchens: codeToKitchens.get(code)
+            });
+        } else {
+            analysis.missing.push({
+                code,
+                name: excelItemNames[code] || ''   // ← from Excel
+            });
+        }
     }
 
     // Build map: code -> [kitchens]
@@ -999,7 +1019,7 @@ function renderCurrentTab() {
         columns = ['Code', 'Name', 'Found In Kitchens'];
         rows = analysis.matched;
     } else if (currentTab === 'missing') {
-        columns = ['Code', 'Status'];
+        columns = ['Code','Name', 'Status'];
         rows = analysis.missing;
     } else {
         columns = ['Code', 'Name', 'Kitchen'];
@@ -1041,6 +1061,7 @@ function renderCurrentTab() {
         rows.forEach(r => {
             html += `<tr>
                 <td class="code-cell">${escapeHtml(r.code)}</td>
+                <td>${escapeHtml(r.name || '—')}</td>
                 <td style="color:#dc2626; font-weight:600;">❌ Not in any kitchen JSON</td>
             </tr>`;
         });
@@ -1149,7 +1170,7 @@ function downloadReportCsv() {
         csv += `"Matched","${r.code}","${(r.name||'').replace(/"/g,'""')}","${r.kitchens.join(' | ')}","In Excel & JSON"\n`;
     });
     analysis.missing.forEach(r => {
-        csv += `"Missing","${r.code}","","","In Excel, missing from all JSONs"\n`;
+    csv += `"Missing","${r.code}","${(r.name||'').replace(/"/g,'""')}","","In Excel, missing from all JSONs"\n`;
     });
     analysis.discontinued.forEach(r => {
         csv += `"Discontinued","${r.code}","${(r.name||'').replace(/"/g,'""')}","${r.kitchen}","In JSON, not in Excel — will be removed"\n`;
