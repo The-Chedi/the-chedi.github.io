@@ -1061,6 +1061,34 @@ function renderCurrentTab() {
 // ==================================================================
 // ============ DOWNLOAD ACTIONS ===================================
 // ==================================================================
+ /**
+ * Format items as one compact JSON object per line:
+ * {"code": "...", "name": "...", ...},
+ * {"code": "...", "name": "...", ...},
+ * ...
+ */
+function formatJsonOnePerLine(items) {
+    if (!items || !items.length) return "[]\n";
+
+    const lines = items.map(item => {
+        // Preserve key order: code, name, name_ar, unit, maxLimit, step, AVE
+        const ordered = {};
+        const preferred = ["code", "name", "name_ar", "unit", "maxLimit", "step", "AVE"];
+        preferred.forEach(k => {
+            if (item[k] !== undefined) ordered[k] = item[k];
+        });
+        // Include any other keys
+        Object.keys(item).forEach(k => {
+            if (!(k in ordered)) ordered[k] = item[k];
+        });
+
+        // Compact JSON — no spaces, one line
+        return JSON.stringify(ordered);
+    });
+
+    // Join with ",\n" and wrap in [ ... ]
+    return "[\n" + lines.join(",\n") + "\n]\n";
+}   
 async function downloadAllJsonZip() {
     if (!window.JSZip) {
         // Load JSZip dynamically
@@ -1091,7 +1119,7 @@ async function downloadAllJsonZip() {
             }
 
             // Format JSON (2-space indent for readability)
-            zip.file(filename, JSON.stringify(filtered, null, 2));
+            zip.file(filename, formatJsonOnePerLine(filtered));
         }
 
         const blob = await zip.generateAsync({ type: 'blob' });
