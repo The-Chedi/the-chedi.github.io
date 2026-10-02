@@ -715,6 +715,16 @@ body {
                 </button>
             </div>
 
+            <div id="missingToolbar" style="display:none; padding: 12px; background:#fafbfc; border-radius:10px; margin-bottom:12px; align-items:center; gap:10px; flex-wrap:wrap;">
+                <span class="progress-pill" id="missingProgress">0 skipped</span>
+                <button class="btn-action btn-secondary" style="padding:8px 16px; font-size:12px; background:#fef2f2; color:#dc2626; border-color:#fca5a5;" onclick="skipAllVisibleNew()">
+                    🗑️ Skip All Visible
+                </button>
+                <button class="btn-action btn-secondary" style="padding:8px 16px; font-size:12px;" onclick="undoAllSkips()">
+                    ↩️ Undo All Skips
+                </button>
+            </div>
+
             <div id="discontinuedToolbar" style="display:none; padding: 12px; background:#fafbfc; border-radius:10px; margin-bottom:12px; align-items:center; gap:10px; flex-wrap:wrap;">
                 <span class="progress-pill" id="discontinuedProgress">No changes</span>
                 <button class="btn-action btn-secondary" style="padding:8px 16px; font-size:12px;" onclick="restoreAllDiscontinued()">
@@ -748,7 +758,7 @@ body {
                 <span class="progress-pill" id="editorProgress">0 / 0 configured</span>
             </div>
             <p style="font-size:0.85rem; color:#64748b; margin-bottom:14px;">
-                For each new item below, fill in the missing details and click the kitchen(s) it belongs to. Your edits are <strong>auto-saved</strong> locally — safe to close the browser.
+                For each new item below, fill in the missing details and click the kitchen(s) it belongs to. Skipped items are shown in red. Your edits are <strong>auto-saved</strong> locally.
             </p>
 
             <div class="action-row" style="margin-bottom: 16px;">
@@ -775,11 +785,12 @@ body {
             </div>
             <p style="font-size:0.85rem; color:#64748b; margin-bottom:14px;">
                 Downloads all 7 JSON files with:
-                ✅ matched items kept ·
-                ↩️ restored items kept ·
-                🗑️ deleted items removed ·
+                ✅ matched kept ·
+                ↩️ restored kept ·
+                🗑️ deleted removed ·
+                ⛔ skipped-new excluded ·
                 ➕ new items added to assigned kitchens ·
-                📊 sorted A → Z by name.
+                📊 sorted A → Z.
             </p>
 
             <div class="action-row">
@@ -846,10 +857,12 @@ let currentTab = 'matched';
 let editorData = {};
 let restoredItems = {};
 let deletedItems = {};
+let skippedNewItems = {};
 
 const EDITOR_STORAGE_KEY = "jsonMatcherEditorData";
 const RESTORED_STORAGE_KEY = "jsonMatcherRestoredItems";
 const DELETED_STORAGE_KEY = "jsonMatcherDeletedItems";
+const SKIPPED_STORAGE_KEY = "jsonMatcherSkippedNewItems";
 
 // ==================================================================
 // ============ ROBUST NUMBER PARSER ===============================
@@ -924,6 +937,23 @@ function loadDeletedFromStorage() {
 function saveDeletedToStorage() {
     try { localStorage.setItem(DELETED_STORAGE_KEY, JSON.stringify(deletedItems)); }
     catch (e) { console.warn("Failed to save deleted:", e); }
+}
+
+function loadSkippedFromStorage() {
+    try {
+        const raw = localStorage.getItem(SKIPPED_STORAGE_KEY);
+        if (raw) {
+            skippedNewItems = JSON.parse(raw);
+            console.log("[SKIP] Loaded", Object.keys(skippedNewItems).length, "skipped");
+        }
+    } catch (e) {
+        console.warn("Failed to load skipped:", e);
+        skippedNewItems = {};
+    }
+}
+function saveSkippedToStorage() {
+    try { localStorage.setItem(SKIPPED_STORAGE_KEY, JSON.stringify(skippedNewItems)); }
+    catch (e) { console.warn("Failed to save skipped:", e); }
 }
 
 // ==================================================================
@@ -1269,13 +1299,12 @@ function analyze() {
         }
     });
 
-    // Cleanup stale editor entries
+    // Cleanup stale entries
     const missingCodes = new Set(analysis.missing.map(m => m.code));
     Object.keys(editorData).forEach(code => {
         if (!missingCodes.has(code)) delete editorData[code];
     });
 
-    // Cleanup stale restore/delete entries
     const discontinuedCodes = new Set(analysis.discontinued.map(d => d.code));
     Object.keys(restoredItems).forEach(code => {
         if (!discontinuedCodes.has(code)) delete restoredItems[code];
@@ -1283,14 +1312,19 @@ function analyze() {
     Object.keys(deletedItems).forEach(code => {
         if (!discontinuedCodes.has(code)) delete deletedItems[code];
     });
+    Object.keys(skippedNewItems).forEach(code => {
+        if (!missingCodes.has(code)) delete skippedNewItems[code];
+    });
 
     saveEditorToStorage();
     saveRestoredToStorage();
     saveDeletedToStorage();
+    saveSkippedToStorage();
 
     renderEditor();
     renderCurrentTab();
     updateDiscontinuedActions();
+    updateMissingActions();
 
     showToast('✅ Analysis complete', 'success');
 }
@@ -1348,6 +1382,13 @@ function renderEditor() {
     analysis.missing.forEach(m => {
         const data = editorData[m.code] || {};
         const isAssigned = (data.kitchens || []).length > 0;
+        const isSkipped = skippedNewItems[m.code] === true;
+        const skippedStyle = isSkipped ? 'opacity:0.55; background:#fef2f2; border-color:#fca5a5;' : '';
+        const skippedBadge = isSkipped
+            ? `<span class="editor-badge-new" style="background:#fecaca; color:#991b1b;">⛔ Skipped</span>`
+            : (isAssigned
+                ? `<span class="editor-badge-assigned">✅ Assigned to ${data.kitchens.length}</span>`
+                : `<span class="editor-badge-new">➕ New</span>`);
 
         const kitchenBtns = KITCHENS.map(k => {
             const selected = (data.kitchens || []).includes(k.name);
@@ -1358,16 +1399,14 @@ function renderEditor() {
         }).join('');
 
         html += `
-            <div class="editor-item ${isAssigned ? 'assigned' : ''}" id="editor-item-${escapeHtml(m.code)}">
+            <div class="editor-item ${isAssigned ? 'assigned' : ''}" id="editor-item-${escapeHtml(m.code)}" style="${skippedStyle}">
                 <div class="editor-item-header">
                     <div class="editor-item-info">
                         <span class="editor-item-code">${escapeHtml(m.code)}</span>
                         <div class="editor-item-name">${escapeHtml(m.name)}</div>
                         <div class="editor-item-ave">💰 AVE: ${parseNumber(m.ave).toFixed(2)} EGP · ${escapeHtml(m.unit)}</div>
                     </div>
-                    ${isAssigned
-                        ? `<span class="editor-badge-assigned">✅ Assigned to ${data.kitchens.length}</span>`
-                        : `<span class="editor-badge-new">➕ New</span>`}
+                    ${skippedBadge}
                 </div>
 
                 <div class="editor-fields">
@@ -1451,14 +1490,19 @@ function toggleKitchen(code, kitchenName, btnEl) {
 }
 
 function updateEditorProgress() {
-    const total = analysis.missing.length;
+    const totalActive = analysis.missing.filter(m => skippedNewItems[m.code] !== true).length;
     const configured = analysis.missing.filter(m => {
+        if (skippedNewItems[m.code] === true) return false;
         const d = editorData[m.code];
         return d && (d.kitchens || []).length > 0;
     }).length;
+    const skipped = analysis.missing.filter(m => skippedNewItems[m.code] === true).length;
+
     const pill = document.getElementById('editorProgress');
-    pill.innerText = `${configured} / ${total} configured`;
-    pill.className = 'progress-pill' + (configured === total && total > 0 ? ' ok' : (configured < total ? ' warn' : ''));
+    let text = `${configured} / ${totalActive} configured`;
+    if (skipped > 0) text += ` (${skipped} skipped)`;
+    pill.innerText = text;
+    pill.className = 'progress-pill' + (totalActive > 0 && configured === totalActive ? ' ok' : ' warn');
 }
 
 function clearEditorEdits() {
@@ -1506,6 +1550,7 @@ function autoAssignAllToKitchen() {
 function applyBulkAssign(kitchenName) {
     let count = 0;
     Object.keys(editorData).forEach(code => {
+        if (skippedNewItems[code] === true) return;   // don't bulk-assign skipped
         if (!editorData[code].kitchens) editorData[code].kitchens = [];
         if (editorData[code].kitchens.length === 0) {
             editorData[code].kitchens.push(kitchenName);
@@ -1520,7 +1565,7 @@ function applyBulkAssign(kitchenName) {
 }
 
 // ==================================================================
-// ============ RESTORE / DELETE ===================================
+// ============ RESTORE / DELETE (Discontinued) ====================
 // ==================================================================
 function toggleRestore(code) {
     if (restoredItems[code]) {
@@ -1629,6 +1674,62 @@ function updateDiscontinuedActions() {
 }
 
 // ==================================================================
+// ============ SKIP (Missing / New) ===============================
+// ==================================================================
+function toggleSkipNew(code) {
+    if (skippedNewItems[code]) {
+        delete skippedNewItems[code];
+    } else {
+        skippedNewItems[code] = true;
+    }
+    saveSkippedToStorage();
+    renderCurrentTab();
+    renderEditor();
+    updateEditorProgress();
+    updateMissingActions();
+}
+
+function skipAllVisibleNew() {
+    const search = (document.getElementById('searchBox')?.value || '').toLowerCase().trim();
+    let rows = analysis.missing;
+    if (search) {
+        rows = rows.filter(r =>
+            (r.code || '').toLowerCase().includes(search) ||
+            (r.name || '').toLowerCase().includes(search)
+        );
+    }
+    if (!confirm(`Skip ${rows.length} new item(s)? They will NOT be added to any kitchen.`)) return;
+    rows.forEach(r => {
+        skippedNewItems[r.code] = true;
+    });
+    saveSkippedToStorage();
+    renderCurrentTab();
+    renderEditor();
+    updateEditorProgress();
+    updateMissingActions();
+    showToast(`🗑️ Skipped ${rows.length} item(s)`, 'success');
+}
+
+function undoAllSkips() {
+    skippedNewItems = {};
+    saveSkippedToStorage();
+    renderCurrentTab();
+    renderEditor();
+    updateEditorProgress();
+    updateMissingActions();
+    showToast('↩️ All skips undone', 'success');
+}
+
+function updateMissingActions() {
+    const skipCount = Object.keys(skippedNewItems).length;
+    const pill = document.getElementById('missingProgress');
+    if (pill) {
+        pill.innerText = skipCount > 0 ? `🗑️ ${skipCount} skipped` : 'No skips';
+        pill.className = 'progress-pill' + (skipCount > 0 ? ' ok' : '');
+    }
+}
+
+// ==================================================================
 // ============ TABS / TABLE RENDER ================================
 // ==================================================================
 function switchTab(tab) {
@@ -1637,13 +1738,19 @@ function switchTab(tab) {
         t.classList.toggle('active', t.dataset.tab === tab);
     });
 
-    const toolbar = document.getElementById('discontinuedToolbar');
-    if (toolbar) {
-        toolbar.style.display = (tab === 'discontinued') ? 'flex' : 'none';
+    const discToolbar = document.getElementById('discontinuedToolbar');
+    if (discToolbar) {
+        discToolbar.style.display = (tab === 'discontinued') ? 'flex' : 'none';
+    }
+
+    const missToolbar = document.getElementById('missingToolbar');
+    if (missToolbar) {
+        missToolbar.style.display = (tab === 'missing') ? 'flex' : 'none';
     }
 
     renderCurrentTab();
     if (tab === 'discontinued') updateDiscontinuedActions();
+    if (tab === 'missing') updateMissingActions();
 }
 
 function renderCurrentTab() {
@@ -1658,7 +1765,7 @@ function renderCurrentTab() {
         columns = ['Code', 'Name', 'Found In Kitchens'];
         rows = analysis.matched;
     } else if (currentTab === 'missing') {
-        columns = ['Code', 'Name', 'AVE', 'Unit'];
+        columns = ['Code', 'Name', 'AVE', 'Unit', 'Action'];
         rows = analysis.missing;
     } else {
         columns = ['Code', 'Name', 'Kitchen', 'Action'];
@@ -1695,11 +1802,25 @@ function renderCurrentTab() {
         });
     } else if (currentTab === 'missing') {
         rows.forEach(r => {
-            html += `<tr>
+            const isSkipped = skippedNewItems[r.code] === true;
+            const rowStyle = isSkipped ? 'background:#fef2f2; opacity:0.85;' : '';
+
+            const skipBtn = isSkipped
+                ? `<button onclick="toggleSkipNew('${r.code}')"
+                        style="background:#dc2626; color:white; border:none; padding:6px 12px; border-radius:20px; font-weight:700; font-size:11px; cursor:pointer;">
+                        ❌ Skipped
+                   </button>`
+                : `<button onclick="toggleSkipNew('${r.code}')"
+                        style="background:#fef2f2; color:#dc2626; border:2px solid #fca5a5; padding:6px 12px; border-radius:20px; font-weight:700; font-size:11px; cursor:pointer;">
+                        🗑️ Skip
+                   </button>`;
+
+            html += `<tr style="${rowStyle}">
                 <td class="code-cell">${escapeHtml(r.code)}</td>
                 <td>${escapeHtml(r.name)}</td>
                 <td>${parseNumber(r.ave).toFixed(2)}</td>
                 <td>${escapeHtml(r.unit)}</td>
+                <td style="white-space:nowrap;">${skipBtn}</td>
             </tr>`;
         });
     } else {
@@ -1767,13 +1888,14 @@ function formatJsonOnePerLine(items) {
 
 async function downloadAllJsonZip() {
     const unassigned = analysis.missing.filter(m => {
+        if (skippedNewItems[m.code] === true) return false;
         const d = editorData[m.code];
         return !d || !d.kitchens || d.kitchens.length === 0;
     });
 
     if (unassigned.length > 0) {
         showModal("⚠️ Unassigned Items",
-            `You have <strong>${unassigned.length}</strong> new item(s) without any kitchen assigned. They will NOT be added to any JSON.<br><br>Continue anyway?`,
+            `You have <strong>${unassigned.length}</strong> new item(s) without any kitchen assigned and not skipped. They will NOT be added to any JSON.<br><br>Continue anyway?`,
             () => actuallyDownloadZip());
         return;
     }
@@ -1797,11 +1919,13 @@ async function actuallyDownloadZip() {
         let keptTotal = 0;
         let addedTotal = 0;
 
-        // Build new items per kitchen
+        // Build new items per kitchen (skip skipped)
         const newItemsByKitchen = {};
         KITCHENS.forEach(k => newItemsByKitchen[k.name] = []);
 
         analysis.missing.forEach(m => {
+            if (skippedNewItems[m.code] === true) return;
+
             const d = editorData[m.code];
             if (!d || !d.kitchens || d.kitchens.length === 0) return;
             const item = {
@@ -1822,7 +1946,6 @@ async function actuallyDownloadZip() {
         });
 
         for (const [kitchen, items] of Object.entries(kitchenJsonData)) {
-            // Keep: in Excel OR restored — UNLESS deleted
             const filtered = items.filter(it => {
                 if (deletedItems[it.code] === true) return false;
                 return excelCodeSet.has(it.code) || restoredItems[it.code] === true;
@@ -1833,7 +1956,6 @@ async function actuallyDownloadZip() {
             const newItems = newItemsByKitchen[kitchen] || [];
             const combined = [...filtered, ...newItems];
 
-            // Sort A → Z by name
             combined.sort((a, b) => {
                 const nameA = String(a.name || "").trim().toLowerCase();
                 const nameB = String(b.name || "").trim().toLowerCase();
@@ -1860,7 +1982,8 @@ async function actuallyDownloadZip() {
 
         const restoredCount = Object.keys(restoredItems).length;
         const deletedCount = Object.keys(deletedItems).length;
-        showToast(`✅ ${keptTotal} kept (↩️${restoredCount} · ❌${deletedCount}) · ➕${addedTotal} · 🗑️${removedTotal} removed`, 'success');
+        const skippedCount = Object.keys(skippedNewItems).length;
+        showToast(`✅ ${keptTotal} kept · ➕${addedTotal} added · ⛔${skippedCount} skipped · 🗑️${removedTotal} removed`, 'success');
 
     } catch (e) {
         console.error(e);
@@ -1878,7 +2001,9 @@ function downloadReportCsv() {
     analysis.missing.forEach(r => {
         const d = editorData[r.code] || {};
         const kitchens = (d.kitchens || []).join(' | ');
-        csv += `"New","${r.code}","${(r.name||'').replace(/"/g,'""')}","${parseNumber(r.ave).toFixed(2)}","${r.unit||''}","${kitchens}","Added to assigned kitchens"\n`;
+        let status = "Added to assigned kitchens";
+        if (skippedNewItems[r.code]) status = "SKIPPED — not added";
+        csv += `"New","${r.code}","${(r.name||'').replace(/"/g,'""')}","${parseNumber(r.ave).toFixed(2)}","${r.unit||''}","${kitchens}","${status}"\n`;
     });
     analysis.discontinued.forEach(r => {
         let status = "Removed from JSON";
@@ -1899,7 +2024,7 @@ function downloadReportCsv() {
 
 function resetAll() {
     showModal("Reset Everything?",
-        "This will clear JSONs, Excel, editor edits, restore/delete marks, and analysis. Continue?",
+        "This will clear JSONs, Excel, editor edits, restore/delete/skip marks, and analysis. Continue?",
         () => {
             kitchenJsonData = {};
             excelCodes = [];
@@ -1910,12 +2035,14 @@ function resetAll() {
             editorData = {};
             restoredItems = {};
             deletedItems = {};
+            skippedNewItems = {};
             analysis = { matched: [], missing: [], discontinued: [] };
             currentTab = 'matched';
 
             localStorage.removeItem(EDITOR_STORAGE_KEY);
             localStorage.removeItem(RESTORED_STORAGE_KEY);
             localStorage.removeItem(DELETED_STORAGE_KEY);
+            localStorage.removeItem(SKIPPED_STORAGE_KEY);
 
             document.getElementById('jsonStatusGrid').innerHTML = '';
             document.getElementById('excelDropZone').classList.remove('has-file');
@@ -1923,6 +2050,7 @@ function resetAll() {
             document.getElementById('excelInput').value = '';
             document.getElementById('resultsSection').classList.add('hidden');
             document.getElementById('discontinuedToolbar').style.display = 'none';
+            document.getElementById('missingToolbar').style.display = 'none';
 
             closeModal();
             fetchAllJsons();
@@ -1980,6 +2108,7 @@ function closeModal() {
 loadEditorFromStorage();
 loadRestoredFromStorage();
 loadDeletedFromStorage();
+loadSkippedFromStorage();
 fetchAllJsons();
 console.log("🔍 Excel ↔ JSON Matcher + Editor ready");
 </script>
