@@ -2,6 +2,7 @@
 {"code":"113085","name":"Beef Bacon Smoked Sliced Choice","name_ar":"بيكون لحم مدخن شرائح شويس","unit":"kg","maxLimit":5,"step":0.5,"AVE":492.8},
 {"code":"110018","name":"Beef Neck Brazil","name_ar":"بيف رقبه برزييلي","unit":"Kilogram","maxLimit":40,"step":1,"AVE":325},
 {"code":"110047","name":"Beef Rib Eye USA","name_ar":"ريب آي لحم أمريكي","unit":"kg","maxLimit":8,"step":0.5,"AVE":2400},
+{"code":"110051","name":"Beef Tenderloin Australian", "name_ar": "تندرلوين لحم أسترالي", "unit": "kg", "maxLimit": 8, "step": 0.5, "AVE": 2600},
 {"code":"110028","name":"Beef Shoulder Brazil","name_ar":"كتف لحم برازيلي","unit":"kg","maxLimit":20,"step":0.5,"AVE":278.89508},
 {"code":"110029","name":"Beef Shoulder Indian","name_ar":"كتف لحم هندي","unit":"kg","maxLimit":40,"step":0.5,"AVE":249.7167},
 {"code":"110046","name":"beef tenderloin USA","name_ar":"بيف تندرليون امريكي","unit":"kg","maxLimit":8,"step":1,"AVE":2495},
