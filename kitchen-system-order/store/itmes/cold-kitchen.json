@@ -64,7 +64,6 @@
 {"code":"175306","name":"Flour Tamboura KG Uncle Barns","name_ar":"دقيق تمبورا أنكل بارنز","unit":"Kilogram","maxLimit":6,"step":1,"AVE":131.58},
 {"code":"170008","name":"Fruit Ring Flakes Temmys","name_ar":"فروت رينج فليكس تيميز","unit":"250g pkt","maxLimit":6,"step":1,"AVE":45.71},
 {"code":"165089","name":"Garanula  strawberry&berry Sante polanda pkt 350 gr","name_ar":"جرانوله فروله و بيري","unit":"Pkt 350 Gram","maxLimit":3,"step":1,"AVE":129.8235},
-{"code":"165036","name":"Garanula Strawberry & Raspberry","name_ar":"جارانولا فراولة وتوت","unit":"350g pkt","maxLimit":6,"step":1,"AVE":129.82},
 {"code":"161153","name":"Garlic Powder (PURE)","name_ar":"ثوم بودرة (نقي)","unit":"kg","maxLimit":1,"step":0.5,"AVE":166.6},
 {"code":"161154","name":"Ginger Powder (PURE)","name_ar":"زنجبيل بودرة (نقي)","unit":"kg","maxLimit":1,"step":0.5,"AVE":323.4},
 {"code":"164002","name":"Glass Noodles","name_ar":"نودلز زجاجية","unit":"250g pkt","maxLimit":3,"step":1,"AVE":38.02816},
