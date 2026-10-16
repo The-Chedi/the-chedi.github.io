@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="firebase-config.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
-    <title>Stock Manager — Excel Import + Local Edit</title>
+    <title>Stock Manager — Excel Import + Firebase Manager</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -60,11 +60,49 @@
         }
         .btn-header:hover { background: rgba(255,255,255,0.35); transform: translateY(-1px); }
         .btn-header.primary { background: rgba(255,255,255,0.95); color: #059669; }
+        .btn-header.warn { background: rgba(245, 158, 11, 0.9); }
+        .btn-header.danger { background: rgba(239, 68, 68, 0.9); }
+
         .container {
             max-width: 1400px;
             margin: 0 auto;
             padding: 20px;
         }
+
+        /* ===== TABS ===== */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            background: white;
+            border-radius: 14px;
+            padding: 6px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+            overflow-x: auto;
+        }
+        .tab-btn {
+            flex: 1;
+            padding: 12px 18px;
+            border: none;
+            background: transparent;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 13px;
+            cursor: pointer;
+            color: #64748b;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .tab-btn:hover { background: #f8fafc; }
+        .tab-btn.active {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            box-shadow: 0 4px 12px rgba(16,185,129,0.3);
+        }
+        .tab-panel { display: none; }
+        .tab-panel.active { display: block; }
+
+        /* ===== DROP ZONE ===== */
         .drop-zone {
             background: white;
             border: 3px dashed #cbd5e1;
@@ -225,15 +263,70 @@
             text-align: right; background: white;
         }
         .editable-cell input:focus { outline: 2px solid #10b981; border-color: transparent; }
-        .edit-icon { margin-left: 6px; cursor: pointer; opacity: 0.5; font-size: 14px; }
-        .edit-icon:hover { opacity: 1; }
         .unsaved-marker { background: #fef9c3; border-radius: 6px; padding: 2px 4px; }
 
+        /* ===== DB MANAGER TAB ===== */
+        .db-toolbar {
+            background: white; border-radius: 16px; padding: 16px 20px;
+            margin-bottom: 16px; display: flex; gap: 10px; align-items: center;
+            flex-wrap: wrap; box-shadow: 0 2px 10px rgba(0,0,0,0.06);
+        }
+        .db-toolbar input[type="text"] {
+            flex: 1; min-width: 180px; padding: 10px 14px;
+            border: 1px solid #e2e8f0; border-radius: 10px; font-size: 13px;
+        }
+        .db-toolbar input[type="text"]:focus { outline: none; border-color: #10b981; }
+        .db-toolbar select {
+            padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 10px;
+            font-size: 13px; font-weight: 600; background: white; cursor: pointer;
+        }
+        .btn-add {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white; border: none; padding: 10px 20px; border-radius: 10px;
+            font-weight: 700; font-size: 13px; cursor: pointer; transition: all 0.2s;
+        }
+        .btn-add:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(59,130,246,0.4); }
+
+        .db-table { width: 100%; border-collapse: collapse; min-width: 800px; }
+        .db-table thead { background: #f8fafc; }
+        .db-table th {
+            padding: 12px; text-align: left; font-size: 11px; font-weight: 700;
+            color: #475569; text-transform: uppercase; letter-spacing: 0.5px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+        .db-table td {
+            padding: 10px 12px; border-bottom: 1px solid #f1f5f9; font-size: 13px;
+        }
+        .db-table tbody tr:hover { background: #f8fafc; }
+        .db-table input {
+            width: 100%; padding: 6px 8px; border: 1px solid #e2e8f0;
+            border-radius: 6px; font-size: 13px; font-family: inherit;
+        }
+        .db-table input:focus { outline: 2px solid #10b981; border-color: transparent; }
+        .db-table input.num { font-family: monospace; text-align: right; }
+        .row-actions { display: flex; gap: 6px; justify-content: flex-end; }
+        .icon-btn {
+            border: none; background: #f1f5f9; padding: 6px 10px;
+            border-radius: 8px; cursor: pointer; font-size: 14px;
+            transition: all 0.2s;
+        }
+        .icon-btn:hover { background: #e2e8f0; transform: scale(1.05); }
+        .icon-btn.del { background: #fee2e2; }
+        .icon-btn.del:hover { background: #fecaca; }
+        .icon-btn.save { background: #d1fae5; }
+        .icon-btn.save:hover { background: #a7f3d0; }
+
+        .empty-row td {
+            text-align: center; padding: 40px; color: #94a3b8;
+        }
+
+        /* ===== TOAST ===== */
         .toast {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
             background: #1e293b; color: white; padding: 12px 24px;
             border-radius: 30px; font-size: 13px; font-weight: 600; z-index: 5000;
             animation: slideUp 0.3s ease; box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            max-width: 90vw;
         }
         .toast.success { background: linear-gradient(135deg, #10b981, #059669); }
         .toast.error { background: linear-gradient(135deg, #ef4444, #dc2626); }
@@ -270,6 +363,8 @@
         .modal-btn-confirm:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(16,185,129,0.4); }
         .modal-btn-cancel { background: #f1f5f9; color: #475569; }
         .modal-btn-cancel:hover { background: #e2e8f0; }
+        .modal-btn-danger { background: linear-gradient(135deg, #ef4444, #dc2626); color: white; }
+        .modal-btn-danger:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(239,68,68,0.4); }
 
         .loading-overlay {
             display: flex; position: fixed; top: 0; left: 0;
@@ -302,6 +397,7 @@
             .stock-table th, .stock-table td { padding: 8px 6px; }
             .drop-zone { padding: 40px 20px; }
             .drop-zone-icon { font-size: 3rem; }
+            .db-toolbar { flex-direction: column; align-items: stretch; }
         }
     </style>
 </head>
@@ -311,94 +407,169 @@
     <div class="header-content">
         <div class="logo">
             <span class="logo-icon">📦</span>
-            <span>Stock Manager — Excel Import + Local Edit</span>
+            <span>Stock Manager — Excel Import + Firebase Manager</span>
         </div>
         <div class="header-actions">
             <button class="btn-header primary" onclick="document.getElementById('fileInput').click()">📁 Choose File</button>
-            <button class="btn-header" onclick="loadLocalEdits()">✏️ Load Local Edits</button>
-            <button class="btn-header" onclick="reloadStock()">🔄 Reload Stock</button>
+            <button class="btn-header" onclick="reloadStock()">🔄 Reload</button>
             <button class="btn-header" onclick="window.open('admin.html', '_blank')">👑 Admin</button>
         </div>
     </div>
 </div>
 
 <div class="container">
-    <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
-        <div class="drop-zone-icon">📥</div>
-        <div class="drop-zone-title">Drop your Excel file here</div>
-        <div class="drop-zone-sub">Supports .xlsx, .xls, .csv — from your office</div>
-        <button class="drop-zone-btn">📁 Choose Excel File</button>
-        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileSelect(event)">
+
+    <!-- ===== TABS ===== -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="importTab" onclick="switchTab('importTab', this)">📥 Excel Import</button>
+        <button class="tab-btn" data-tab="sharedTab" onclick="switchTab('sharedTab', this)">🗄️ Shared Stock (Live DB)</button>
+        <button class="tab-btn" data-tab="localTab" onclick="switchTab('localTab', this)">✏️ Local Edits (Live DB)</button>
     </div>
 
-    <div class="preview-section" id="previewSection">
-        <div class="summary-card">
-            <div class="summary-title">
-                <span>📊 Summary of Changes <span id="localEditIndicator" class="local-badge" style="display:none;">LOCAL EDITS</span></span>
-                <span class="file-name-badge" id="fileNameBadge">—</span>
-            </div>
-            <div class="summary-grid">
-                <div class="summary-stat increase">
-                    <div class="summary-number" id="countIncrease">0</div>
-                    <div class="summary-label">🔺 Increased</div>
-                </div>
-                <div class="summary-stat decrease">
-                    <div class="summary-number" id="countDecrease">0</div>
-                    <div class="summary-label">🔻 Decreased</div>
-                </div>
-                <div class="summary-stat new-item">
-                    <div class="summary-number" id="countNew">0</div>
-                    <div class="summary-label">✨ New Items</div>
-                </div>
-                <div class="summary-stat zero">
-                    <div class="summary-number" id="countZero">0</div>
-                    <div class="summary-label">⛔ Now Zero</div>
-                </div>
-                <div class="summary-stat unchanged">
-                    <div class="summary-number" id="countUnchanged">0</div>
-                    <div class="summary-label">✅ Unchanged</div>
-                </div>
-            </div>
+    <!-- ============================================================ -->
+    <!-- TAB 1: EXCEL IMPORT                                          -->
+    <!-- ============================================================ -->
+    <div class="tab-panel active" id="importTab">
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+            <div class="drop-zone-icon">📥</div>
+            <div class="drop-zone-title">Drop your Excel file here</div>
+            <div class="drop-zone-sub">Supports .xlsx, .xls, .csv — from your office</div>
+            <button class="drop-zone-btn">📁 Choose Excel File</button>
+            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" style="display:none" onchange="handleFileSelect(event)">
         </div>
 
-        <div class="toolbar">
-            <input type="text" id="searchInput" placeholder="🔍 Search by code or name..." oninput="applyFilters()">
-            <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">All</button>
-            <button class="filter-btn" data-filter="increase" onclick="setFilter('increase', this)">🔺 Increased</button>
-            <button class="filter-btn" data-filter="decrease" onclick="setFilter('decrease', this)">🔻 Decreased</button>
-            <button class="filter-btn" data-filter="new" onclick="setFilter('new', this)">✨ New</button>
-            <button class="filter-btn" data-filter="zero" onclick="setFilter('zero', this)">⛔ Zero</button>
-            <button class="filter-btn" data-filter="unchanged" onclick="setFilter('unchanged', this)">Show Unchanged</button>
-        </div>
-
-        <div class="action-bar">
-            <div class="action-info" id="selectedInfo">0 items selected for update</div>
-            <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                <button class="btn-cancel" onclick="cancelImport()">❌ Cancel</button>
-                <button class="btn-apply" id="applyBtn" onclick="showConfirmModal()">✅ Apply Changes</button>
+        <div class="preview-section" id="previewSection">
+            <div class="summary-card">
+                <div class="summary-title">
+                    <span>📊 Summary of Changes <span id="localEditIndicator" class="local-badge" style="display:none;">LOCAL EDITS</span></span>
+                    <span class="file-name-badge" id="fileNameBadge">—</span>
+                </div>
+                <div class="summary-grid">
+                    <div class="summary-stat increase">
+                        <div class="summary-number" id="countIncrease">0</div>
+                        <div class="summary-label">🔺 Increased</div>
+                    </div>
+                    <div class="summary-stat decrease">
+                        <div class="summary-number" id="countDecrease">0</div>
+                        <div class="summary-label">🔻 Decreased</div>
+                    </div>
+                    <div class="summary-stat new-item">
+                        <div class="summary-number" id="countNew">0</div>
+                        <div class="summary-label">✨ New Items</div>
+                    </div>
+                    <div class="summary-stat zero">
+                        <div class="summary-number" id="countZero">0</div>
+                        <div class="summary-label">⛔ Now Zero</div>
+                    </div>
+                    <div class="summary-stat unchanged">
+                        <div class="summary-number" id="countUnchanged">0</div>
+                        <div class="summary-label">✅ Unchanged</div>
+                    </div>
+                </div>
             </div>
+
+            <div class="toolbar">
+                <input type="text" id="searchInput" placeholder="🔍 Search by code or name..." oninput="applyFilters()">
+                <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">All</button>
+                <button class="filter-btn" data-filter="increase" onclick="setFilter('increase', this)">🔺 Increased</button>
+                <button class="filter-btn" data-filter="decrease" onclick="setFilter('decrease', this)">🔻 Decreased</button>
+                <button class="filter-btn" data-filter="new" onclick="setFilter('new', this)">✨ New</button>
+                <button class="filter-btn" data-filter="zero" onclick="setFilter('zero', this)">⛔ Zero</button>
+                <button class="filter-btn" data-filter="unchanged" onclick="setFilter('unchanged', this)">Show Unchanged</button>
+            </div>
+
+            <div class="action-bar">
+                <div class="action-info" id="selectedInfo">0 items selected for update</div>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button class="btn-cancel" onclick="cancelImport()">❌ Cancel</button>
+                    <button class="btn-apply" id="applyBtn" onclick="showConfirmModal()">✅ Apply Changes</button>
+                </div>
+            </div>
+
+            <div class="table-wrapper">
+                <table class="stock-table">
+                    <thead>
+                        <tr>
+                            <th style="width:50px; text-align:center;">
+                                <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)" style="width:18px;height:18px;accent-color:#10b981;cursor:pointer;">
+                            </th>
+                            <th style="width:100px;">Code</th>
+                            <th>Item</th>
+                            <th style="width:110px;">Unit</th>
+                            <th style="width:110px; text-align:right;">Old</th>
+                            <th style="width:140px; text-align:right;">New (editable)</th>
+                            <th style="width:80px; text-align:right;">Δ</th>
+                            <th style="width:100px; text-align:center;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="previewBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB 2: SHARED STOCK LIVE DB                                  -->
+    <!-- ============================================================ -->
+    <div class="tab-panel" id="sharedTab">
+        <div class="db-toolbar">
+            <input type="text" id="sharedSearch" placeholder="🔍 Search shared stock by code or name..." oninput="renderSharedTable()">
+            <button class="btn-add" onclick="addNewSharedRow()">➕ Add New Item</button>
+            <button class="btn-header primary" style="padding:10px 18px;border-radius:10px;" onclick="loadSharedStockTable()">🔄 Refresh</button>
         </div>
 
         <div class="table-wrapper">
-            <table class="stock-table">
+            <table class="db-table">
                 <thead>
                     <tr>
-                        <th style="width:50px; text-align:center;">
-                            <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)" style="width:18px;height:18px;accent-color:#10b981;cursor:pointer;">
-                        </th>
-                        <th style="width:100px;">Code</th>
-                        <th>Item</th>
-                        <th style="width:110px;">Unit</th>
-                        <th style="width:110px; text-align:right;">Old</th>
-                        <th style="width:140px; text-align:right;">New (editable)</th>
-                        <th style="width:80px; text-align:right;">Δ</th>
-                        <th style="width:100px; text-align:center;">Status</th>
+                        <th style="width:140px;">Code</th>
+                        <th>Name</th>
+                        <th style="width:100px;">Unit</th>
+                        <th style="width:100px; text-align:right;">Stock Qty</th>
+                        <th style="width:100px; text-align:right;">Price</th>
+                        <th style="width:100px; text-align:right;">Min Alert</th>
+                        <th style="width:160px; text-align:right;">Actions</th>
                     </tr>
                 </thead>
-                <tbody id="previewBody"></tbody>
+                <tbody id="sharedTableBody"></tbody>
             </table>
         </div>
+        <div style="margin-top:14px; text-align:right; color:#64748b; font-size:12px;">
+            <span id="sharedCount">0</span> items in shared stock
+        </div>
     </div>
+
+    <!-- ============================================================ -->
+    <!-- TAB 3: LOCAL EDITS LIVE DB                                   -->
+    <!-- ============================================================ -->
+    <div class="tab-panel" id="localTab">
+        <div class="db-toolbar">
+            <input type="text" id="localSearch" placeholder="🔍 Search local edits by code or name..." oninput="renderLocalTable()">
+            <button class="btn-add" onclick="addNewLocalRow()">➕ Add New Local Edit</button>
+            <button class="btn-header primary" style="padding:10px 18px;border-radius:10px;" onclick="loadLocalEditsTable()">🔄 Refresh</button>
+            <button class="btn-header danger" style="padding:10px 18px;border-radius:10px;" onclick="clearAllLocalEdits()">🗑️ Clear All Local Edits</button>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="db-table">
+                <thead>
+                    <tr>
+                        <th style="width:140px;">Code</th>
+                        <th>Name</th>
+                        <th style="width:100px;">Unit</th>
+                        <th style="width:100px; text-align:right;">Stock Qty</th>
+                        <th style="width:100px; text-align:right;">Price</th>
+                        <th style="width:160px; text-align:right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="localTableBody"></tbody>
+            </table>
+        </div>
+        <div style="margin-top:14px; text-align:right; color:#64748b; font-size:12px;">
+            <span id="localCount">0</span> items in local edits
+        </div>
+    </div>
+
 </div>
 
 <div class="loading-overlay" id="loadingOverlay" style="display:none;">
@@ -414,7 +585,23 @@ let currentFilter = 'all';
 let currentFileName = '';
 let firestoreStockCache = {};
 
+// Live DB caches for the manager tabs
+let sharedItemsCache = {};
+let localItemsCache = {};
+
 const SHARED_STOCK_DOC = "shared_stock";
+const LOCAL_EDITS_DOC = "local_edits";
+
+// ============ TABS ============
+function switchTab(tabId, btn) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+
+    if (tabId === 'sharedTab') loadSharedStockTable();
+    if (tabId === 'localTab') loadLocalEditsTable();
+}
 
 // ============ EXCEL PARSING ============
 function handleFileSelect(e) {
@@ -559,21 +746,19 @@ async function compareWithFirestore() {
     document.getElementById('previewSection').classList.add('active');
 }
 
-// ============ LOAD LOCAL EDITS ============
+// ============ LOAD LOCAL EDITS (Excel Import tab) ============
 async function loadLocalEdits() {
     showLoading("Loading local edits from Firestore...");
     try {
-        // Load from a separate "local_edits" doc
-        const doc = await db.collection("stock").doc("local_edits").get();
+        const doc = await db.collection("stock").doc(LOCAL_EDITS_DOC).get();
         const edits = doc.exists ? (doc.data().items || {}) : {};
-        
+
         if (Object.keys(edits).length === 0) {
             hideLoading();
             showToast("📭 No local edits found", "error");
             return;
         }
 
-        // Convert edits object to parsedRows format
         const rows = Object.entries(edits).map(([code, data]) => ({
             code: code,
             name: data.name || '',
@@ -582,19 +767,12 @@ async function loadLocalEdits() {
             price: Number(data.price ?? 0)
         }));
 
-        if (rows.length === 0) {
-            hideLoading();
-            showToast("📭 No local edits found", "error");
-            return;
-        }
-
         parsedRows = rows;
         currentFileName = 'local_edits';
         document.getElementById('fileNameBadge').innerText = `local_edits • ${rows.length} rows`;
         document.getElementById('localEditIndicator').style.display = 'inline';
         showToast(`📂 Loaded ${rows.length} local edits`, "success");
 
-        // Compare with shared stock
         await compareWithFirestore();
     } catch (e) {
         console.error("Load local edits error:", e);
@@ -606,7 +784,7 @@ async function loadLocalEdits() {
 // ============ SAVE LOCAL EDIT ============
 async function saveLocalEdit(code, newStock, newName, newUnit) {
     try {
-        const docRef = db.collection("stock").doc("local_edits");
+        const docRef = db.collection("stock").doc(LOCAL_EDITS_DOC);
         const doc = await docRef.get();
         const currentItems = doc.exists ? (doc.data().items || {}) : {};
 
@@ -620,7 +798,7 @@ async function saveLocalEdit(code, newStock, newName, newUnit) {
         };
 
         await docRef.set({ items: currentItems }, { merge: false });
-        showToast(`✏️ Local edit saved for ${code}`, "success");
+        localItemsCache = currentItems;
         return true;
     } catch (e) {
         console.error("Save local edit error:", e);
@@ -685,9 +863,9 @@ function renderPreview() {
         const editedMarker = row.edited ? ' unsaved-marker' : '';
 
         body.innerHTML += `
-            <tr class="${rowClass}" data-code="${row.code}">
+            <tr class="${rowClass}" data-code="${escapeHtml(row.code)}">
                 <td class="checkbox-cell">
-                    <input type="checkbox" ${row.selected ? 'checked' : ''} ${row.status === 'unchanged' ? 'disabled' : ''} onchange="toggleRow('${row.code}', this.checked)">
+                    <input type="checkbox" ${row.selected ? 'checked' : ''} ${row.status === 'unchanged' ? 'disabled' : ''} onchange="toggleRow('${escapeAttr(row.code)}', this.checked)">
                 </td>
                 <td class="code-cell">${escapeHtml(row.code)}</td>
                 <td class="item-cell">${escapeHtml(row.name)}</td>
@@ -695,7 +873,7 @@ function renderPreview() {
                 <td class="num-cell old-val">${oldNum}</td>
                 <td class="num-cell new-val editable-cell${editedMarker}">
                     <input type="number" step="0.001" value="${row.newStock}" 
-                           onchange="onStockEdit('${row.code}', this.value)" 
+                           onchange="onStockEdit('${escapeAttr(row.code)}', this.value)" 
                            onkeydown="if(event.key==='Enter'){this.blur();}">
                 </td>
                 <td class="num-cell delta-val ${deltaClass}">${deltaNum}</td>
@@ -725,7 +903,6 @@ function onStockEdit(code, newValue) {
     row.newStock = newStock;
     row.edited = true;
 
-    // Recalculate status and delta
     if (row.oldStock === null) {
         row.status = 'new';
         row.delta = 0;
@@ -737,14 +914,11 @@ function onStockEdit(code, newValue) {
         else row.status = 'decrease';
     }
 
-    // Auto-select if changed
     if (row.status !== 'unchanged') {
         row.selected = true;
     }
 
-    // Save to local edits in background
     saveLocalEdit(row.code, row.newStock, row.name, row.unit);
-
     renderPreview();
 }
 
@@ -855,10 +1029,7 @@ async function applyChanges(btn) {
         document.querySelectorAll('.modal-overlay').forEach(m => m.remove());
         showToast(`✅ Updated ${selected.length} items successfully`, "success");
 
-        setTimeout(() => {
-            resetToDropZone();
-        }, 1200);
-
+        setTimeout(() => resetToDropZone(), 1200);
     } catch (e) {
         console.error("Apply error:", e);
         showToast("❌ Failed to save changes", "error");
@@ -889,16 +1060,333 @@ function resetToDropZone() {
     showToast("🔄 Ready for new file", "success");
 }
 
-// ============ RELOAD STOCK ============
+// ============ RELOAD ============
 async function reloadStock() {
     showLoading("Reloading stock...");
     try {
         const doc = await db.collection("stock").doc(SHARED_STOCK_DOC).get();
         firestoreStockCache = doc.exists ? (doc.data().items || {}) : {};
         showToast(`✅ Loaded ${Object.keys(firestoreStockCache).length} items from database`, "success");
+
+        // Also refresh active DB tab
+        const activeTab = document.querySelector('.tab-panel.active')?.id;
+        if (activeTab === 'sharedTab') await loadSharedStockTable();
+        if (activeTab === 'localTab') await loadLocalEditsTable();
     } catch (e) {
         console.error(e);
         showToast("❌ Failed to reload", "error");
+    }
+    hideLoading();
+}
+
+// ==================================================================
+// ============ SHARED STOCK LIVE DB MANAGER ========================
+// ==================================================================
+async function loadSharedStockTable() {
+    showLoading("Loading shared stock...");
+    try {
+        const doc = await db.collection("stock").doc(SHARED_STOCK_DOC).get();
+        sharedItemsCache = doc.exists ? (doc.data().items || {}) : {};
+        renderSharedTable();
+    } catch (e) {
+        console.error(e);
+        showToast("❌ Failed to load shared stock", "error");
+    }
+    hideLoading();
+}
+
+function renderSharedTable() {
+    const body = document.getElementById('sharedTableBody');
+    const term = (document.getElementById('sharedSearch')?.value || '').trim().toLowerCase();
+
+    const entries = Object.entries(sharedItemsCache)
+        .filter(([code, data]) => {
+            if (!term) return true;
+            return code.toLowerCase().includes(term) ||
+                   (data.name || '').toLowerCase().includes(term);
+        })
+        .sort((a, b) => (a[1].name || '').localeCompare(b[1].name || ''));
+
+    document.getElementById('sharedCount').innerText = Object.keys(sharedItemsCache).length;
+
+    if (entries.length === 0) {
+        body.innerHTML = `<tr class="empty-row"><td colspan="7">📭 No items found. Click "Add New Item" to create one.</td></tr>`;
+        return;
+    }
+
+    body.innerHTML = entries.map(([code, data]) => `
+        <tr data-code="${escapeAttr(code)}">
+            <td><input type="text" value="${escapeAttr(code)}" data-field="code" readonly style="background:#f8fafc;color:#64748b;"></td>
+            <td><input type="text" value="${escapeAttr(data.name || '')}" data-field="name"></td>
+            <td><input type="text" value="${escapeAttr(data.unit || 'pcs')}" data-field="unit"></td>
+            <td><input type="number" step="0.001" class="num" value="${Number(data.stockQty ?? 0)}" data-field="stockQty"></td>
+            <td><input type="number" step="0.01" class="num" value="${Number(data.price ?? 0)}" data-field="price"></td>
+            <td><input type="number" step="0.001" class="num" value="${Number(data.minAlert ?? 0)}" data-field="minAlert"></td>
+            <td>
+                <div class="row-actions">
+                    <button class="icon-btn save" onclick="saveSharedRow('${escapeAttr(code)}')" title="Save">💾</button>
+                    <button class="icon-btn" onclick="duplicateSharedRow('${escapeAttr(code)}')" title="Duplicate">📋</button>
+                    <button class="icon-btn del" onclick="deleteSharedRow('${escapeAttr(code)}')" title="Delete">🗑️</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function addNewSharedRow() {
+    const code = prompt("Enter new item CODE:");
+    if (!code) return;
+    const trimmed = code.trim();
+    if (!trimmed) return;
+    if (sharedItemsCache[trimmed]) {
+        showToast("⚠️ Code already exists", "error");
+        return;
+    }
+
+    const name = prompt("Enter item NAME:") || '';
+    const unit = prompt("Enter UNIT (e.g., pcs):") || 'pcs';
+    const stockQty = parseFloat(prompt("Enter STOCK QTY:") || '0') || 0;
+    const price = parseFloat(prompt("Enter PRICE:") || '0') || 0;
+    const minAlert = parseFloat(prompt("Enter MIN ALERT:") || '0') || 0;
+
+    try {
+        sharedItemsCache[trimmed] = {
+            name, unit, stockQty, price, minAlert,
+            updatedAt: new Date().toISOString()
+        };
+        await db.collection("stock").doc(SHARED_STOCK_DOC).set({ items: sharedItemsCache }, { merge: false });
+        renderSharedTable();
+        showToast(`✅ Added ${trimmed}`, "success");
+    } catch (e) {
+        console.error(e);
+        showToast("❌ Failed to add item", "error");
+    }
+}
+
+async function saveSharedRow(code) {
+    const row = document.querySelector(`#sharedTableBody tr[data-code="${cssEscape(code)}"]`);
+    if (!row) return;
+
+    const name = row.querySelector('[data-field="name"]').value.trim();
+    const unit = row.querySelector('[data-field="unit"]').value.trim();
+    const stockQty = parseFloat(row.querySelector('[data-field="stockQty"]').value) || 0;
+    const price = parseFloat(row.querySelector('[data-field="price"]').value) || 0;
+    const minAlert = parseFloat(row.querySelector('[data-field="minAlert"]').value) || 0;
+
+    try {
+        sharedItemsCache[code] = {
+            name, unit, stockQty, price, minAlert,
+            updatedAt: new Date().toISOString()
+        };
+        await db.collection("stock").doc(SHARED_STOCK_DOC).set({ items: sharedItemsCache }, { merge: false });
+        showToast(`💾 Saved ${code}`, "success");
+    } catch (e) {
+        console.error(e);
+        showToast("❌ Failed to save", "error");
+    }
+}
+
+async function duplicateSharedRow(code) {
+    const newCode = prompt("Enter NEW code for duplicate:", code + "-COPY");
+    if (!newCode) return;
+    const trimmed = newCode.trim();
+    if (!trimmed || sharedItemsCache[trimmed]) {
+        showToast("⚠️ Invalid or existing code", "error");
+        return;
+    }
+
+    sharedItemsCache[trimmed] = { ...sharedItemsCache[code], updatedAt: new Date().toISOString() };
+    try {
+        await db.collection("stock").doc(SHARED_STOCK_DOC).set({ items: sharedItemsCache }, { merge: false });
+        renderSharedTable();
+        showToast(`📋 Duplicated to ${trimmed}`, "success");
+    } catch (e) {
+        console.error(e);
+        showToast("❌ Failed to duplicate", "error");
+    }
+}
+
+async function deleteSharedRow(code) {
+    if (!confirm(`Delete "${code}" from shared stock?\n\nThis cannot be undone.`)) return;
+
+    try {
+        delete sharedItemsCache[code];
+        await db.collection("stock").doc(SHARED_STOCK_DOC).set({ items: sharedItemsCache }, { merge: false });
+        renderSharedTable();
+        showToast(`🗑️ Deleted ${code}`, "success");
+    } catch (e) {
+        console.error(e);
+        showToast("❌ Failed to delete", "error");
+    }
+}
+
+// ==================================================================
+// ============ LOCAL EDITS LIVE DB MANAGER =========================
+// ==================================================================
+async function loadLocalEditsTable() {
+    showLoading("Loading local edits...");
+    try {
+        const doc = await db.collection("stock").doc(LOCAL_EDITS_DOC).get();
+        localItemsCache = doc.exists ? (doc.data().items || {}) : {};
+        renderLocalTable();
+    } catch (e) {
+        console.error(e);
+        showToast("❌ Failed to load local edits", "error");
+    }
+    hideLoading();
+}
+
+function renderLocalTable() {
+    const body = document.getElementById('localTableBody');
+    const term = (document.getElementById('localSearch')?.value || '').trim().toLowerCase();
+
+    const entries = Object.entries(localItemsCache)
+        .filter(([code, data]) => {
+            if (!term) return true;
+            return code.toLowerCase().includes(term) ||
+                   (data.name || '').toLowerCase().includes(term);
+        })
+        .sort((a, b) => (a[1].name || '').localeCompare(b[1].name || ''));
+
+    document.getElementById('localCount').innerText = Object.keys(localItemsCache).length;
+
+    if (entries.length === 0) {
+        body.innerHTML = `<tr class="empty-row"><td colspan="6">📭 No local edits yet. Edit stock in the Excel Import tab or click "Add New Local Edit".</td></tr>`;
+        return;
+    }
+
+    body.innerHTML = entries.map(([code, data]) => `
+        <tr data-code="${escapeAttr(code)}">
+            <td><input type="text" value="${escapeAttr(code)}" data-field="code" readonly style="background:#f8fafc;color:#64748b;"></td>
+            <td><input type="text" value="${escapeAttr(data.name || '')}" data-field="name"></td>
+            <td><input type="text" value="${escapeAttr(data.unit || 'pcs')}" data-field="unit"></td>
+            <td><input type="number" step="0.001" class="num" value="${Number(data.stockQty ?? 0)}" data-field="stockQty"></td>
+            <td><input type="number" step="0.01" class="num" value="${Number(data.price ?? 0)}" data-field="price"></td>
+            <td>
+                <div class="row-actions">
+                    <button class="icon-btn save" onclick="saveLocalRow('${escapeAttr(code)}')" title="Save">💾</button>
+                    <button class="icon-btn" onclick="pushLocalToShared('${escapeAttr(code)}')" title="Push to Shared Stock">⬆️</button>
+                    <button class="icon-btn del" onclick="deleteLocalRow('${escapeAttr(code)}')" title="Delete">🗑️</button>
+                </div>
+            </td>
+        </tr>
+    `).join('');
+}
+
+async function addNewLocalRow() {
+    const code = prompt("Enter new item CODE:");
+    if (!code) return;
+    const trimmed = code.trim();
+    if (!trimmed) return;
+    if (localItemsCache[trimmed]) {
+        showToast("⚠️ Code already exists in local edits", "error");
+        return;
+    }
+
+    const name = prompt("Enter item NAME:") || '';
+    const unit = prompt("Enter UNIT (e.g., pcs):") || 'pcs';
+    const stockQty = parseFloat(prompt("Enter STOCK QTY:") || '0') || 0;
+    const price = parseFloat(prompt("Enter PRICE:") || '0') || 0;
+
+    try {
+        localItemsCache[trimmed] = {
+            name, unit, stockQty, price,
+            updatedAt: new Date().toISOString()
+        };
+        await db.collection("stock").doc(LOCAL_EDITS_DOC).set({ items: localItemsCache }, { merge: false });
+        renderLocalTable();
+        showToast(`✅ Added local edit: ${trimmed}`, "success");
+    } catch (e) {
+        console.error(e);
+        showToast("❌ Failed to add", "error");
+    }
+}
+
+async function saveLocalRow(code) {
+    const row = document.querySelector(`#localTableBody tr[data-code="${cssEscape(code)}"]`);
+    if (!row) return;
+
+    const name = row.querySelector('[data-field="name"]').value.trim();
+    const unit = row.querySelector('[data-field="unit"]').value.trim();
+    const stockQty = parseFloat(row.querySelector('[data-field="stockQty"]').value) || 0;
+    const price = parseFloat(row.querySelector('[data-field="price"]').value) || 0;
+
+    try {
+        localItemsCache[code] = {
+            name, unit, stockQty, price,
+            updatedAt: new Date().toISOString()
+        };
+        await db.collection("stock").doc(LOCAL_EDITS_DOC).set({ items: localItemsCache }, { merge: false });
+        showToast(`💾 Saved local edit: ${code}`, "success");
+    } catch (e) {
+        console.error(e);
+        showToast("❌ Failed to save", "error");
+    }
+}
+
+async function deleteLocalRow(code) {
+    if (!confirm(`Delete local edit "${code}"?\n\nThis does NOT affect the shared stock.`)) return;
+
+    try {
+        delete localItemsCache[code];
+        await db.collection("stock").doc(LOCAL_EDITS_DOC).set({ items: localItemsCache }, { merge: false });
+        renderLocalTable();
+        showToast(`🗑️ Deleted local edit: ${code}`, "success");
+    } catch (e) {
+        console.error(e);
+        showToast("❌ Failed to delete", "error");
+    }
+}
+
+async function pushLocalToShared(code) {
+    const local = localItemsCache[code];
+    if (!local) return;
+
+    if (!confirm(`Push "${code}" to SHARED STOCK?\n\nThis will overwrite the shared stock value.`)) return;
+
+    showLoading("Pushing to shared stock...");
+    try {
+        const sharedDoc = await db.collection("stock").doc(SHARED_STOCK_DOC).get();
+        const sharedItems = sharedDoc.exists ? (sharedDoc.data().items || {}) : {};
+
+        sharedItems[code] = {
+            name: local.name,
+            unit: local.unit,
+            stockQty: local.stockQty,
+            price: local.price,
+            minAlert: sharedItems[code]?.minAlert ?? 0,
+            updatedAt: new Date().toISOString()
+        };
+
+        await db.collection("stock").doc(SHARED_STOCK_DOC).set({ items: sharedItems }, { merge: false });
+        sharedItemsCache = sharedItems;
+
+        // Remove from local edits after pushing
+        delete localItemsCache[code];
+        await db.collection("stock").doc(LOCAL_EDITS_DOC).set({ items: localItemsCache }, { merge: false });
+
+        renderLocalTable();
+        showToast(`⬆️ Pushed ${code} to shared stock`, "success");
+    } catch (e) {
+        console.error(e);
+        showToast("❌ Failed to push", "error");
+    }
+    hideLoading();
+}
+
+async function clearAllLocalEdits() {
+    if (!confirm("⚠️ Delete ALL local edits?\n\nThis will clear the entire 'local_edits' document.\nThis cannot be undone.")) return;
+    if (!confirm("Are you ABSOLUTELY sure? This will remove all local edits.")) return;
+
+    showLoading("Clearing local edits...");
+    try {
+        await db.collection("stock").doc(LOCAL_EDITS_DOC).set({ items: {} }, { merge: false });
+        localItemsCache = {};
+        renderLocalTable();
+        showToast("🗑️ All local edits cleared", "success");
+    } catch (e) {
+        console.error(e);
+        showToast("❌ Failed to clear", "error");
     }
     hideLoading();
 }
@@ -925,6 +1413,16 @@ function escapeHtml(str) {
     return String(str || '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
 }
 
+function escapeAttr(str) {
+    return String(str || '').replace(/['"\\&<>]/g, m => ({
+        "'": '&#39;', '"': '&quot;', '\\': '\\\\', '&': '&amp;', '<': '&lt;', '>': '&gt;'
+    }[m]));
+}
+
+function cssEscape(str) {
+    return String(str || '').replace(/["\\]/g, '\\$&');
+}
+
 // ============ DRAG & DROP ============
 const dz = document.getElementById('dropZone');
 
@@ -949,7 +1447,7 @@ dz.addEventListener('drop', (e) => {
     if (file) processFile(file);
 });
 
-console.log("📦 Stock Manager loaded with local edit support");
+console.log("📦 Stock Manager with Firebase Manager loaded");
 </script>
 </body>
 </html>
