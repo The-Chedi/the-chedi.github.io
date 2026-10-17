@@ -11,7 +11,7 @@
 {"code":"142003","name":"Broccoli Frozen","name_ar":"بروكلي مجمد","unit":"7.5kg box","maxLimit":1,"step":0.5,"AVE":374.00003},
 {"code":"110073","name":"Burger Vegan Classic Yumazing Box 5 KG","name_ar":"برجر نباتي كلاسيك يوميزينج","unit":"Box 5 Kg","maxLimit":1,"step":1,"AVE":2263},
 {"code":"151040","name":"Butter ISIGNY STMERE Block 10 kg ,","name_ar":"زبده استريم بلوك 10 ك","unit":"Box 10 KG","maxLimit":1,"step":1,"AVE":7450},
-{"code":"151038","name":"Butter New Zealand Fontera Block","name_ar":"زبدة نيوزيلندا فونتيرا","unit":"25kg box","maxLimit":1,"step":1,"AVE":14500},
+{"code":"151005","name":"Butter Fern","name_ar":"زبدة فيرن","unit":"kg","maxLimit":8,"step":0.5,"AVE":147.69841},
 {"code":"161009","name":"Cajun Seasoning Pkt 2 KG","name_ar":"بهارات كاجون 2 كجم","unit":"Pkt 2 KG","maxLimit":1,"step":1,"AVE":2737.35},
 {"code":"175291","name":"Carbonates KG (PURE)","name_ar":"كربونات (نقي)","unit":"kg","maxLimit":1,"step":0.5,"AVE":53.9},
 {"code":"161140","name":"Cardamom Seeds (PURE)","name_ar":"حبهان بيور","unit":"Kilogram","maxLimit":1,"step":1,"AVE":2156},
