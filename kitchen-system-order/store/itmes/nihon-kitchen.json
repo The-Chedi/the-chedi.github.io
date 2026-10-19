@@ -51,6 +51,7 @@
 {"code":"131054","name":"Smoked Salmon Sliced Skin On Maxim","name_ar":"سلمون مدخن شرائح بالجلد ماكسيم","unit":"kg","maxLimit":4,"step":1,"AVE":1000},
 {"code":"164075","name":"Soba Noodles","name_ar":"نودلز سوبا","unit":"300g pkt","maxLimit":8,"step":1,"AVE":65},
 {"code":"161118","name":"Togarashi Powder","name_ar":"بودرة توجاراشي","unit":"300g pkt","maxLimit":2,"step":1,"AVE":241.875},
+{"code":"167023","name":"Vinegar Balsamic","name_ar":"خل بلسميك","unit":"500ml bottle","maxLimit":2,"step":1,"AVE":67.27273},
 {"code":"131081","name":"Tuna Saku","name_ar":"تونة ساكو","unit":"kg","maxLimit":5,"step":0.5,"AVE":751.6129},
 {"code":"167050","name":"Vinegar Rice Gallon 18 Liter Zumra","name_ar":"خل ارز جالون 18 لتر","unit":"Gallon 20 Ltr","maxLimit":1,"step":1,"AVE":2894.74},
 {"code":"162035","name":"Wakami","name_ar":"واكامي","unit":"500g pkt","maxLimit":2,"step":1,"AVE":600},
