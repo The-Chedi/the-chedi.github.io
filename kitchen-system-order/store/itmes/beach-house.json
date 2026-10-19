@@ -9,7 +9,7 @@
 {"code":"113085","name":"Beef Bacon Smoked Sliced Choice","name_ar":"بيكون لحم مدخن شرائح شويس","unit":"kg","maxLimit":5,"step":0.5,"AVE":492.8},
 {"code":"110047","name":"Beef Rib Eye USA","name_ar":"ريب آي لحم أمريكي","unit":"kg","maxLimit":8,"step":0.5,"AVE":2400},
 {"code":"110028","name":"Beef Shoulder Brazil","name_ar":"كتف لحم برازيلي","unit":"kg","maxLimit":20,"step":0.5,"AVE":278.89508},
-{"code":"110046","name":"beef tenderloin USA","name_ar":"بيف تندرليون امريكي","unit":"kg","maxLimit":8,"step":1,"AVE":2495},
+{"code":"110051","name":"Beef Tenderloin Australian", "name_ar": "ببيف تندرلين استرالي", "unit": "kg", "maxLimit": 8, "step": 0.5, "AVE": 2600},
 {"code":"166033","name":"Black Lentil (PURE)","name_ar":"عدس اسود بيور","unit":"Kilogram","maxLimit":2,"step":1,"AVE":73.5},
 {"code":"161138","name":"Black Pepper Powder (PURE)","name_ar":"فلفل أسود بودرة (نقي)","unit":"kg","maxLimit":1,"step":1,"AVE":540},
 {"code":"161008","name":"Black Sesame Seeds","name_ar":"سمسم أسود","unit":"kg","maxLimit":2,"step":0.5,"AVE":550},
