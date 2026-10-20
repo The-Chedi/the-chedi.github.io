@@ -41,6 +41,7 @@
 {"code":"163165","name":"Sauce Barbecue","name_ar":"باريكو صوص","unit":"4.25kg gal","maxLimit":1,"step":1,"AVE":275},
 {"code":"163209","name":"Sauce Fish 625 Ml","name_ar":"صوص سمك 625 مل","unit":"Bottle 625 ML","maxLimit":2,"step":1,"AVE":78},
 {"code":"163140","name":"Sauce Oyster","name_ar":"صوص محار","unit":"830ml bottle","maxLimit":2,"step":1,"AVE":98.25},
+{"code":"113034","name":"Spring Roll With Vegetables","name_ar":"سبرينج رول","unit":"kg","maxLimit":4,"step":0.5,"AVE":124.6875},
 {"code":"163223","name":"Sauce Oyster Heinz 500 Ml","name_ar":"صوص محار هاينز 500 مل","unit":"Bottle 500 ML","maxLimit":2,"step":1,"AVE":100},
 {"code":"163242","name":"Sauce Soya Kikoman Gallon 18.9 Ltr Zumra","name_ar":"صويا صوص كوكومان جالون18  لتر","unit":"Gallon 18.9 Ltr","maxLimit":1,"step":1,"AVE":5090.00001},
 {"code":"163245","name":"Sauce Sweet Chilli Bott 740 Ml(zumra)","name_ar":"سويت شيلي صوص","unit":"Bottle 740Ml","maxLimit":3,"step":1,"AVE":140.9996},
