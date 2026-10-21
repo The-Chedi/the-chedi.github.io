@@ -40,6 +40,7 @@
 {"code":"174005","name":"Color Red Raspberry Powder","name_ar":"لون أحمر توت","unit":"kg","maxLimit":1,"step":0.5,"AVE":517.54},
 {"code":"174007","name":"Color Yellow Tartazin Powder","name_ar":"لون أصفر تارترازين","unit":"kg","maxLimit":1,"step":0.5,"AVE":394.74},
 {"code":"172007","name":"Compote Peach","name_ar":"كمبوت خوخ","unit":"800g tin","maxLimit":5,"step":1,"AVE":70},
+{"code":"173097","name":"Cream Patisserie Golden Pack sac 10 kg","name_ar": "كريمة باتيسري جولدن باك 10 كجم", "unit": "Sac 10 KG", "maxLimit": 1, "step": 1, "AVE": 1745.7}
 {"code":"172099","name":"Compote Peach 820 Gram","name_ar":"كمبود خوخ 820 جرام","unit":"Tin 820 Gram","maxLimit":3,"step":1,"AVE":70},
 {"code":"161147","name":"Coriander Powder (PURE)","name_ar":"كزبرة بودرة (نقي)","unit":"kg","maxLimit":1,"step":0.5,"AVE":105},
 {"code":"175133","name":"Corn Flour Dreem","name_ar":"دقيق ذرة دريم","unit":"240g pkt","maxLimit":8,"step":1,"AVE":11.8798},
