@@ -36,6 +36,6 @@
 {"code":"160079","name":"Tomato Paste Wadi Food","name_ar":"صلصة طماطم وادي فود","unit":"3kg tin","maxLimit":3,"AVE":142},
 {"code":"131081","name":"Tuna Saku","name_ar":"تونة ساكو","unit":"kg","maxLimit":5,"step":0.5,"AVE":751.6129},
 {"code":"120015","name":"Turkey Whole El Doctor","name_ar":"تركي سليم","unit":"Kilogram","maxLimit":3,"step":1,"AVE":159.8},
-{"code":"167017","name":"Vinegar Heinz White","name_ar":"خل أبيض هاينز","unit":"L","maxLimit":3,"step":1,"AVE":16.},
+{"code":"167017","name":"Vinegar Heinz White","name_ar":"خل أبيض هاينز","unit":"L","maxLimit":3,"step":1,"AVE":16.7},
 {"code":"161163","name":"White Pepper Powder (PURE)","name_ar":"فلفل أبيض بودرة (نقي)","unit":"kg","maxLimit":1,"step":0.5,"AVE":872.2}
 ]
