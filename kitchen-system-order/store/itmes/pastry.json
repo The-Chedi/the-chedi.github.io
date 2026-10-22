@@ -24,7 +24,6 @@
 {"code":"161016","name":"Chia Seeds Pkt ABU AUF 400 Gram","name_ar":"بذور شيا أبو عوف 400 جرام","unit":"Pkt 400 Gram","maxLimit":6,"step":1,"AVE":125},
 {"code":"171049","name":"Chocolate Brown Block","name_ar":"شوكولاتة بني بلوك","unit":"2.5kg block","maxLimit":3,"step":1,"AVE":369.11403},
 {"code":"171190","name":"Chocolate Dark 56 % Van Meester Belgum Drops","name_ar":"شوكولاتة داكنة 56% فان ميستر بلجيكي","unit":"Kilogram","maxLimit":5,"step":5,"AVE":546},
-{"code":"171190","name":"Chocolate Dark 56% Van Meester Belgium Dr","name_ar":"شوكولاتة دارك 56% فان ميستر بلجيكي","unit":"kg","maxLimit":5,"step":0.5,"AVE":473},
 {"code":"171189","name":"Chocolate Milk 36 % Van Meester Belgum Drops","name_ar":"شوكولاتة حليب 36% فان ميستر بلجيكي","unit":"Kilogram","maxLimit":5,"step":5,"AVE":515},
 {"code":"171146","name":"Chocolate Sticks Belcolade Belgium stick 44%","name_ar":"أعواد شوكولاتة بيلكوليد بلجيكي 44%","unit":"kg","maxLimit":5,"step":0.5,"AVE":1295},
 {"code":"165024","name":"Chocolate Stone","name_ar":"شوكولاتة ستون","unit":"130g pkt","maxLimit":6,"step":1,"AVE":39.47387},
