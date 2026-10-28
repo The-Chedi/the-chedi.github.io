@@ -13,7 +13,7 @@
 {"code":"153038","name":"Cheese White Gallon","name_ar":"جبنة بيضاء جالون","unit":"10kg gal","maxLimit":1,"step":1,"AVE":700.0522},
 {"code":"166035","name":"Chick Peas Dry (PURE)","name_ar":"حمص يابس (نقي)","unit":"kg","maxLimit":2,"step":0.5,"AVE":156.8},
 {"code":"120017","name":"Chicken Whole 1100 Gr Brazil","name_ar":"دجاج كامل 1100 جرام برازيلي","unit":"kg","maxLimit":44,"step":0.5,"AVE":157.79083},
-{"code":"120047","name":"Chicken Breast Size 4-5","name_ar":"صدر دجاج مقاس 4-5","unit":"kg","maxLimit":15,"step":1,"AVE":221.7},
+{"code":"113026","name":"Chicken Sausage Chipolata 20 Gram","name_ar":"دجاج سوسيدج","unit":"Kilogram","maxLimit":6,"step":1,"AVE":193.6}, {"code":"120047","name":"Chicken Breast Size 4-5","name_ar":"صدر دجاج مقاس 4-5","unit":"kg","maxLimit":15,"step":1,"AVE":221.7},
 {"code":"161141","name":"Chilli Powder (PURE)","name_ar":"مسحوق شطة (نقي)","unit":"Kilogram","maxLimit":1,"step":0.5,"AVE":150},
 {"code":"161143","name":"Cinnamon Powder (PURE)","name_ar":"قرفة بودرة (نقي)","unit":"kg","maxLimit":1,"step":0.5,"AVE":294},
 {"code":"161145","name":"Cinnamon Sticks ( Cigar ) (PURE)","name_ar":"أعواد قرفة (سيجار) (نقي)","unit":"kg","maxLimit":1,"step":0.5,"AVE":406.7},
