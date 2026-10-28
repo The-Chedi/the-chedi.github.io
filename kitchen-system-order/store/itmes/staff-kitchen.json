@@ -8,6 +8,7 @@
 {"code":"151005","name":"Butter Fern","name_ar":"زبدة فيرن","unit":"kg","maxLimit":8,"step":0.5,"AVE":147.69841},
 {"code":"175291","name":"Carbonates KG (PURE)","name_ar":"كربونات (نقي)","unit":"kg","maxLimit":1,"step":0.5,"AVE":53.9},
 {"code":"153036","name":"Cheese Smoked Farm Cheese","name_ar":"جبنة مدخنة","unit":"kg","maxLimit":4.5,"step":4.5,"AVE":344.75},
+{"code":"161149","name":"Cumin Powder (PURE) ","name_ar":"مسحوق كمون بيور ","unit":"kg","maxLimit":2,"step":0.5,"AVE":445.9},
 {"code":"153038","name":"Cheese White Gallon","name_ar":"جبنة بيضاء جالون","unit":"10kg gal","maxLimit":1,"step":1,"AVE":700.0522},
 {"code":"166035","name":"Chick Peas Dry (PURE)","name_ar":"حمص يابس (نقي)","unit":"kg","maxLimit":2,"step":0.5,"AVE":156.8},
 {"code":"120017","name":"Chicken Whole 1100 Gr Brazil","name_ar":"دجاج كامل 1100 جرام برازيلي","unit":"kg","maxLimit":44,"step":0.5,"AVE":157.79083},
