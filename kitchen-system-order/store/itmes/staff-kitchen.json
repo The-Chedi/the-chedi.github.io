@@ -1,7 +1,7 @@
 [
 {"code":"110018","name":"Beef Neck Brazil","name_ar":"بيف رقبه برزييلي","unit":"Kilogram","maxLimit":40,"step":1,"AVE":325},
 {"code":"113019","name":"Beef Sausage Chipolata 20 Gram","name_ar":"بيف سوسيدج","unit":"Kilogram","maxLimit":6,"step":1,"AVE":211.2},
-{"code":"113051","name":"Beef Sausage Oriental (sogok)","name_ar":"سدق مصري ","unit":"Kilogram","maxLimit":15,"step":1,"AVE":4576},
+{"code":"113051","name":"Beef Sausage Oriental (sogok)","name_ar":"سدق مصر","unit":"Kilogram","maxLimit":15,"step":1,"AVE":4576},
 {"code":"166033","name":"Black Lentil (PURE)","name_ar":"عدس اسود بيور","unit":"Kilogram","maxLimit":4,"step":1,"AVE":73.5},
 {"code":"161137","name":"Black Pepper Corn (PURE)","name_ar":"فلفل أسود حب (نقي)","unit":"kg","maxLimit":1,"step":1,"AVE":525},
 {"code":"161138","name":"Black Pepper Powder (PURE)","name_ar":"فلفل أسود بودرة (نقي)","unit":"kg","maxLimit":1,"step":0.5,"AVE":540},
