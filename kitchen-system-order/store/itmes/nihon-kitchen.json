@@ -35,7 +35,7 @@
 {"code":"163013","name":"Oil Truffle","name_ar":"زيت كمأة","unit":"250ml bottle","maxLimit":1,"step":1,"AVE":552.62468},
 {"code":"176018","name":"Peanuts For Pastry","name_ar":"فول سوداني للحلويات","unit":"500g pkt","maxLimit":8,"step":1,"AVE":80},
 {"code":"163236","name":"Pickles Ginger 1.5 Kg Zumra","name_ar":"زنجبيل مخلل زمرة 1.5 كجم","unit":"Pkt 1.5 KG","maxLimit":3,"step":1,"AVE":140},
-{"code":"164076","name":"Rice White 3% El Doha","name_ar":"ارز الضحي 3%","unit":"Kilogram","maxLimit":12,"step":1,"AVE":2209.9},
+{"code":"164076","name":"Rice White 3% El Doha","name_ar":"ارز الضحي 3%","unit":"Kilogram","maxLimit":12,"step":1,"AVE":45.1},
 {"code":"164143","name":"Rice White Local (El Badr)","name_ar":"أرز أبيض محلي (البدر)","unit":"25kg sac","maxLimit":2,"step":1,"AVE":750},
 {"code":"152017","name":"Rich Cream Juhayna Cooking","name_ar":"كريمة طبخ جهينة","unit":"L","maxLimit":8,"step":1,"AVE":173.09748},
 {"code":"131055","name":"Salmon Whole Side Fillet Skin On Maxim","name_ar":"فيليه سلمون كامل بالجلد ماكسيم","unit":"kg","maxLimit":8,"step":0.5,"AVE":830},
