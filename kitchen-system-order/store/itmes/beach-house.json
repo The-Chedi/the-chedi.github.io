@@ -75,7 +75,7 @@
 {"code":"132013","name":"Shrimps Medium (20-30)","name_ar":"جمبري متوسط (20-30)","unit":"kg","maxLimit":4,"step":0.5,"AVE":714.375},
 {"code":"142031","name":"Spinach Fodeco Box (20 Pkt X 400 Gram )","name_ar":"سبانخ مجمده فوديكو","unit":"Box ( 20 Pkt * 400 Gram)","maxLimit":1,"step":0.25,"AVE":2200},
 {"code":"175020","name":"Taco Shell Corn","name_ar":"تاكو شل ذرة","unit":"pkt","maxLimit":6,"step":1,"AVE":57.75},
-{"code": "131097", "name": "Tina Sako Soly", "name_ar": "تونه ساكو سولي", "unit": "kg", "maxLimit": 4, "step": 1, "AVE": 900},
+{"code": "131097", "name": "Tuna Sako Soly", "name_ar": "تونه ساكو سولي", "unit": "kg", "maxLimit": 4, "step": 1, "AVE": 900},
 {"code":"163100","name":"Tahina Jar El Rashidi","name_ar":"طحينة الرشيدي","unit":"460g jar","maxLimit":6,"step":1,"AVE":102.50665},
 {"code":"160107","name":"Tomato Peeled Tin 2550 Gram Daria","name_ar":"طماطم مقشرة 2550 جرام داريا","unit":"2.55kg tin","maxLimit":6,"step":1,"AVE":158},
 {"code":"160044","name":"Truffle Dough Jar 500 Grm","name_ar":"ترافيل مشروم برطمان 500 جرام","unit":"Jar 500 Gram","maxLimit":1,"step":1,"AVE":850},
