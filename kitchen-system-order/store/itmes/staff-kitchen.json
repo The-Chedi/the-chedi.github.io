@@ -42,7 +42,7 @@
 {"code":"152036","name":"Milk Powder 500 Gram Nestle","name_ar":"لبن بودره 500 جرام","unit":"Pkt 500 Gram","maxLimit":99,"step":1,"AVE":242.2452},
 {"code":"152039","name":"Milk Powder Nestle","name_ar":"لبن بودرة نستله","unit":"1.75kg pkt","maxLimit":2,"step":1,"AVE":754.29113},
 {"code":"142011","name":"Mix Vegetable Frozen","name_ar":"خضار مشكل مجمد","unit":"10kg box","maxLimit":1,"step":1,"AVE":339.7962},
-{"code":"142032","name":"Molokia Frozen Fodeco (Box 20 Pkt * 400 Gram)","name_ar":"ملوخيه فروزن فويدكو ","unit":"Box ( 20 Pkt * 400 Gram)","maxLimit":2,"step":0.5,"AVE":2100},
+{"code":"142032","name":"Molokia Frozen Fodeco (Box 20 Pkt * 400 Gram)","name_ar":"ملوخيه فروزن فويدكو ","unit":"Box ( 20 Pkt * 400 Gram)","maxLimit":2,"step":0.5,"AVE":210},
 {"code":"167008","name":"Mustard Heinz","name_ar":"موسترد هاينز","unit":"235g jar","maxLimit":6,"step":1,"AVE":32.569},
 {"code":"181016","name":"Nescafe 2 In1 Caramel 500 Grm","name_ar":"نسكافيه كاراميل 500 جرام","unit":"Pkt 500 Gram","maxLimit":3,"step":1,"AVE":310.764},
 {"code":"181017","name":"Nescafe Alegria Intense 500 Grm","name_ar":"نسكافيه أليجريا إنتنس","unit":"Pkt 500 Gram","maxLimit":3,"step":1,"AVE":772.219},
